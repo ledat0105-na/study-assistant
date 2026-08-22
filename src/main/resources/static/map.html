@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study AI - Sơ đồ kiến thức</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-slate-900/80 backdrop-blur-md border-r border-slate-800 text-slate-202 flex flex-col justify-between p-4 sticky top-0 h-screen z-20">
+    <div>
+      <div class="flex items-center gap-2 px-2 py-4 mb-6">
+        <div class="bg-gradient-to-tr from-indigo-500 to-purple-500 p-2 rounded-xl text-white shadow-lg shadow-indigo-500/30">
+          <i data-lucide="sparkles" class="h-6 w-6"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Study AI</h1>
+          <span class="text-xs text-slate-500 font-medium">Assistant Hub</span>
+        </div>
+      </div>
+
+      <nav class="space-y-1">
+        <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
+          <i data-lucide="layout-dashboard" class="h-5 w-5"></i>
+          Bảng điều khiển
+        </a>
+        <a href="documents.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
+          <i data-lucide="file-text" class="h-5 w-5"></i>
+          Tài liệu
+        </a>
+        <a href="map.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-indigo-600/20 text-indigo-400 border-l-4 border-indigo-500 pl-2.5 transition-all">
+          <i data-lucide="network" class="h-5 w-5"></i>
+          Sơ đồ kiến thức
+        </a>
+        <a href="viewer.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
+          <i data-lucide="message-square" class="h-5 w-5"></i>
+          <span>Hỏi đáp AI</span>
+        </a>
+        <a href="flashcards.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
+          <i data-lucide="book-open" class="h-5 w-5"></i>
+          Thẻ ghi nhớ
+        </a>
+        <a href="quiz.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
+          <i data-lucide="help-circle" class="h-5 w-5"></i>
+          Trắc nghiệm
+        </a>
+        <a href="progress.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
+          <i data-lucide="bar-chart-3" class="h-5 w-5"></i>
+          Tiến độ học tập
+        </a>
+        <a href="profile.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
+          <i data-lucide="user" class="h-5 w-5"></i>
+          Thông tin cá nhân
+        </a>
+        <a href="admin.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
+          <i data-lucide="shield-alert" class="h-5 w-5"></i>
+          Quản trị viên
+        </a>
+      </nav>
+    </div>
+
+    <div class="border-t border-slate-800 pt-4 mt-auto">
+      <div class="flex items-center gap-3 px-2 py-2 mb-3 bg-slate-900/40 rounded-xl border border-slate-800/40">
+        <div class="w-9 h-9 rounded-full bg-indigo-650 text-white flex items-center justify-center font-bold shadow-md">JD</div>
+        <div class="flex-1 min-w-0">
+          <p id="userNameLabel" class="text-xs font-semibold text-slate-202 truncate">John Doe</p>
+          <p id="userEmailLabel" class="text-[10px] text-slate-505 truncate">john.doe@example.com</p>
+        </div>
+      </div>
+      <a href="login.html" class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all duration-200">
+        <i data-lucide="log-out" class="h-4 w-4"></i>
+        Đăng xuất
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-8 overflow-y-auto flex flex-col">
+    <div class="flex justify-between items-center mb-6">
+      <div class="flex items-center gap-4">
+        <a href="documents.html" class="p-2.5 bg-slate-900 border border-slate-805 text-slate-400 hover:text-slate-205 rounded-xl transition-all">
+          <i data-lucide="arrow-left" class="h-5 w-5"></i>
+        </a>
+        <div>
+          <h1 class="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent">
+            Sơ đồ kiến thức & Reader
+          </h1>
+          <p class="text-xs text-slate-500 mt-0.5">Navigate document pages automatically through concept maps</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[550px]">
+      <!-- Left Tree Panel -->
+      <div class="bg-slate-900/40 border border-slate-850 p-6 rounded-3xl flex flex-col justify-between">
+        <div>
+          <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Topic Hierarchy</h3>
+          <div id="treeContainer" class="space-y-2 max-h-[350px] overflow-y-auto pr-2">
+            <!-- Render tree here -->
+          </div>
+        </div>
+
+        <div class="bg-slate-950/60 border border-slate-800 p-5 rounded-2xl mt-6">
+          <span class="text-[10px] uppercase font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md">
+            Active Concept Detail
+          </span>
+          <h4 id="activeLabel" class="font-bold text-sm text-slate-200 mt-2">Select a topic to start</h4>
+          <p id="activeDesc" class="text-xs text-slate-450 mt-1.5 leading-relaxed">Click any topic in the list above to move the PDF viewer to its specific page location.</p>
+        </div>
+      </div>
+
+      <!-- Right PDF Panel -->
+      <div class="bg-slate-900/20 border border-slate-850 rounded-3xl overflow-hidden flex flex-col">
+        <div class="bg-slate-900/80 border-b border-slate-850 p-4 flex justify-between items-center">
+          <div class="flex items-center gap-2">
+            <i data-lucide="book-open" class="h-4 w-4 text-indigo-400"></i>
+            <span id="pageReaderLabel" class="text-xs font-semibold text-slate-300">PDF Reader Panel (Page 1)</span>
+          </div>
+          <div class="flex items-center gap-1.5 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg">
+            <button onclick="zoomOut()" aria-label="Zoom out" class="p-1 hover:bg-slate-800 rounded text-slate-450 hover:text-slate-300"><i data-lucide="zoom-out" class="h-3.5 w-3.5"></i></button>
+            <span id="zoomLabel" class="text-[10px] text-slate-400 font-mono font-bold">100%</span>
+            <button onclick="zoomIn()" aria-label="Zoom in" class="p-1 hover:bg-slate-800 rounded text-slate-450 hover:text-slate-300"><i data-lucide="zoom-in" class="h-3.5 w-3.5"></i></button>
+          </div>
+        </div>
+
+        <div class="flex-1 p-6 overflow-y-auto flex justify-center items-start">
+          <div id="pdfCanvas" class="w-full max-w-md bg-white text-slate-900 shadow-xl rounded-2xl p-6 min-h-[450px] flex flex-col justify-between font-serif relative transition-all duration-200">
+            <div id="pdfPageBadge" class="absolute top-4 right-4 bg-indigo-150 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full select-none">PAGE 1</div>
+            <div>
+              <h3 id="pdfPageTitle" class="text-base font-bold border-b pb-2 mb-4 text-indigo-950">Foundational Neural Models</h3>
+              <p class="leading-relaxed text-xs text-slate-700">
+                This section covers the core characteristics of neural architectures. Explaining weight parameters, matrices operations, and backpropagation optimization routes. Single layer perceptrons perform simple classifications but hidden layers resolve complex XOR matrices issues.
+              </p>
+              <p class="leading-relaxed text-xs text-slate-750 mt-4">
+                Verify calculations on the next pages utilizing the active gradient formulas.
+              </p>
+            </div>
+            <div class="text-[9px] text-slate-400 text-center border-t pt-3 font-sans select-none">
+              AI Generated Scanned PDF Reader
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (!user.id) {
+      window.location.href = "login.html";
+    }
+
+    document.getElementById("userNameLabel").textContent = user.name || "Guest";
+    document.getElementById("userEmailLabel").textContent = user.email || "guest@example.com";
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const docId = urlParams.get("id") || "1";
+
+    let topics = [];
+    let selectedTopic = null;
+    let zoom = 100;
+    let expanded = {};
+
+    
+    // Hide Admin sidebar link if not ADMIN
+    const adminLink = document.querySelector('a[href="admin.html"]');
+    if (adminLink && (user.role || "FREE").toUpperCase() !== "ADMIN") {
+      adminLink.remove();
+    }
+    lucide.createIcons();
+
+    async function loadTopics() {
+      try {
+        const response = await fetch(`/api/topics/document/${docId}`);
+        if (response.ok) {
+          topics = await response.json();
+          if (topics.length > 0) {
+            // Set default selected
+            selectedTopic = topics[0].children && topics[0].children.length > 0 ? topics[0].children[0] : topics[0];
+            // Expand all parents by default
+            topics.forEach(t => expanded[t.id] = true);
+            renderTree();
+            updateActiveTopicDisplay();
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load map topics", err);
+      }
+    }
+
+    function renderTree() {
+      const container = document.getElementById("treeContainer");
+      container.innerHTML = "";
+
+      topics.forEach(node => {
+        container.appendChild(createNodeElement(node, 0));
+      });
+      lucide.createIcons();
+    }
+
+    function createNodeElement(node, depth) {
+      const hasChildren = node.children && node.children.length > 0;
+      const isExpanded = expanded[node.id];
+      const isSelected = selectedTopic && selectedTopic.id === node.id;
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "select-none";
+
+      const item = document.createElement("div");
+      item.className = `flex items-center gap-2 py-2 px-3 rounded-xl cursor-pointer transition-all ${
+        isSelected 
+          ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/30" 
+          : "hover:bg-slate-900 text-slate-300"
+      }`;
+      item.style.marginLeft = `${depth * 16}px`;
+      item.addEventListener("click", () => {
+        selectedTopic = node;
+        updateActiveTopicDisplay();
+        renderTree();
+      });
+
+      let iconHtml = `<div class="w-6 h-6 flex items-center justify-center text-[10px] text-slate-500 font-mono font-bold">•</div>`;
+      if (hasChildren) {
+        const toggleId = `toggle-${node.id}`;
+        iconHtml = `
+          <button id="${toggleId}" class="p-1 text-slate-500 hover:text-slate-350 hover:bg-slate-800/40 rounded transition-all">
+            <i data-lucide="${isExpanded ? 'chevron-down' : 'chevron-right'}" class="h-4 w-4"></i>
+          </button>
+        `;
+      }
+
+      item.innerHTML = `
+        ${iconHtml}
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold truncate">${node.label}</p>
+          <p class="text-[10px] text-slate-500 truncate">Starts on Page ${node.pageStart}</p>
+        </div>
+      `;
+
+      wrapper.appendChild(item);
+
+      if (hasChildren) {
+        const toggleBtn = item.querySelector(`#toggle-${node.id}`);
+        if (toggleBtn) {
+          toggleBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            expanded[node.id] = !expanded[node.id];
+            renderTree();
+          });
+        }
+
+        if (isExpanded) {
+          const childrenWrapper = document.createElement("div");
+          childrenWrapper.className = "mt-1 space-y-1";
+          node.children.forEach(child => {
+            childrenWrapper.appendChild(createNodeElement(child, depth + 1));
+          });
+          wrapper.appendChild(childrenWrapper);
+        }
+      }
+
+      return wrapper;
+    }
+
+    function updateActiveTopicDisplay() {
+      if (!selectedTopic) return;
+      document.getElementById("activeLabel").textContent = selectedTopic.label;
+      document.getElementById("activeDesc").textContent = selectedTopic.description || "No concept description provided.";
+      document.getElementById("pageReaderLabel").textContent = `PDF Reader Panel (Page ${selectedTopic.pageStart})`;
+      document.getElementById("pdfPageBadge").textContent = `PAGE ${selectedTopic.pageStart}`;
+      document.getElementById("pdfPageTitle").textContent = selectedTopic.label;
+    }
+
+    function zoomIn() {
+      if (zoom < 150) {
+        zoom += 10;
+        applyZoom();
+      }
+    }
+
+    function zoomOut() {
+      if (zoom > 50) {
+        zoom -= 10;
+        applyZoom();
+      }
+    }
+
+    function applyZoom() {
+      document.getElementById("zoomLabel").textContent = zoom + "%";
+      const canvas = document.getElementById("pdfCanvas");
+      canvas.style.transform = `scale(${zoom / 100})`;
+      canvas.style.transformOrigin = "top center";
+    }
+
+    loadTopics();
+  </script>
+</body>
+</html>

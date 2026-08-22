@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study AI - Upload</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-slate-900/80 backdrop-blur-md border-r border-slate-800 text-slate-202 flex flex-col justify-between p-4 sticky top-0 h-screen z-20">
+    <div>
+      <div class="flex items-center gap-2 px-2 py-4 mb-6">
+        <div class="bg-gradient-to-tr from-indigo-500 to-purple-500 p-2 rounded-xl text-white shadow-lg shadow-indigo-500/30">
+          <i data-lucide="sparkles" class="h-6 w-6"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Study AI</h1>
+          <span class="text-xs text-slate-500 font-medium" data-i18n="brand_sub">Assistant Hub</span>
+        </div>
+      </div>
+
+      <nav class="space-y-1">
+        <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
+          <i data-lucide="layout-dashboard" class="h-5 w-5"></i>
+          <span data-i18n="nav_dashboard">Bảng điều khiển</span>
+        </a>
+        <a href="documents.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
+          <i data-lucide="file-text" class="h-5 w-5"></i>
+          <span data-i18n="nav_documents">Tài liệu</span>
+        </a>
+        <a href="map.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
+          <i data-lucide="network" class="h-5 w-5"></i>
+          <span data-i18n="nav_map">Sơ đồ kiến thức</span>
+        </a>
+        <a href="viewer.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
+          <i data-lucide="message-square" class="h-5 w-5"></i>
+          <span>Hỏi đáp AI</span>
+        </a>
+        <a href="flashcards.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
+          <i data-lucide="book-open" class="h-5 w-5"></i>
+          <span data-i18n="nav_flashcards">Thẻ ghi nhớ</span>
+        </a>
+        <a href="quiz.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
+          <i data-lucide="help-circle" class="h-5 w-5"></i>
+          <span data-i18n="nav_quiz">Trắc nghiệm</span>
+        </a>
+        <a href="progress.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
+          <i data-lucide="bar-chart-3" class="h-5 w-5"></i>
+          <span data-i18n="nav_progress">Tiến độ học tập</span>
+        </a>
+        <a href="profile.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
+          <i data-lucide="user" class="h-5 w-5"></i>
+          <span data-i18n="nav_profile">Thông tin cá nhân</span>
+        </a>
+        <a href="admin.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
+          <i data-lucide="shield-alert" class="h-5 w-5"></i>
+          <span data-i18n="nav_admin">Quản trị viên</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="border-t border-slate-800 pt-4 mt-auto">
+      <div class="flex items-center gap-3 px-2 py-2 mb-3 bg-slate-900/40 rounded-xl border border-slate-800/40">
+        <div class="w-9 h-9 rounded-full bg-indigo-650 text-white flex items-center justify-center font-bold shadow-md">JD</div>
+        <div class="flex-1 min-w-0">
+          <p id="userNameLabel" class="text-xs font-semibold text-slate-202 truncate">John Doe</p>
+          <p id="userEmailLabel" class="text-[10px] text-slate-505 truncate">john.doe@example.com</p>
+        </div>
+      </div>
+      <a href="login.html" class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all duration-200">
+        <i data-lucide="log-out" class="h-4 w-4"></i>
+        <span data-i18n="nav_logout">Đăng xuất</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-8 overflow-y-auto">
+    <div class="max-w-3xl mx-auto">
+      <div class="mb-8">
+        <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent" data-i18n="upload_title">Tải lên tài liệu</h1>
+        <p class="text-slate-400 mt-1" data-i18n="upload_sub">Add PDF, DOCX, or PPTX research files to generate your AI Study hub</p>
+      </div>
+
+      <!-- Drag & Drop container -->
+      <div id="dropZone" class="border-2 border-dashed border-slate-800 bg-slate-900/10 hover:border-slate-700/80 rounded-3xl p-12 flex flex-col items-center justify-center transition-all cursor-pointer">
+        <input type="file" id="fileInput" accept=".pdf,.docx,.pptx" class="hidden" />
+
+        <div id="idleState" class="flex flex-col items-center">
+          <div class="p-4 bg-slate-900 rounded-2xl border border-slate-800 text-indigo-400 mb-4 shadow-xl">
+            <i data-lucide="upload-cloud" class="h-10 w-10"></i>
+          </div>
+          <h3 class="text-lg font-bold text-slate-202" data-i18n="upload_drag">Drag and drop your file here</h3>
+          <p class="text-sm text-slate-500 mt-1.5 mb-6 text-center" data-i18n="upload_limit">Supports PDF, DOCX, or PPTX up to 32MB</p>
+          <label for="fileInput" class="px-5 py-2.5 bg-indigo-650 hover:bg-indigo-600 text-white rounded-xl text-sm font-semibold cursor-pointer shadow-lg transition-all" data-i18n="upload_select">
+            Chọn tệp tin
+          </label>
+        </div>
+
+        <div id="uploadingState" class="hidden w-full max-w-md text-center">
+          <i data-lucide="loader-2" class="h-10 w-10 text-indigo-500 animate-spin mx-auto mb-4"></i>
+          <h3 class="text-lg font-bold text-slate-202" data-i18n="uploading">Uploading file...</h3>
+          <p id="fileName" class="text-sm text-slate-400 mt-1 font-medium"></p>
+          <p id="fileDetails" class="text-xs text-slate-505 mt-1"></p>
+          <div class="w-full bg-slate-950/60 border border-slate-800 h-3 rounded-full mt-6 overflow-hidden">
+            <div id="progressBar" class="bg-indigo-500 h-full w-0 transition-all duration-200 rounded-full"></div>
+          </div>
+        </div>
+
+        <div id="completedState" class="hidden w-full max-w-md text-center">
+          <div class="p-3 bg-emerald-500/10 text-emerald-450 border border-emerald-500/20 rounded-full w-fit mx-auto mb-4">
+            <i data-lucide="check-circle" class="h-10 w-10"></i>
+          </div>
+          <h3 class="text-lg font-bold text-slate-202" data-i18n="upload_done">Upload Complete!</h3>
+          <p id="uploadedName" class="text-sm text-slate-400 mt-1.5 font-medium"></p>
+          <p class="text-xs text-slate-550 mt-1" data-i18n="upload_done_sub">Our AI has parsed all chapters and built your Study Map!</p>
+          <a href="documents.html" class="mt-6 inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold transition-all shadow-lg">
+            <span data-i18n="upload_done_btn">Go to Documents</span>
+            <i data-lucide="arrow-right" class="h-4 w-4"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Upgrade Package Limit Modal Popup -->
+  <div id="limitModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md">
+    <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl max-w-md text-center shadow-2xl relative">
+      <div class="absolute top-4 right-4 cursor-pointer text-slate-400 hover:text-slate-200" onclick="closeLimitModal()">
+        <i data-lucide="x" class="h-5 w-5"></i>
+      </div>
+      <div class="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-3xl w-fit mx-auto mb-6 text-indigo-400">
+        <i data-lucide="shield-alert" class="h-12 w-12 animate-bounce"></i>
+      </div>
+      <h3 class="text-xl font-extrabold text-slate-100" data-i18n="limit_modal_title">Free Limit Reached!</h3>
+      <p class="text-xs text-slate-450 mt-3 leading-relaxed" data-i18n="limit_modal_desc">Your account has reached the free limit of 3 uploaded documents. Upgrade to the Pro Plan to enjoy unlimited document processing capacities.</p>
+      
+      <div class="mt-8 flex flex-col gap-2">
+        <button onclick="upgradeAccount()" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-bold text-white shadow-lg transition-all" data-i18n="limit_modal_btn">Upgrade to PRO Plan</button>
+        <button onclick="closeLimitModal()" class="w-full py-3 px-4 bg-slate-950 hover:bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold text-slate-400 transition-all" data-i18n="limit_modal_close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="i18n.js"></script>
+  <script>
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (!user.id) {
+      window.location.href = "login.html";
+    }
+
+    document.getElementById("userNameLabel").textContent = user.name || "Guest";
+    document.getElementById("userEmailLabel").textContent = user.email || "guest@example.com";
+
+    // Set default tier to FREE if not exists
+    if (!user.tier) {
+      user.tier = "FREE";
+      localStorage.setItem("user", JSON.stringify(user));
+    }
+
+    
+    // Hide Admin sidebar link if not ADMIN
+    const adminLink = document.querySelector('a[href="admin.html"]');
+    if (adminLink && (user.role || "FREE").toUpperCase() !== "ADMIN") {
+      adminLink.remove();
+    }
+    lucide.createIcons();
+
+    const fileInput = document.getElementById("fileInput");
+    const dropZone = document.getElementById("dropZone");
+    const idleState = document.getElementById("idleState");
+    const uploadingState = document.getElementById("uploadingState");
+    const completedState = document.getElementById("completedState");
+
+    dropZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropZone.className = "border-2 border-dashed border-indigo-500 bg-indigo-500/5 rounded-3xl p-12 flex flex-col items-center justify-center transition-all cursor-pointer";
+    });
+
+    dropZone.addEventListener("dragleave", () => {
+      dropZone.className = "border-2 border-dashed border-slate-800 bg-slate-900/10 hover:border-slate-700/80 rounded-3xl p-12 flex flex-col items-center justify-center transition-all cursor-pointer";
+    });
+
+    dropZone.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      dropZone.className = "border-2 border-dashed border-slate-800 bg-slate-900/10 hover:border-slate-700/80 rounded-3xl p-12 flex flex-col items-center justify-center transition-all cursor-pointer";
+      
+      const isBlocked = await checkUploadLimit();
+      if (isBlocked) return;
+
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        uploadFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    fileInput.addEventListener("change", async (e) => {
+      const isBlocked = await checkUploadLimit();
+      if (isBlocked) {
+        fileInput.value = ""; // Reset
+        return;
+      }
+
+      if (e.target.files && e.target.files[0]) {
+        uploadFile(e.target.files[0]);
+      }
+    });
+
+    async function checkUploadLimit() {
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      const role = u.role || "FREE";
+      
+      let limit = 3;
+      if (role === "STUDENT") limit = 50;
+      else if (role === "PRO") limit = 200;
+      else if (role === "ADMIN") return false;
+
+      try {
+        const response = await fetch("/api/documents");
+        if (response.ok) {
+          const docs = await response.json();
+          if (docs.length >= limit) {
+            document.getElementById("limitModal").classList.remove("hidden");
+            
+            const descElem = document.querySelector("[data-i18n='limit_modal_desc']");
+            if (localStorage.getItem("lang") === "en") {
+              descElem.textContent = `Your account has reached the limit of ${limit} uploaded documents for the ${role} plan. Upgrade your plan to unlock more document slots.`;
+            } else {
+              descElem.textContent = `Tài khoản của bạn đã đạt giới hạn tải lên tối đa ${limit} tài liệu của gói ${role}. Vui lòng nâng cấp gói để tiếp tục tải lên tài liệu mới.`;
+            }
+            return true;
+          }
+        }
+      } catch (err) {
+        console.error("Failed to verify limit validation", err);
+      }
+      return false;
+    }
+
+    function closeLimitModal() {
+      document.getElementById("limitModal").classList.add("hidden");
+    }
+
+    function upgradeAccount() {
+      window.location.href = "profile.html";
+    }
+
+    async function uploadFile(file) {
+      idleState.classList.add("hidden");
+      uploadingState.classList.remove("hidden");
+      
+      document.getElementById("fileName").textContent = file.name;
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      document.getElementById("fileDetails").textContent = `${sizeMB} MB • ${file.name.split('.').pop().toUpperCase()}`;
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const progressBar = document.getElementById("progressBar");
+      let pct = 0;
+      const timer = setInterval(() => {
+        if (pct < 90) {
+          pct += 15;
+          progressBar.style.width = pct + "%";
+        }
+      }, 100);
+
+      try {
+        const response = await fetch("/api/documents/upload", {
+          method: "POST",
+          body: formData
+        });
+        clearInterval(timer);
+
+        if (response.ok) {
+          progressBar.style.width = "100%";
+          setTimeout(() => {
+            uploadingState.classList.add("hidden");
+            completedState.classList.remove("hidden");
+            document.getElementById("uploadedName").textContent = file.name;
+            lucide.createIcons();
+          }, 300);
+        } else {
+          const errData = await response.json();
+          alert(errData.error || "Upload failed");
+          resetDropZone();
+        }
+      } catch (err) {
+        clearInterval(timer);
+        alert("Server connection failed");
+        resetDropZone();
+      }
+    }
+
+    function resetDropZone() {
+      idleState.classList.remove("hidden");
+      uploadingState.classList.add("hidden");
+      completedState.classList.add("hidden");
+    }
+  </script>
+</body>
+</html>

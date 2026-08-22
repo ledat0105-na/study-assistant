@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study AI - Intelligent Learning Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen relative overflow-x-hidden font-sans">
+
+  <!-- Background Glows -->
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-indigo-500/10 rounded-full blur-[160px] pointer-events-none"></div>
+  <div class="absolute top-[800px] right-1/4 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-[140px] pointer-events-none"></div>
+
+  <!-- Header -->
+  <header class="border-b border-slate-900 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50 transition-all">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="bg-gradient-to-tr from-indigo-500 to-purple-500 p-2 rounded-xl text-white shadow-lg">
+          <i data-lucide="sparkles" class="h-5 w-5"></i>
+        </div>
+        <span class="font-extrabold text-lg bg-gradient-to-r from-slate-100 to-indigo-200 bg-clip-text text-transparent">Study AI</span>
+      </div>
+
+      <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-400">
+        <a href="#features" class="hover:text-slate-100 transition-colors" data-i18n="nav_features">Features</a>
+        <a href="#pricing" class="hover:text-slate-100 transition-colors" data-i18n="nav_pricing">Pricing</a>
+        <a href="#faq" class="hover:text-slate-100 transition-colors" data-i18n="nav_faq">FAQ</a>
+      </nav>
+
+      <div class="flex items-center gap-4">
+        <a href="login.html" class="text-sm font-semibold text-slate-300 hover:text-slate-100 transition-colors" data-i18n="nav_signin">Đăng nhập</a>
+        <a href="register.html" class="px-4 py-2 bg-indigo-650 hover:bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-500/20 transition-all" data-i18n="nav_getstarted">
+          Get Started
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="max-w-7xl mx-auto px-6 pt-20 pb-24 text-center relative z-10">
+    <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-full text-xs font-semibold mb-6">
+      <i data-lucide="sparkles" class="h-3.5 w-3.5 animate-pulse"></i> Tiếp theo-Gen AI Learning Assistant
+    </div>
+    <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight max-w-4xl mx-auto leading-tight bg-gradient-to-b from-slate-100 via-slate-200 to-indigo-200 bg-clip-text text-transparent" data-i18n="hero_title">
+      Transform Complex Documents Into Interactive Sơ đồ kiến thứcs
+    </h1>
+    <p class="mt-6 text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed" data-i18n="hero_desc">
+      Upload your PDF or DOCX textbooks. Our AI automatically parses concepts, generates structured topic maps, creates active-recall flashcards, and builds customized quizzes.
+    </p>
+    <div class="mt-10 flex flex-wrap justify-center gap-4">
+      <a href="register.html" class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl text-sm font-bold shadow-xl shadow-indigo-500/25 transition-all flex items-center gap-2">
+        <span data-i18n="nav_getstarted">Get Started</span>
+        <i data-lucide="arrow-right" class="h-4 w-4"></i>
+      </a>
+      <a href="#features" class="px-6 py-3 bg-slate-900 border border-slate-800 hover:bg-slate-850 hover:border-slate-700 text-slate-300 rounded-xl text-sm font-bold transition-all" data-i18n="nav_features">
+        Explore Features
+      </a>
+    </div>
+  </section>
+
+  <!-- Features Bento Grid -->
+  <section id="features" class="max-w-7xl mx-auto px-6 py-20 border-t border-slate-900 relative z-10">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl font-extrabold bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent" data-i18n="features_title">
+        Everything you need to study smarter
+      </h2>
+      <p class="text-slate-400 mt-2" data-i18n="features_desc">AI-driven modules built to accelerate your retention rates</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-slate-900/40 border border-slate-850 p-8 rounded-3xl md:col-span-2 flex flex-col justify-between min-h-[300px]">
+        <div class="p-3 bg-indigo-950/60 text-indigo-400 border border-indigo-900/50 rounded-xl w-fit">
+          <i data-lucide="network" class="h-6 w-6"></i>
+        </div>
+        <div class="mt-8">
+          <h3 class="font-bold text-xl text-slate-200" data-i18n="detail_tool_map">Interactive Sơ đồ kiến thức</h3>
+          <p class="text-sm text-slate-450 mt-2 leading-relaxed" data-i18n="map_select_desc">
+            Visual concept mapping structures document lessons into expandable parent-child nodes. Clicking any topic node automatically jumps the PDF viewer to its specific starting page.
+          </p>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/40 border border-slate-850 p-8 rounded-3xl flex flex-col justify-between min-h-[300px]">
+        <div class="p-3 bg-purple-900/60 text-purple-400 border border-purple-900/50 rounded-xl w-fit">
+          <i data-lucide="book-open" class="h-6 w-6"></i>
+        </div>
+        <div class="mt-8">
+          <h3 class="font-bold text-xl text-slate-202" data-i18n="nav_flashcards">Active Thẻ ghi nhớs</h3>
+          <p class="text-sm text-slate-455 mt-2 leading-relaxed" data-i18n="flash_sub">
+            Flip active recall cards to study key definitions and rate your memory.
+          </p>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/40 border border-slate-850 p-8 rounded-3xl flex flex-col justify-between min-h-[300px]">
+        <div class="p-3 bg-amber-900/60 text-amber-400 border border-amber-900/50 rounded-xl w-fit">
+          <i data-lucide="help-circle" class="h-6 w-6"></i>
+        </div>
+        <div class="mt-8">
+          <h3 class="font-bold text-xl text-slate-202" data-i18n="detail_tool_quiz">AI Trắc nghiệm Engine</h3>
+          <p class="text-sm text-slate-455 mt-2 leading-relaxed" data-i18n="quiz_sub">
+            Auto-generate custom multiple-choice questionnaires to validate your score progress.
+          </p>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/40 border border-slate-850 p-8 rounded-3xl md:col-span-2 flex flex-col justify-between min-h-[300px]">
+        <div class="p-3 bg-emerald-900/60 text-emerald-405 border border-emerald-900/50 rounded-xl w-fit">
+          <i data-lucide="bar-chart-3" class="h-6 w-6"></i>
+        </div>
+        <div class="mt-8">
+          <h3 class="font-bold text-xl text-slate-202" data-i18n="nav_progress">Tiến độ học tập Tracking</h3>
+          <p class="text-sm text-slate-455 mt-2 leading-relaxed" data-i18n="progress_sub">
+            Monitor learning stages (`COMPLETED`, `LEARNING`, `NOT_STARTED`) and streaks on your personal stats dashboard.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing" class="max-w-7xl mx-auto px-6 py-20 border-t border-slate-900 relative z-10">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl font-extrabold bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent" data-i18n="pricing_title">Simple, transparent pricing</h2>
+      <p class="text-slate-400 mt-2" data-i18n="pricing_sub">Get access to premium learning tools today</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+      <div class="bg-slate-900/30 border border-slate-850 p-8 rounded-3xl flex flex-col justify-between">
+        <div>
+          <h3 class="font-bold text-lg text-slate-200">Gói Miễn phí (FREE)</h3>
+          <p class="text-slate-500 mt-1 text-sm" data-i18n="pricing_free_desc">Perfect for trial purposes</p>
+          <div class="my-6">
+            <span class="text-4xl font-extrabold">0đ</span>
+            <span class="text-xs text-slate-500">/ forever</span>
+          </div>
+          <ul class="space-y-3 text-xs text-slate-400">
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-indigo-400"></i> <span data-i18n="pricing_free_1">Upload up to 3 documents</span></li>
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-indigo-400"></i> <span data-i18n="pricing_free_2">Basic Sơ đồ kiến thứcs</span></li>
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-indigo-400"></i> <span data-i18n="pricing_free_3">10 Trắc nghiệmzes generated per month</span></li>
+          </ul>
+        </div>
+        <a href="register.html" class="mt-8 w-full text-center py-2.5 bg-slate-950 hover:bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold text-slate-300 transition-all" data-i18n="nav_getstarted">Đăng ký Free</a>
+      </div>
+
+      <div class="bg-gradient-to-b from-indigo-950/20 to-slate-900/30 border border-indigo-500/30 p-8 rounded-3xl flex flex-col justify-between relative overflow-hidden">
+        <div class="absolute top-4 right-4 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Most Popular</div>
+        <div>
+          <h3 class="font-bold text-lg text-slate-200">Gói Chuyên nghiệp (PRO)</h3>
+          <p class="text-indigo-400/80 mt-1 text-sm" data-i18n="pricing_pro_desc">Best for active learners</p>
+          <div class="my-6">
+            <span class="text-4xl font-extrabold">99.000đ</span>
+            <span class="text-xs text-slate-500">/ tháng</span>
+          </div>
+          <ul class="space-y-3 text-xs text-slate-350">
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-indigo-400"></i> <span data-i18n="pricing_pro_1">Unlimited file uploads</span></li>
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-indigo-400"></i> <span data-i18n="pricing_pro_2">Interactive Knowledge Trees</span></li>
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-indigo-400"></i> <span data-i18n="pricing_pro_3">Infinite flashcards and AI quizzes</span></li>
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-indigo-400"></i> <span data-i18n="pricing_pro_4">Premium dashboard progress insights</span></li>
+          </ul>
+        </div>
+        <a href="register.html" class="mt-8 w-full text-center py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg transition-all" data-i18n="nav_getstarted">Get Pro Access</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="max-w-4xl mx-auto px-6 py-20 border-t border-slate-900 relative z-10">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl font-extrabold bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent" data-i18n="faq_title">Frequently Asked Questions</h2>
+      <p class="text-slate-400 mt-2" data-i18n="faq_sub">Everything you need to know about the Study AI system</p>
+    </div>
+
+    <div class="space-y-4">
+      <div class="bg-slate-900/30 border border-slate-855 rounded-2xl overflow-hidden">
+        <button onclick="toggleFaq(1)" class="w-full text-left p-6 font-bold text-sm text-slate-202 flex justify-between items-center focus:outline-none">
+          <span data-i18n="faq_q_1">How does the Sơ đồ kiến thức link to the PDF?</span>
+          <i data-lucide="chevron-down" id="faqIcon-1" class="h-4 w-4 text-slate-455 transition-transform"></i>
+        </button>
+        <div id="faqContent-1" class="hidden px-6 pb-6 text-xs text-slate-400 leading-relaxed border-t border-slate-900/60 pt-4" data-i18n="faq_a_1">
+          Each concept node extracted by our AI has an associated page indicator (`pageStart`). When you click on any topic inside the tree structure, the right-side Trình đọc PDF automatically jumps to that page, allowing you to read context immediately.
+        </div>
+      </div>
+
+      <div class="bg-slate-900/30 border border-slate-855 rounded-2xl overflow-hidden">
+        <button onclick="toggleFaq(2)" class="w-full text-left p-6 font-bold text-sm text-slate-202 flex justify-between items-center focus:outline-none">
+          <span data-i18n="faq_q_2">What document file formats are supported?</span>
+          <i data-lucide="chevron-down" id="faqIcon-2" class="h-4 w-4 text-slate-455 transition-transform"></i>
+        </button>
+        <div id="faqContent-2" class="hidden px-6 pb-6 text-xs text-slate-400 leading-relaxed border-t border-slate-900/60 pt-4" data-i18n="faq_a_2">
+          We support PDF, DOCX, and PPTX slideshow files. Our parser scans images and layout boundaries to extract textual topics accurately.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-900 bg-slate-900 py-12 relative z-10 text-center">
+    <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+      <div class="flex items-center gap-2">
+        <div class="bg-indigo-600 p-1.5 rounded-lg text-white"><i data-lucide="sparkles" class="h-4 w-4"></i></div>
+        <span class="font-bold text-slate-200 text-sm">Study AI</span>
+      </div>
+      <p class="text-xs text-slate-500">&copy; 2026 Study Trợ lý AI. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="i18n.js"></script>
+  <script>
+    lucide.createIcons();
+
+    function toggleFaq(num) {
+      const content = document.getElementById("faqContent-" + num);
+      const icon = document.getElementById("faqIcon-" + num);
+      
+      const isOpen = !content.classList.contains("hidden");
+      if (isOpen) {
+        content.classList.add("hidden");
+        icon.classList.remove("rotate-180");
+      } else {
+        content.classList.remove("hidden");
+        icon.classList.add("rotate-180");
+      }
+    }
+  </script>
+</body>
+</html>
