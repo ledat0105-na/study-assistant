@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study AI - Quản Lý Người Dùng 3D</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style-3d.css">
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
+
+  <!-- 3D Sidebar -->
+  <aside></aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 md:p-10 overflow-y-auto relative z-10 space-y-8">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">
+          Quản Lý Người Dùng Toàn Hệ Thống
+        </h1>
+        <p class="text-slate-600 text-sm mt-1.5 font-semibold">Thêm tài khoản, đổi vai trò (ADMIN / STUDENT), phân gói dịch vụ (FREE / STUDENT / PRO), khóa/mở khóa & xóa tài khoản</p>
+      </div>
+      <button onclick="openUserModal()" class="btn-3d btn-3d-primary px-5 py-3 text-xs font-extrabold shadow-xl shadow-indigo-500/30 flex items-center gap-2">
+        <i data-lucide="user-plus" class="h-4 w-4"></i> Thêm Người Dùng Mới
+      </button>
+    </div>
+
+    <!-- Users Table Card -->
+    <div class="glass-3d-card rounded-3xl overflow-hidden shadow-2xl">
+      <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-white/90">
+        <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2.5">
+          <i data-lucide="users" class="h-5 w-5 text-indigo-600"></i> Danh Sách Tài Khoản Trong CSDL
+        </h3>
+        <span id="userCountBadge" class="badge-3d badge-3d-indigo">0 Thành viên</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="bg-slate-100/90 text-slate-600 font-extrabold uppercase border-b border-slate-200">
+              <th class="p-4 pl-6">ID</th>
+              <th class="p-4">Họ Và Tên</th>
+              <th class="p-4">Username</th>
+              <th class="p-4">Email</th>
+              <th class="p-4">Vai Trò (Role)</th>
+              <th class="p-4">Gói Dịch Vụ</th>
+              <th class="p-4">Trạng Thái</th>
+              <th class="p-4 text-center pr-6">Thao Tác Quản Lý</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody" class="divide-y divide-slate-200">
+            <tr>
+              <td colspan="8" class="p-8 text-center text-slate-500 font-semibold">Đang tải danh sách người dùng...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- User Modal Popup -->
+  <div id="userModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
+    <div class="glass-3d-card max-w-lg w-full p-8 shadow-2xl relative border-slate-300 rounded-3xl space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+        <h3 id="userModalTitle" class="text-xl font-extrabold text-slate-900">Quản Lý Thông Tin Người Dùng</h3>
+        <button type="button" onclick="closeUserModal()" class="text-slate-400 hover:text-slate-800 p-1.5 rounded-xl">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+
+      <form id="userForm" onsubmit="event.preventDefault(); submitUserForm();" class="space-y-4">
+        <input type="hidden" id="editUserId" />
+
+        <div>
+          <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1">Họ Và Tên</label>
+          <input type="text" id="userFullName" placeholder="Nguyễn Văn A" required class="input-3d w-full font-semibold" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1">Tên Đăng Nhập</label>
+            <input type="text" id="userUsername" placeholder="username123" required class="input-3d w-full font-semibold" />
+          </div>
+          <div>
+            <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1">Email</label>
+            <input type="email" id="userEmail" placeholder="user@gmail.com" required class="input-3d w-full font-semibold" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1">Vai Trò (Role)</label>
+            <select id="userRole" class="input-3d w-full font-semibold">
+              <option value="STUDENT">STUDENT (Học viên)</option>
+              <option value="ADMIN">ADMIN (Quản trị viên)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1">Gói Dịch Vụ (Plan)</label>
+            <select id="userPlan" class="input-3d w-full font-semibold">
+              <option value="FREE">Gói FREE</option>
+              <option value="STUDENT">Gói STUDENT (49k)</option>
+              <option value="PRO">Gói PRO (99k)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1">Trạng Thái Tài Khoản</label>
+          <select id="userStatus" class="input-3d w-full font-semibold">
+            <option value="ACTIVE">ACTIVE (Đang hoạt động)</option>
+            <option value="LOCKED">LOCKED (Bị khóa)</option>
+          </select>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 border-t border-slate-200">
+          <button type="button" onclick="closeUserModal()" class="btn-3d btn-3d-secondary py-2.5 px-5 text-xs font-bold">Hủy</button>
+          <button type="submit" class="btn-3d btn-3d-primary py-2.5 px-6 text-xs font-bold shadow-lg shadow-indigo-500/30">
+            Lưu Thông Tin Người Dùng
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="auth-interceptor.js"></script>
+  <script src="sidebar.js"></script>
+  <script>
+    renderUnifiedSidebar("admin-users");
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if ((user.role || "FREE").toUpperCase() !== "ADMIN") {
+      alert("Quyền truy cập bị từ chối! Trang này chỉ dành cho Quản trị viên.");
+      window.location.href = "dashboard.html";
+    }
+
+    let allUsersList = [];
+
+    async function loadAdminUsers() {
+      try {
+        const res = await fetch("/api/admin/users");
+        if (res.ok) {
+          allUsersList = await res.json();
+          renderUsersTable();
+        }
+      } catch (err) {
+        console.error("Lỗi nạp danh sách người dùng:", err);
+      }
+    }
+
+    function renderUsersTable() {
+      const tbody = document.getElementById("usersTableBody");
+      tbody.innerHTML = "";
+      document.getElementById("userCountBadge").textContent = `${allUsersList.length} Thành viên`;
+
+      if (allUsersList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-500 font-semibold">Chưa có người dùng nào trong CSDL.</td></tr>`;
+        return;
+      }
+
+      allUsersList.forEach(u => {
+        const isAdminUser = (u.role || "").toUpperCase() === "ADMIN";
+        const isLocked = (u.status || "").toUpperCase() === "LOCKED";
+
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50 transition-colors";
+        tr.innerHTML = `
+          <td class="p-4 pl-6 font-mono font-bold text-slate-500">${u.id}</td>
+          <td class="p-4 font-extrabold text-slate-900">${u.fullName || u.username}</td>
+          <td class="p-4 font-mono font-semibold text-indigo-700">${u.username}</td>
+          <td class="p-4 text-slate-600 font-semibold">${u.email}</td>
+          <td class="p-4 font-extrabold ${isAdminUser ? 'text-rose-600' : 'text-indigo-700'}">
+            <span class="badge-3d ${isAdminUser ? 'badge-3d-indigo text-rose-700' : 'badge-3d-indigo'} text-[10px]">
+              ${u.role || 'STUDENT'}
+            </span>
+          </td>
+          <td class="p-4 font-bold text-slate-800">${u.plan || 'FREE'}</td>
+          <td class="p-4">
+            <span class="badge-3d ${isLocked ? 'badge-3d-indigo text-rose-600' : 'badge-3d-emerald'} text-[10px]">
+              ${u.status || 'ACTIVE'}
+            </span>
+          </td>
+          <td class="p-4 text-center pr-6 flex justify-center gap-2">
+            <button onclick="openEditUserModal(${u.id})" class="btn-3d btn-3d-primary px-3 py-1.5 text-xs font-bold shadow-md">Sửa / Role</button>
+            <button onclick="toggleUserLock(${u.id}, '${u.status}')" class="btn-3d btn-3d-secondary px-3 py-1.5 text-xs font-bold">
+              ${isLocked ? 'Mở Khóa' : 'Khóa'}
+            </button>
+            <button onclick="deleteUser(${u.id})" class="btn-3d btn-3d-secondary px-2.5 py-1.5 text-xs font-bold !text-rose-600" title="Xóa tài khoản">
+              <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      lucide.createIcons();
+    }
+
+    function openUserModal() {
+      document.getElementById("userForm").reset();
+      document.getElementById("editUserId").value = "";
+      document.getElementById("userUsername").readOnly = false;
+      document.getElementById("userModalTitle").textContent = "Thêm Người Dùng Mới";
+      document.getElementById("userModal").classList.remove("hidden");
+    }
+
+    function closeUserModal() {
+      document.getElementById("userModal").classList.add("hidden");
+    }
+
+    function openEditUserModal(id) {
+      const u = allUsersList.find(item => item.id === id);
+      if (!u) return;
+
+      document.getElementById("editUserId").value = u.id;
+      document.getElementById("userFullName").value = u.fullName || "";
+      document.getElementById("userUsername").value = u.username || "";
+      document.getElementById("userUsername").readOnly = true;
+      document.getElementById("userEmail").value = u.email || "";
+      document.getElementById("userRole").value = (u.role || "STUDENT").toUpperCase();
+      document.getElementById("userPlan").value = (u.plan || "FREE").toUpperCase();
+      document.getElementById("userStatus").value = (u.status || "ACTIVE").toUpperCase();
+
+      document.getElementById("userModalTitle").textContent = `Chỉnh Sửa Người Dùng: ${u.username}`;
+      document.getElementById("userModal").classList.remove("hidden");
+    }
+
+    async function submitUserForm() {
+      const id = document.getElementById("editUserId").value;
+      const isCreate = !id;
+
+      const userData = {
+        fullName: document.getElementById("userFullName").value,
+        username: document.getElementById("userUsername").value,
+        email: document.getElementById("userEmail").value,
+        role: document.getElementById("userRole").value,
+        plan: document.getElementById("userPlan").value,
+        status: document.getElementById("userStatus").value
+      };
+
+      const url = isCreate ? "/api/admin/users" : `/api/admin/users/${id}`;
+      const method = isCreate ? "POST" : "PUT";
+
+      try {
+        const res = await fetch(url, {
+          method: method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(userData)
+        });
+
+        if (res.ok) {
+          alert("Lưu thông tin người dùng thành công!");
+          closeUserModal();
+          loadAdminUsers();
+        } else {
+          const errData = await res.json();
+          alert(errData.error || "Thao tác không thành công!");
+        }
+      } catch (err) {
+        alert("Lỗi kết nối máy chủ.");
+      }
+    }
+
+    async function toggleUserLock(userId, currentStatus) {
+      const newStatus = (currentStatus || "").toUpperCase() === "LOCKED" ? "ACTIVE" : "LOCKED";
+      if (!confirm(`Bạn có chắc muốn chuyển trạng thái tài khoản sang ${newStatus}?`)) return;
+
+      try {
+        const res = await fetch(`/api/admin/users/${userId}/status`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: newStatus, reason: "Khóa/Mở khóa bởi Admin qua UI" })
+        });
+
+        if (res.ok) {
+          alert(`Đã đổi trạng thái tài khoản thành ${newStatus}!`);
+          loadAdminUsers();
+        } else {
+          alert("Thao tác thất bại.");
+        }
+      } catch (err) {
+        alert("Lỗi kết nối máy chủ.");
+      }
+    }
+
+    async function deleteUser(userId) {
+      if (!confirm("CẢNH BÁO: Xóa người dùng này khỏi CSDL? Tất cả dữ liệu liên quan sẽ bị loại bỏ!")) return;
+      try {
+        const res = await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
+        if (res.ok) {
+          alert("Đã xóa người dùng thành công.");
+          loadAdminUsers();
+        } else {
+          const err = await res.json();
+          alert(err.error || "Thao tác thất bại.");
+        }
+      } catch (err) {
+        alert("Lỗi kết nối máy chủ.");
+      }
+    }
+
+    loadAdminUsers();
+    lucide.createIcons();
+  </script>
+</body>
+</html>

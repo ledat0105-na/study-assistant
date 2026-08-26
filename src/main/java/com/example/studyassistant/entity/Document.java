@@ -1,11 +1,12 @@
 package com.example.studyassistant.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "documents")
@@ -17,9 +18,15 @@ public class Document {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "notebook_id", nullable = true)
+    @JsonIgnore
+    private Notebook notebook;
 
     @Column(name = "file_name", nullable = false)
     @JsonProperty("title")
@@ -29,6 +36,7 @@ public class Document {
     private String originalName;
 
     @Column(name = "file_path", nullable = false)
+    @JsonIgnore
     private String filePath;
 
     @Column(name = "file_type")
@@ -43,11 +51,17 @@ public class Document {
     private Integer totalPages;
 
     @Column(nullable = false)
-    private String status; // "UPLOADED", "PROCESSING", "READY"
+    private String status = "UPLOADING"; // "UPLOADING", "PROCESSING", "READY", "FAILED"
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "retry_count")
+    private Integer retryCount = 0;
+
+    @Column(name = "error_message")
+    private String errorMessage; // Thông báo lỗi thân thiện, không lộ stacktrace
+
+    @Column(name = "created_at")
     @JsonProperty("uploadDate")
-    private LocalDate createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @JsonProperty("size")
     public String getSize() {

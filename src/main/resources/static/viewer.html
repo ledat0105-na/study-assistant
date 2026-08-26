@@ -1,149 +1,158 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Study AI - Notebook Studio</title>
+  <title>Study AI - Notebook Studio 3D</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style-3d.css">
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans relative overflow-hidden">
 
-  <!-- Top Navigation Bar -->
-  <header class="border-b border-slate-900 bg-slate-900/60 backdrop-blur-md px-6 py-3 flex items-center justify-between sticky top-0 z-30">
+  <!-- 3D Background Orbs -->
+  <div class="orb-container">
+    <div class="orb-3d orb-1"></div>
+    <div class="orb-3d orb-2"></div>
+    <div class="orb-3d orb-3"></div>
+  </div>
+
+  <!-- Top Navigation Bar 3D -->
+  <header class="glass-3d sticky top-0 z-30 border-b border-slate-200/80 px-6 py-3.5 flex items-center justify-between">
     <div class="flex items-center gap-4">
-      <a href="dashboard.html" class="p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-xl transition-all">
+      <a href="dashboard.html" class="btn-3d btn-3d-secondary p-2 text-slate-700">
         <i data-lucide="arrow-left" class="h-4 w-4"></i>
       </a>
-      <div class="flex items-center gap-2">
-        <div class="bg-indigo-600 p-1.5 rounded-lg text-white"><i data-lucide="book-open" class="h-4 w-4"></i></div>
-        <span id="notebookTitle" class="font-bold text-slate-200 text-sm truncate max-w-xs md:max-w-md">Danh sách tài liệu học tập</span>
+      <div class="flex items-center gap-3">
+        <div class="bg-gradient-to-tr from-indigo-600 to-purple-600 p-2 rounded-xl text-white shadow-md">
+          <i data-lucide="sparkles" class="h-4 w-4"></i>
+        </div>
+        <span id="notebookTitle" class="font-extrabold text-slate-900 text-sm truncate max-w-xs md:max-w-md">Danh sách tài liệu học tập 3D</span>
       </div>
     </div>
 
     <div class="flex items-center gap-3">
-      <button onclick="window.location.href='upload.html'" class="px-3.5 py-1.5 bg-indigo-650 hover:bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-lg transition-all flex items-center gap-1.5">
-        <i data-lucide="plus" class="h-3.5 w-3.5"></i> <span data-i18n="db_upload_btn">Tải lên tài liệu</span>
+      <button onclick="window.location.href='upload.html'" class="btn-3d btn-3d-primary px-4 py-2 text-xs font-bold shadow-lg shadow-indigo-500/30">
+        <i data-lucide="plus" class="h-3.5 w-3.5"></i> <span>Tải lên tài liệu</span>
       </button>
-      <span class="text-[10px] font-extrabold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full">PRO</span>
-      <div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-md">JD</div>
+      <span class="badge-3d badge-3d-indigo text-[10px]">3D AURORA PRO</span>
     </div>
   </header>
 
   <!-- Main 3-Column Layout -->
-  <div class="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 p-6 h-[calc(100vh-64px)] min-h-0 overflow-hidden">
+  <div class="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 p-6 h-[calc(100vh-68px)] min-h-0 overflow-hidden relative z-10">
     
     <!-- Column 1: Sources (Nguồn) -->
-    <div class="bg-slate-900/30 border border-slate-850 rounded-3xl p-6 flex flex-col h-full min-h-0 overflow-hidden">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="font-bold text-sm text-slate-200 uppercase tracking-wider flex items-center gap-2">
-          <i data-lucide="folder-open" class="h-4 w-4 text-indigo-400"></i> Nguồn
+    <div class="glass-3d-card p-6 flex flex-col h-full min-h-0 overflow-hidden">
+      <div class="flex justify-between items-center mb-4 border-b border-slate-200 pb-3">
+        <h3 class="font-extrabold text-xs text-slate-900 uppercase tracking-wider flex items-center gap-2">
+          <i data-lucide="folder-open" class="h-4 w-4 text-indigo-600"></i> Nguồn Tài Liệu
         </h3>
-        <span id="sourceCount" class="text-xs text-slate-505 font-bold font-mono">0 tài liệu</span>
+        <span id="sourceCount" class="badge-3d badge-3d-indigo text-[10px]">0 tài liệu</span>
       </div>
 
       <!-- Add source button -->
-      <a href="upload.html" class="w-full py-3 px-4 border border-dashed border-slate-800 hover:border-slate-700 bg-slate-955/40 hover:bg-slate-900/30 rounded-2xl text-xs font-bold text-slate-400 hover:text-slate-202 flex items-center justify-center gap-2 mb-4 transition-all">
-        <i data-lucide="plus" class="h-4 w-4"></i> Thêm nguồn học tập
+      <a href="upload.html" class="btn-3d btn-3d-secondary py-3 px-4 text-xs font-bold mb-4">
+        <i data-lucide="plus" class="h-4 w-4"></i> Thêm Nguồn Học Tập
       </a>
 
       <!-- Selection controls -->
-      <div class="flex justify-between items-center mb-3 text-[10px] text-slate-500 font-semibold px-1">
-        <button onclick="selectAllSources()" class="hover:text-indigo-400 transition-colors">Chọn tất cả</button>
-        <button onclick="deselectAllSources()" class="hover:text-indigo-400 transition-colors">Bỏ chọn tất cả</button>
+      <div class="flex justify-between items-center mb-3 text-[10px] font-extrabold text-slate-600 px-1">
+        <button onclick="selectAllSources()" class="hover:text-indigo-600 transition-colors">Chọn tất cả</button>
+        <button onclick="deselectAllSources()" class="hover:text-indigo-600 transition-colors">Bỏ chọn tất cả</button>
       </div>
 
       <!-- Sources List -->
-      <div id="sourcesList" class="flex-1 overflow-y-auto space-y-2 pr-1">
-        <div class="text-center py-8 text-xs text-slate-500 font-medium">Đang tải nguồn tài liệu...</div>
+      <div id="sourcesList" class="flex-1 overflow-y-auto space-y-2.5 pr-1">
+        <div class="text-center py-8 text-xs text-slate-500 font-semibold">Đang tải danh sách tài liệu...</div>
       </div>
     </div>
 
     <!-- Column 2 & 3: Chat Assistant (Cuộc trò chuyện) -->
-    <div class="lg:col-span-2 bg-slate-900/30 border border-slate-855 rounded-3xl p-6 flex flex-col h-full min-h-0 overflow-hidden relative">
-      <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-850/60">
-        <h3 class="font-bold text-sm text-slate-202 flex items-center gap-2">
-          <i data-lucide="message-square" class="h-4 w-4 text-indigo-400"></i> Cuộc trò chuyện
+    <div class="lg:col-span-2 glass-3d-card p-6 flex flex-col h-full min-h-0 overflow-hidden relative">
+      <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200">
+        <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+          <i data-lucide="bot" class="h-4 w-4 text-indigo-600"></i> Trợ Lý Hỏi Đáp Chatbot AI
         </h3>
-        <span class="text-[10px] text-slate-505 font-bold uppercase tracking-wider bg-slate-950 px-2 py-0.5 rounded-lg border border-slate-850">GPT-4o-Mini Active</span>
+        <span class="badge-3d badge-3d-emerald text-[10px]">AI MODEL ACTIVE</span>
       </div>
 
       <!-- Message stream -->
-      <div id="chatMessages" class="flex-1 overflow-y-auto space-y-4 mb-4 pr-1 text-xs">
+      <div id="chatMessages" class="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 text-xs">
         <div class="flex justify-start mb-4">
-          <div class="bg-indigo-950/40 border border-indigo-900/50 rounded-2xl px-4 py-3 text-slate-300 leading-relaxed max-w-[85%]">
-            Chào mừng bạn đến với Studio Học tập! Tôi là trợ lý AI. Tôi đã sẵn sàng phân tích các nguồn tài liệu của bạn. Bạn có thể tích chọn một hoặc nhiều tài liệu cùng lúc ở cột bên trái và hỏi tôi các kiến thức liên quan nhé!
+          <div class="bg-indigo-50/90 border border-indigo-200 rounded-2xl p-4 text-slate-800 leading-relaxed max-w-[88%] shadow-sm font-semibold">
+            Chào mừng bạn đến với Phòng Chatbot AI 3D! Bạn có thể chọn các tài liệu bên trái để đặt câu hỏi, yêu cầu tóm tắt hoặc giải thích ngữ cảnh chi tiết.
           </div>
         </div>
       </div>
 
       <!-- Prompt Input bar -->
       <form id="chatForm" class="relative mt-auto">
-        <input type="text" id="chatInput" placeholder="Đặt câu hỏi hoặc tạo nội dung từ nguồn của bạn..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-4 pr-12 py-3 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-slate-700 focus:ring-1 focus:ring-slate-700 transition-all" />
-        <button type="submit" class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 bg-indigo-650 hover:bg-indigo-600 text-white rounded-xl transition-all shadow-md">
+        <input type="text" id="chatInput" placeholder="Đặt câu hỏi hoặc yêu cầu AI từ tài liệu của bạn..." class="input-3d w-full pl-4 pr-14 py-3.5 text-xs font-semibold" />
+        <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 btn-3d btn-3d-primary p-2 text-white shadow-md">
           <i data-lucide="arrow-up" class="h-4 w-4"></i>
         </button>
       </form>
     </div>
 
     <!-- Column 4: Studio Toolkit -->
-    <div class="bg-slate-900/30 border border-slate-850 rounded-3xl p-6 flex flex-col h-full min-h-0 overflow-hidden">
-      <div class="mb-4">
-        <h3 class="font-bold text-sm text-slate-202 uppercase tracking-wider flex items-center gap-2">
-          <i data-lucide="compass" class="h-4 w-4 text-purple-400"></i> Studio
+    <div class="glass-3d-card p-6 flex flex-col h-full min-h-0 overflow-hidden">
+      <div class="mb-4 border-b border-slate-200 pb-3">
+        <h3 class="font-extrabold text-xs text-slate-900 uppercase tracking-wider flex items-center gap-2">
+          <i data-lucide="grid" class="h-4 w-4 text-purple-600"></i> Bộ Công Cụ 3D
         </h3>
       </div>
 
       <div class="flex-1 overflow-y-auto space-y-3 pr-1">
         <!-- PDF Reader card -->
-        <button id="toolRead" class="w-full text-left p-4 bg-slate-950/40 border border-slate-850 hover:border-slate-700/80 rounded-2xl transition-all flex items-center justify-between group">
+        <button id="toolRead" class="glass-3d-card w-full text-left p-4 hover:border-indigo-400 flex items-center justify-between group">
           <div>
-            <h4 class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i data-lucide="file-text" class="h-3.5 w-3.5 text-indigo-400"></i> Đọc tài liệu PDF</h4>
-            <p class="text-[10px] text-slate-505 mt-1 leading-normal">Đọc trực tiếp với chế độ xem song song</p>
+            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2"><i data-lucide="book-open" class="h-4 w-4 text-indigo-600"></i> Đọc Tài Liệu PDF</h4>
+            <p class="text-[10px] text-slate-500 font-semibold mt-1">Đọc trực tiếp chế độ song song</p>
           </div>
-          <i data-lucide="chevron-right" class="h-4 w-4 text-slate-500 group-hover:text-slate-200 transition-transform group-hover:translate-x-0.5"></i>
+          <i data-lucide="chevron-right" class="h-4 w-4 text-slate-400 group-hover:text-indigo-600 transition-transform group-hover:translate-x-1"></i>
         </button>
 
         <!-- Mind Map card -->
-        <button id="toolMap" class="w-full text-left p-4 bg-slate-950/40 border border-slate-850 hover:border-slate-700/80 rounded-2xl transition-all flex items-center justify-between group">
+        <button id="toolMap" class="glass-3d-card w-full text-left p-4 hover:border-purple-400 flex items-center justify-between group">
           <div>
-            <h4 class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i data-lucide="network" class="h-3.5 w-3.5 text-purple-400"></i> Bản đồ tư duy</h4>
-            <p class="text-[10px] text-slate-550 mt-1 leading-normal">Khám phá cấu trúc sơ đồ kiến thức liên kết</p>
+            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2"><i data-lucide="network" class="h-4 w-4 text-purple-600"></i> Sơ Đồ Tư Duy 3D</h4>
+            <p class="text-[10px] text-slate-500 font-semibold mt-1">Sơ đồ chủ đề liên kết tự động</p>
           </div>
-          <i data-lucide="chevron-right" class="h-4 w-4 text-slate-500 group-hover:text-slate-200 transition-transform group-hover:translate-x-0.5"></i>
+          <i data-lucide="chevron-right" class="h-4 w-4 text-slate-400 group-hover:text-purple-600 transition-transform group-hover:translate-x-1"></i>
         </button>
 
         <!-- Flashcards card -->
-        <button id="toolFlash" class="w-full text-left p-4 bg-slate-950/40 border border-slate-850 hover:border-slate-700/80 rounded-2xl transition-all flex items-center justify-between group">
+        <button id="toolFlash" class="glass-3d-card w-full text-left p-4 hover:border-amber-400 flex items-center justify-between group">
           <div>
-            <h4 class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i data-lucide="book-open" class="h-3.5 w-3.5 text-amber-400"></i> Thẻ ghi nhớ (Flashcards)</h4>
-            <p class="text-[10px] text-slate-550 mt-1 leading-normal">Luyện trí nhớ bằng phương pháp lật thẻ chủ động</p>
+            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2"><i data-lucide="layers" class="h-4 w-4 text-amber-600"></i> Thẻ Flashcard Lật 3D</h4>
+            <p class="text-[10px] text-slate-500 font-semibold mt-1">Ôn tập chủ động Active Recall</p>
           </div>
-          <i data-lucide="chevron-right" class="h-4 w-4 text-slate-500 group-hover:text-slate-200 transition-transform group-hover:translate-x-0.5"></i>
+          <i data-lucide="chevron-right" class="h-4 w-4 text-slate-400 group-hover:text-amber-600 transition-transform group-hover:translate-x-1"></i>
         </button>
 
         <!-- Quiz card -->
-        <button id="toolQuiz" class="w-full text-left p-4 bg-slate-950/40 border border-slate-850 hover:border-slate-700/80 rounded-2xl transition-all flex items-center justify-between group">
+        <button id="toolQuiz" class="glass-3d-card w-full text-left p-4 hover:border-emerald-400 flex items-center justify-between group">
           <div>
-            <h4 class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i data-lucide="help-circle" class="h-3.5 w-3.5 text-emerald-455"></i> Bài kiểm tra trắc nghiệm</h4>
-            <p class="text-[10px] text-slate-550 mt-1 leading-normal">Tự động tạo câu hỏi trắc nghiệm đánh giá điểm</p>
+            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2"><i data-lucide="help-circle" class="h-4 w-4 text-emerald-600"></i> Trắc Nghiệm Tự Động</h4>
+            <p class="text-[10px] text-slate-500 font-semibold mt-1">Tạo bài thi đánh giá trình độ</p>
           </div>
-          <i data-lucide="chevron-right" class="h-4 w-4 text-slate-500 group-hover:text-slate-200 transition-transform group-hover:translate-x-0.5"></i>
+          <i data-lucide="chevron-right" class="h-4 w-4 text-slate-400 group-hover:text-emerald-600 transition-transform group-hover:translate-x-1"></i>
         </button>
 
         <!-- Report card -->
-        <button id="toolReport" class="w-full text-left p-4 bg-slate-950/40 border border-slate-855 hover:border-slate-700/80 rounded-2xl transition-all flex items-center justify-between group">
+        <button id="toolReport" class="glass-3d-card w-full text-left p-4 hover:border-rose-400 flex items-center justify-between group">
           <div>
-            <h4 class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i data-lucide="clipboard" class="h-3.5 w-3.5 text-rose-400"></i> Báo cáo & Tóm tắt khái niệm</h4>
-            <p class="text-[10px] text-slate-550 mt-1 leading-normal">Xem thông tin tóm tắt và khái niệm chi tiết</p>
+            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2"><i data-lucide="clipboard" class="h-4 w-4 text-rose-600"></i> Tóm Tắt Chi Tiết</h4>
+            <p class="text-[10px] text-slate-500 font-semibold mt-1">Trích xuất khái niệm nhanh</p>
           </div>
-          <i data-lucide="chevron-right" class="h-4 w-4 text-slate-500 group-hover:text-slate-200 transition-transform group-hover:translate-x-0.5"></i>
+          <i data-lucide="chevron-right" class="h-4 w-4 text-slate-400 group-hover:text-rose-600 transition-transform group-hover:translate-x-1"></i>
         </button>
       </div>
 
-      <div class="border-t border-slate-850/60 pt-4 mt-auto">
-        <a href="dashboard.html" class="w-full py-2.5 bg-slate-900 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold hover:bg-slate-800 flex items-center justify-center gap-2 transition-all">
-          <i data-lucide="layout-dashboard" class="h-4 w-4"></i> Quay lại Dashboard
+      <div class="border-t border-slate-200 pt-4 mt-auto">
+        <a href="dashboard.html" class="btn-3d btn-3d-secondary w-full py-2.5 text-xs font-bold">
+          <i data-lucide="layout-dashboard" class="h-4 w-4"></i> Trở Về Bảng Điều Khiển
         </a>
       </div>
     </div>
@@ -167,7 +176,6 @@
           documents = await response.json();
           document.getElementById("sourceCount").textContent = `${documents.length} tài liệu`;
 
-          // Select the first document by default if list is not empty
           if (documents.length > 0) {
             selectedDocIds = [documents[0].id];
           }
@@ -176,7 +184,7 @@
           updateActiveDocumentDetails();
         }
       } catch (err) {
-        console.error("Failed to load documents", err);
+        console.error("Lỗi nạp danh sách tài liệu", err);
       }
     }
 
@@ -185,32 +193,32 @@
       container.innerHTML = "";
 
       if (documents.length === 0) {
-        container.innerHTML = `<div class="text-center py-8 text-xs text-slate-500">Chưa có nguồn tài liệu nào. Vui lòng thêm tài liệu.</div>`;
+        container.innerHTML = `<div class="text-center py-8 text-xs text-slate-500 font-semibold">Chưa có nguồn tài liệu nào.</div>`;
         return;
       }
 
       documents.forEach(doc => {
         const isChecked = selectedDocIds.includes(doc.id);
         const div = document.createElement("div");
-        div.className = `p-3 rounded-xl border transition-all flex items-center gap-3 ${
+        div.className = `p-3 rounded-2xl border transition-all flex items-center gap-3 ${
           isChecked
-            ? "border-indigo-500 bg-indigo-500/10 text-slate-200"
-            : "border-slate-850 bg-slate-950/40 hover:bg-slate-900/30 text-slate-400 hover:text-slate-200"
+            ? "border-indigo-400 bg-indigo-50/80 text-slate-900 shadow-sm"
+            : "border-slate-200 bg-white/90 hover:bg-slate-50 text-slate-700"
         }`;
         div.innerHTML = `
-          <div onclick="toggleDocument(${doc.id})" class="p-2 bg-slate-900 border border-slate-800 rounded-lg text-rose-400 flex items-center justify-center cursor-pointer">
+          <div onclick="toggleDocument(${doc.id})" class="p-2 bg-indigo-50 border border-indigo-200 rounded-xl text-indigo-600 flex items-center justify-center cursor-pointer">
             <i data-lucide="file-text" class="h-4 w-4"></i>
           </div>
           <div onclick="toggleDocument(${doc.id})" class="flex-1 min-w-0 cursor-pointer">
-            <p class="text-xs font-bold truncate">${doc.title || doc.fileName}</p>
-            <p class="text-[10px] text-slate-500 mt-0.5 uppercase font-mono">${doc.format || doc.fileType}</p>
+            <p class="text-xs font-extrabold truncate">${doc.title || doc.fileName}</p>
+            <p class="text-[10px] text-slate-500 mt-0.5 uppercase font-mono font-bold">${doc.format || doc.fileType}</p>
           </div>
           <div class="flex items-center gap-2">
-            <button onclick="deleteDocument(${doc.id})" class="p-1.5 rounded-lg border bg-slate-950 hover:bg-rose-500/15 border-slate-800 text-slate-400 hover:text-rose-455 transition-all" title="Xóa tài liệu">
+            <button onclick="deleteDocument(${doc.id})" class="p-1.5 rounded-lg border bg-white hover:bg-rose-50 border-slate-200 text-slate-400 hover:text-rose-600 transition-all" title="Xóa tài liệu">
               <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
             </button>
             <div onclick="toggleDocument(${doc.id})" class="w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 cursor-pointer transition-all ${
-              isChecked ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-slate-800 bg-slate-950'
+              isChecked ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-slate-300 bg-white'
             }">
               ${isChecked ? '<i data-lucide="check" class="h-3 w-3"></i>' : ''}
             </div>
@@ -222,19 +230,15 @@
     }
 
     async function deleteDocument(id) {
-      if (!confirm("Bạn có chắc chắn muốn xóa tài liệu này không? Hành động này không thể hoàn tác.")) return;
+      if (!confirm("Bạn có chắc chắn muốn xóa tài liệu này không?")) return;
       try {
         const response = await fetch(`/api/documents/${id}`, { method: "DELETE" });
         if (response.ok) {
-          alert("Xóa tài liệu thành công!");
           selectedDocIds = selectedDocIds.filter(dId => dId !== id);
           loadDocuments();
-        } else {
-          alert("Lỗi khi xóa tài liệu.");
         }
       } catch (err) {
         console.error(err);
-        alert("Lỗi kết nối máy chủ.");
       }
     }
 
@@ -266,8 +270,6 @@
       
       if (selectedDocIds.length === 0) {
         titleLabel.textContent = "Vui lòng chọn nguồn tài liệu";
-        
-        // Disable tools if no document is selected
         const disableTool = () => alert("Vui lòng chọn ít nhất một nguồn tài liệu ở cột bên trái!");
         document.getElementById("toolRead").onclick = disableTool;
         document.getElementById("toolMap").onclick = disableTool;
@@ -286,7 +288,6 @@
         titleLabel.textContent = `Đang chọn ${selectedDocIds.length} nguồn tài liệu`;
       }
 
-      // Toolkit uses the first selected document context
       const primaryDocId = selectedDocIds[0];
       document.getElementById("toolRead").onclick = () => window.location.href = `reader.html?id=${primaryDocId}`;
       document.getElementById("toolMap").onclick = () => window.location.href = `map.html?id=${primaryDocId}`;
@@ -313,12 +314,11 @@
       chatInput.value = "";
       appendMessage("user", txt);
 
-      // Show typing indicator
       const typingDiv = document.createElement("div");
       typingDiv.className = "flex justify-start mb-4";
       typingDiv.innerHTML = `
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-indigo-400 font-semibold max-w-[80%] flex items-center gap-1.5">
-          <i data-lucide="loader-2" class="h-3 w-3 animate-spin"></i> <span>Trợ lý đang suy nghĩ...</span>
+        <div class="bg-white border border-slate-200 rounded-2xl p-3 text-xs text-indigo-600 font-extrabold max-w-[80%] flex items-center gap-2 shadow-sm">
+          <i data-lucide="loader-2" class="h-4 w-4 animate-spin"></i> <span>Trợ lý AI đang suy nghĩ...</span>
         </div>
       `;
       chatMessages.appendChild(typingDiv);
@@ -328,13 +328,8 @@
       try {
         const response = await fetch("/api/ai/chat", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ 
-            message: txt,
-            docIds: selectedDocIds
-          })
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: txt, docIds: selectedDocIds })
         });
 
         chatMessages.removeChild(typingDiv);
@@ -343,7 +338,7 @@
           const data = await response.json();
           appendMessage("ai", data.response);
         } else {
-          appendMessage("ai", "Lỗi: Không thể kết nối API AI. Vui lòng kiểm tra lại cấu hình API.");
+          appendMessage("ai", "Lỗi: Phản hồi từ API AI không thành công.");
         }
       } catch (err) {
         if (chatMessages.contains(typingDiv)) {
@@ -361,9 +356,9 @@
       div.innerHTML = `
         <div class="${
           isUser
-            ? "bg-indigo-655 text-white rounded-2xl"
-            : "bg-slate-900 border border-slate-800 text-slate-300 rounded-2xl"
-        } px-4 py-3 leading-relaxed max-w-[85%]">
+            ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl shadow-md"
+            : "bg-white border border-slate-200 text-slate-800 rounded-2xl shadow-sm font-semibold"
+        } p-3.5 leading-relaxed max-w-[88%] font-medium">
           ${text.replace(/\n/g, "<br>")}
         </div>
       `;

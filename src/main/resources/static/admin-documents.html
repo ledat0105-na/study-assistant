@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study AI - Quản Lý Tài Liệu Hệ Thống 3D</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style-3d.css">
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
+
+  <!-- 3D Sidebar -->
+  <aside></aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 md:p-10 overflow-y-auto relative z-10 space-y-8">
+    <div>
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">
+        Quản Lý Tài Liệu Toàn Hệ Thống
+      </h1>
+      <p class="text-slate-600 text-sm mt-1.5 font-semibold">Theo dõi tất cả các tài liệu bài học PDF/DOCX được tải lên toàn bộ nền tảng và gỡ bỏ file vi phạm</p>
+    </div>
+
+    <!-- Documents Table Card -->
+    <div class="glass-3d-card rounded-3xl overflow-hidden shadow-2xl">
+      <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-white/90">
+        <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2.5">
+          <i data-lucide="folder-open" class="h-5 w-5 text-indigo-600"></i> Danh Sách File Tài Liệu Trong CSDL
+        </h3>
+        <span id="allDocCountLabel" class="badge-3d badge-3d-indigo">0 tài liệu</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="bg-slate-100/90 text-slate-600 font-extrabold uppercase border-b border-slate-200">
+              <th class="p-4 pl-6">ID</th>
+              <th class="p-4">Tên Tài Liệu</th>
+              <th class="p-4">Định Dạng</th>
+              <th class="p-4">Dung Lượng</th>
+              <th class="p-4">Trạng Thái Xử Lý</th>
+              <th class="p-4 text-center pr-6">Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody id="docsTableBody" class="divide-y divide-slate-200">
+            <tr>
+              <td colspan="6" class="p-8 text-center text-slate-500 font-semibold">Đang tải danh sách tài liệu hệ thống...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="auth-interceptor.js"></script>
+  <script src="sidebar.js"></script>
+  <script>
+    renderUnifiedSidebar("admin-docs");
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if ((user.role || "FREE").toUpperCase() !== "ADMIN") {
+      alert("Quyền truy cập bị từ chối! Trang này chỉ dành cho Quản trị viên.");
+      window.location.href = "dashboard.html";
+    }
+
+    async function loadAdminSystemDocuments() {
+      try {
+        const res = await fetch("/api/admin/documents");
+        if (res.ok) {
+          const docs = await res.json();
+          const tbody = document.getElementById("docsTableBody");
+          tbody.innerHTML = "";
+          document.getElementById("allDocCountLabel").textContent = `${docs.length} tài liệu`;
+
+          if (docs.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-500 font-semibold">Chưa có tài liệu nào trong hệ thống.</td></tr>`;
+            return;
+          }
+
+          docs.forEach(d => {
+            const tr = document.createElement("tr");
+            tr.className = "hover:bg-slate-50 transition-colors";
+            tr.innerHTML = `
+              <td class="p-4 pl-6 font-mono font-bold text-slate-500">${d.id}</td>
+              <td class="p-4 font-bold text-slate-900">${d.fileName || d.originalName}</td>
+              <td class="p-4 font-mono uppercase font-bold text-indigo-700">${d.fileType || d.format || 'PDF'}</td>
+              <td class="p-4 font-mono font-semibold">${d.fileSize ? (d.fileSize / (1024*1024)).toFixed(2) + ' MB' : '2.4 MB'}</td>
+              <td class="p-4"><span class="badge-3d badge-3d-emerald text-[10px]">${d.status || 'READY'}</span></td>
+              <td class="p-4 text-center pr-6">
+                <button onclick="deleteDocByAdmin(${d.id})" class="btn-3d btn-3d-secondary px-3 py-1.5 text-xs font-bold !text-rose-600">
+                  <i data-lucide="trash-2" class="h-3.5 w-3.5"></i> Xóa File
+                </button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+          lucide.createIcons();
+        }
+      } catch (err) {
+        console.error("Lỗi nạp tài liệu hệ thống:", err);
+      }
+    }
+
+    async function deleteDocByAdmin(id) {
+      if (!confirm("Bạn có chắc muốn xóa tài liệu này khỏi toàn hệ thống?")) return;
+      try {
+        const res = await fetch(`/api/admin/documents/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          alert("Đã xóa tài liệu thành công.");
+          loadAdminSystemDocuments();
+        }
+      } catch (err) {
+        alert("Lỗi kết nối máy chủ.");
+      }
+    }
+
+    loadAdminSystemDocuments();
+    lucide.createIcons();
+  </script>
+</body>
+</html>

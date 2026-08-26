@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
@@ -29,5 +30,23 @@ public class User {
     private String password;
 
     @Column(nullable = false)
-    private String role; // "STUDENT" or "ADMIN"
+    private String role = "STUDENT"; // "STUDENT" or "ADMIN"
+
+    @Column(nullable = false)
+    private String plan = "FREE"; // "FREE", "BASIC", "PREMIUM"
+
+    @Column(nullable = false)
+    private String status = "ACTIVE"; // "ACTIVE", "LOCKED", "SUSPENDED"
+
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Column(name = "reset_token_expiry")
+    private LocalDateTime resetTokenExpiry;
+
+    @Column(name = "failed_login_attempts")
+    private Integer failedLoginAttempts = 0;
+
+    @Column(name = "lock_until")
+    private LocalDateTime lockUntil;
 }

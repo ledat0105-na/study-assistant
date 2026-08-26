@@ -1,116 +1,65 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Study AI - Payment</title>
+  <title>Study AI - Nâng Cấp Gói 3D</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style-3d.css">
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
 
-  <!-- Sidebar -->
-  <aside class="w-64 bg-slate-900/80 backdrop-blur-md border-r border-slate-800 text-slate-202 flex flex-col justify-between p-4 sticky top-0 h-screen z-20">
-    <div>
-      <div class="flex items-center gap-2 px-2 py-4 mb-6">
-        <div class="bg-gradient-to-tr from-indigo-500 to-purple-500 p-2 rounded-xl text-white shadow-lg shadow-indigo-500/30">
-          <i data-lucide="sparkles" class="h-6 w-6"></i>
-        </div>
-        <div>
-          <h1 class="font-bold text-lg bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Study AI</h1>
-          <span class="text-xs text-slate-500 font-medium" data-i18n="brand_sub">Assistant Hub</span>
-        </div>
-      </div>
-
-      <nav class="space-y-1">
-        <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="layout-dashboard" class="h-5 w-5"></i>
-          <span data-i18n="nav_dashboard">Bảng điều khiển</span>
-        </a>
-        <a href="documents.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="file-text" class="h-5 w-5"></i>
-          <span data-i18n="nav_documents">Tài liệu</span>
-        </a>
-        <a href="map.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="network" class="h-5 w-5"></i>
-          <span data-i18n="nav_map">Sơ đồ kiến thức</span>
-        </a>
-        <a href="flashcards.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="book-open" class="h-5 w-5"></i>
-          <span data-i18n="nav_flashcards">Thẻ ghi nhớ</span>
-        </a>
-        <a href="quiz.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="help-circle" class="h-5 w-5"></i>
-          <span data-i18n="nav_quiz">Trắc nghiệm</span>
-        </a>
-        <a href="progress.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="bar-chart-3" class="h-5 w-5"></i>
-          <span data-i18n="nav_progress">Tiến độ học tập</span>
-        </a>
-        <a href="profile.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="user" class="h-5 w-5"></i>
-          <span data-i18n="nav_profile">Thông tin cá nhân</span>
-        </a>
-      </nav>
-    </div>
-
-    <div class="border-t border-slate-800 pt-4 mt-auto">
-      <div class="flex items-center gap-3 px-2 py-2 mb-3 bg-slate-900/40 rounded-xl border border-slate-800/40">
-        <div class="w-9 h-9 rounded-full bg-indigo-650 text-white flex items-center justify-center font-bold shadow-md">JD</div>
-        <div class="flex-1 min-w-0">
-          <p id="userNameLabel" class="text-xs font-semibold text-slate-202 truncate">John Doe</p>
-          <p id="userEmailLabel" class="text-[10px] text-slate-505 truncate">john.doe@example.com</p>
-        </div>
-      </div>
-      <a href="login.html" class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all duration-200">
-        <i data-lucide="log-out" class="h-4 w-4"></i>
-        <span data-i18n="nav_logout">Đăng xuất</span>
-      </a>
-    </div>
-  </aside>
+  <!-- 3D Sidebar -->
+  <aside></aside>
 
   <!-- Main Content -->
-  <main class="flex-1 p-8 overflow-y-auto">
-    <div class="max-w-2xl mx-auto">
+  <main class="flex-1 p-6 md:p-10 overflow-y-auto relative z-10">
+    <div class="max-w-3xl mx-auto">
       <div class="mb-8">
-        <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent">Thanh toán nâng cấp gói</h1>
-        <p class="text-slate-400 mt-1">Nạp tiền chuyển khoản và gửi yêu cầu nâng cấp gói tài khoản</p>
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">
+          Thanh Toán Nâng Cấp Gói 3D
+        </h1>
+        <p class="text-slate-600 text-sm mt-1.5 font-semibold">Nạp tiền chuyển khoản và gửi yêu cầu nâng cấp gói tài khoản</p>
       </div>
 
-      <div class="bg-slate-900/40 border border-slate-800 p-8 rounded-3xl space-y-6">
+      <div class="glass-3d-card p-8 space-y-6">
         <div>
-          <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Thông tin gói nâng cấp</h3>
-          <div class="bg-slate-950/60 border border-slate-850 p-4 rounded-xl flex justify-between items-center">
+          <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-3">Gói dịch vụ đã chọn</h3>
+          <div class="bg-indigo-50/80 border border-indigo-200 p-5 rounded-2xl flex justify-between items-center shadow-inner">
             <div>
-              <span id="planName" class="text-lg font-bold text-indigo-400">STUDENT</span>
-              <p class="text-xs text-slate-500 mt-0.5">Thời hạn: 1 Tháng</p>
+              <span id="planName" class="badge-3d badge-3d-indigo text-sm">PRO 3D</span>
+              <p class="text-xs text-slate-600 mt-1 font-semibold">Thời hạn: 1 Tháng không giới hạn</p>
             </div>
-            <span id="planPrice" class="text-2xl font-extrabold text-slate-100">49.000đ</span>
+            <div>
+              <span id="planOriginalPrice" class="line-through text-slate-400 text-sm font-bold mr-2 hidden"></span>
+              <span id="planPrice" class="text-3xl font-extrabold text-indigo-700">99.000đ</span>
+            </div>
           </div>
         </div>
 
         <div>
-          <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Thông tin chuyển khoản ngân hàng</h3>
-          <div class="bg-slate-950/60 border border-slate-850 p-6 rounded-xl space-y-4">
+          <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-3">Thông tin chuyển khoản ngân hàng</h3>
+          <div class="bg-white/90 border border-slate-200 p-6 rounded-2xl space-y-4 shadow-sm">
             <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-500">Ngân hàng:</span>
-              <span class="text-slate-200 font-bold">MB Bank (Ngân hàng Quân Đội)</span>
+              <span class="text-slate-600 font-bold">Ngân hàng:</span>
+              <span class="text-slate-900 font-extrabold">MB Bank (Ngân Hàng Quân Đội)</span>
             </div>
             <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-500">Số tài khoản:</span>
-              <span class="text-slate-200 font-bold font-mono">123456789999</span>
+              <span class="text-slate-600 font-bold">Số tài khoản:</span>
+              <span class="text-indigo-600 font-mono font-extrabold text-sm">123456789999</span>
             </div>
             <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-500">Chủ tài khoản:</span>
-              <span class="text-slate-200 font-bold">STUDY AI ASSISTANT</span>
+              <span class="text-slate-600 font-bold">Chủ tài khoản:</span>
+              <span class="text-slate-900 font-extrabold">STUDY AI ASSISTANT</span>
             </div>
             <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-500">Số tiền:</span>
-              <span id="transferPrice" class="text-emerald-450 font-extrabold font-mono">49.000đ</span>
+              <span class="text-slate-600 font-bold">Số tiền thanh toán:</span>
+              <span id="transferPrice" class="text-emerald-600 font-extrabold font-mono text-sm">99.000đ</span>
             </div>
             <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-500">Nội dung chuyển khoản:</span>
-              <span id="transferSyntax" class="text-amber-450 font-extrabold font-mono uppercase">UPGRADE STUDENT JD</span>
+              <span class="text-slate-600 font-bold">Nội dung chuyển khoản:</span>
+              <span id="transferSyntax" class="text-amber-600 font-extrabold font-mono uppercase text-xs bg-amber-50 border border-amber-200 px-3 py-1 rounded-lg">UPGRADE PRO USER</span>
             </div>
           </div>
         </div>
@@ -118,72 +67,86 @@
         <!-- Submit form -->
         <div class="space-y-4">
           <div>
-            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Ghi chú thanh toán / Mã giao dịch</label>
-            <textarea id="paymentNote" rows="3" placeholder="Nhập mã giao dịch chuyển khoản hoặc ghi chú của bạn để admin đối soát..." class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-202 focus:outline-none focus:ring-1"></textarea>
+            <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Mã giao dịch / Ghi chú đối soát</label>
+            <textarea id="paymentNote" rows="3" placeholder="Nhập mã giao dịch chuyển khoản hoặc ghi chú của bạn để admin đối soát..." class="input-3d w-full font-semibold"></textarea>
           </div>
 
           <div class="flex justify-end gap-3 pt-2">
-            <a href="profile.html" class="px-5 py-2.5 bg-slate-950 hover:bg-slate-900 border border-slate-800 rounded-xl text-sm font-semibold transition-all">Hủy bỏ</a>
-            <button onclick="submitPayment()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold shadow-lg transition-all">Xác nhận đã chuyển khoản</button>
+            <a href="profile.html" class="btn-3d btn-3d-secondary py-3 px-6 text-xs font-bold">Hủy Bỏ</a>
+            <button onclick="submitPayment()" class="btn-3d btn-3d-primary py-3 px-6 text-xs font-bold shadow-lg shadow-indigo-500/30">Xác Nhận Đã Chuyển Khoản</button>
           </div>
         </div>
       </div>
     </div>
   </main>
 
+  <script src="auth-interceptor.js"></script>
+  <script src="sidebar.js"></script>
   <script src="i18n.js"></script>
   <script>
+    renderUnifiedSidebar("profile");
+
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (!user.id) {
-      window.location.href = "login.html";
-    }
-
-    document.getElementById("userNameLabel").textContent = user.name || "Guest";
-    document.getElementById("userEmailLabel").textContent = user.email || "guest@example.com";
-
     const urlParams = new URLSearchParams(window.location.search);
-    const plan = urlParams.get("plan") || "STUDENT";
-    const amount = plan === "PRO" ? 99000 : 49000;
-    const priceText = plan === "PRO" ? "99.000đ" : "49.000đ";
+    const selectedPlanCode = (urlParams.get("plan") || "PRO").toUpperCase();
 
-    document.getElementById("planName").textContent = plan;
-    document.getElementById("planPrice").textContent = priceText;
-    document.getElementById("transferPrice").textContent = priceText;
-    document.getElementById("transferSyntax").textContent = `UPGRADE ${plan} ${user.username || 'USER'}`.toUpperCase();
+    async function loadPlanDetails() {
+      try {
+        const res = await fetch("/api/plans");
+        if (res.ok) {
+          const plans = await res.json();
+          const targetPlan = plans.find(p => p.planCode === selectedPlanCode) || {
+            name: selectedPlanCode === "STUDENT" ? "Gói Sinh Viên" : "Gói Chuyên Nghiệp",
+            salePrice: selectedPlanCode === "STUDENT" ? 49000 : 99000,
+            originalPrice: selectedPlanCode === "STUDENT" ? 79000 : 149000
+          };
+
+          const sPrice = (targetPlan.salePrice || targetPlan.originalPrice || 99000).toLocaleString('vi-VN') + 'đ';
+          
+          document.getElementById("planName").textContent = targetPlan.name || selectedPlanCode;
+          document.getElementById("planPrice").textContent = sPrice;
+          document.getElementById("transferPrice").textContent = sPrice;
+          
+          if (targetPlan.originalPrice && targetPlan.originalPrice > targetPlan.salePrice) {
+            const oPrice = targetPlan.originalPrice.toLocaleString('vi-VN') + 'đ';
+            const origEl = document.getElementById("planOriginalPrice");
+            origEl.textContent = oPrice;
+            origEl.classList.remove("hidden");
+          }
+          
+          document.getElementById("transferSyntax").textContent = `UPGRADE ${selectedPlanCode} ${user.username || 'USER'}`.toUpperCase();
+        }
+      } catch (err) {
+        console.error("Lỗi nạp thông tin gói:", err);
+      }
+    }
 
     lucide.createIcons();
 
     async function submitPayment() {
       const note = document.getElementById("paymentNote").value;
-      if (!note.trim()) {
-        alert("Vui lòng điền ghi chú giao dịch!");
-        return;
-      }
-
       try {
-        const res = await fetch("/api/payments/request", {
+        const response = await fetch("/api/payments/checkout", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            userId: user.id,
-            plan: plan,
-            amount: amount,
+            planId: selectedPlanCode,
             paymentNote: note
           })
         });
 
-        if (res.ok) {
-          alert("Gửi yêu cầu nâng cấp thành công! Vui lòng chờ Admin xác nhận giao dịch.");
+        if (response.ok) {
+          alert("Gửi thông tin chuyển khoản thành công! Yêu cầu của bạn đang được Quản trị viên đối soát phê duyệt.");
           window.location.href = "profile.html";
         } else {
-          alert("Có lỗi xảy ra, vui lòng thử lại!");
+          alert("Không thể tạo yêu cầu thanh toán.");
         }
       } catch (err) {
-        alert("Không thể kết nối đến máy chủ.");
+        alert("Lỗi kết nối máy chủ.");
       }
     }
+
+    loadPlanDetails();
   </script>
 </body>
 </html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study AI - Quản Lý Bảng Giá & Khuyến Mãi 3D</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style-3d.css">
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
+
+  <!-- 3D Sidebar -->
+  <aside></aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 md:p-10 overflow-y-auto relative z-10 space-y-8">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">
+          Quản Lý Bảng Giá & SALE Khuyến Mãi
+        </h1>
+        <p class="text-slate-600 text-sm mt-1.5 font-semibold">Thiết lập giá gốc, giá SALE khuyến mãi, nhãn badge và danh sách tính năng lưu trực tiếp vào CSDL Server-side</p>
+      </div>
+      <button onclick="openPlanModal()" class="btn-3d btn-3d-primary px-5 py-3 text-xs font-extrabold shadow-xl shadow-indigo-500/30 flex items-center gap-2">
+        <i data-lucide="plus" class="h-4 w-4"></i> Thêm Gói Dịch Vụ Mới
+      </button>
+    </div>
+
+    <!-- Pricing Plans Table Card -->
+    <div class="glass-3d-card rounded-3xl overflow-hidden shadow-2xl">
+      <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-white/90">
+        <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2.5">
+          <i data-lucide="tags" class="h-5 w-5 text-indigo-600"></i> Danh Sách Tất Cả Gói Dịch Vụ (`pricing_plans`)
+        </h3>
+        <span id="planCountLabel" class="badge-3d badge-3d-indigo">0 Gói</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="bg-slate-100/90 text-slate-600 font-extrabold uppercase border-b border-slate-200">
+              <th class="p-4 pl-6">Mã Gói (Code)</th>
+              <th class="p-4">Tên Gói Dịch Vụ</th>
+              <th class="p-4">Giá Gốc (VNĐ)</th>
+              <th class="p-4">Giá SALE Khuyến Mãi</th>
+              <th class="p-4">Nhãn Badge</th>
+              <th class="p-4">Trạng Thái</th>
+              <th class="p-4 text-center pr-6">Thao Tác Quản Lý</th>
+            </tr>
+          </thead>
+          <tbody id="plansTableBody" class="divide-y divide-slate-200">
+            <tr>
+              <td colspan="7" class="p-8 text-center text-slate-500 font-semibold">Đang tải danh sách bảng giá từ CSDL...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Pricing Plan Edit/Create Modal Popup -->
+  <div id="planModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
+    <div class="glass-3d-card max-w-xl w-full max-h-[88vh] flex flex-col shadow-2xl relative border-slate-300 rounded-3xl overflow-hidden">
+      <!-- Fixed Modal Header -->
+      <div class="flex justify-between items-center border-b border-slate-200 px-6 py-4 bg-white/95 shrink-0">
+        <h3 id="modalTitle" class="text-xl font-extrabold text-slate-900">Thêm / Sửa Gói Dịch Vụ CSDL</h3>
+        <button type="button" onclick="closePlanModal()" class="text-slate-400 hover:text-slate-800 p-1.5 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+
+      <!-- Scrollable Form Body -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-4">
+        <form id="planForm" onsubmit="event.preventDefault(); submitPlanForm();" class="space-y-4">
+          <input type="hidden" id="planId" />
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1">Mã Gói (Code)</label>
+              <input type="text" id="planCode" placeholder="PRO, STUDENT..." required class="input-3d w-full font-semibold" />
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1">Tên Gói Dịch Vụ</label>
+              <input type="text" id="planNameInput" placeholder="Gói Sinh Viên..." required class="input-3d w-full font-semibold" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1">Giá Gốc (VNĐ)</label>
+              <input type="text" id="originalPriceInput" oninput="formatCurrencyInput(this)" placeholder="149.000" required class="input-3d w-full font-extrabold font-mono text-indigo-700" />
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1">Giá SALE Khuyến Mãi (VNĐ)</label>
+              <input type="text" id="salePriceInput" oninput="formatCurrencyInput(this)" placeholder="99.000" required class="input-3d w-full font-extrabold font-mono text-emerald-600" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1">Chu Kỳ Nạp</label>
+              <input type="text" id="billingCycleInput" placeholder="tháng / vĩnh viễn" class="input-3d w-full font-semibold" value="tháng" />
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1">Nhãn Badge Khuyến Mãi</label>
+              <input type="text" id="badgeTextInput" placeholder="Phổ Biến Nhất - GIẢM 33%" class="input-3d w-full font-semibold" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1">Mô Tả Gói</label>
+            <input type="text" id="descriptionInput" placeholder="Dành cho người học tích cực..." class="input-3d w-full font-semibold" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1">Danh Sách Tính Năng (Ngăn cách bởi | )</label>
+            <textarea id="featuresInput" rows="3" placeholder="Tải lên không giới hạn|Sơ đồ kiến thức 3D|Báo cáo tiến độ" class="input-3d w-full font-semibold"></textarea>
+          </div>
+
+          <div class="flex items-center gap-6 pt-2">
+            <label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+              <input type="checkbox" id="isPopularInput" class="w-4 h-4 text-indigo-600 rounded" />
+              <span>Nổi Bật (Phổ Biến Nhất)</span>
+            </label>
+            <label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+              <input type="checkbox" id="isActiveInput" checked class="w-4 h-4 text-indigo-600 rounded" />
+              <span>Kích Hoạt (Hiển thị ra Web)</span>
+            </label>
+          </div>
+        </form>
+      </div>
+
+      <!-- Always Visible Fixed Footer -->
+      <div class="border-t border-slate-200 p-4 px-6 bg-slate-100/90 flex justify-end items-center gap-3 shrink-0 shadow-lg">
+        <button type="button" onclick="closePlanModal()" class="btn-3d btn-3d-secondary py-3 px-6 text-xs font-extrabold">Hủy Bỏ</button>
+        <button type="button" onclick="submitPlanForm()" class="btn-3d btn-3d-primary py-3 px-7 text-xs font-extrabold shadow-xl shadow-indigo-500/30 flex items-center gap-2">
+          <i data-lucide="save" class="h-4 w-4"></i>
+          <span>LƯU BẢNG GIÁ VÀO CSDL</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="auth-interceptor.js"></script>
+  <script src="sidebar.js"></script>
+  <script>
+    renderUnifiedSidebar("admin-pricing");
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if ((user.role || "FREE").toUpperCase() !== "ADMIN") {
+      alert("Quyền truy cập bị từ chối! Trang này chỉ dành cho Quản trị viên.");
+      window.location.href = "dashboard.html";
+    }
+
+    let allPricingPlans = [];
+
+    function formatCurrencyInput(input) {
+      let val = input.value.replace(/\D/g, "");
+      if (!val) {
+        input.value = "0";
+        return;
+      }
+      input.value = parseInt(val, 10).toLocaleString('vi-VN');
+    }
+
+    function parseCurrencyValue(valStr) {
+      if (!valStr) return 0;
+      return parseFloat(valStr.toString().replace(/\D/g, "")) || 0;
+    }
+
+    async function loadAdminPlans() {
+      try {
+        const res = await fetch("/api/plans/admin");
+        if (res.ok) {
+          allPricingPlans = await res.json();
+          renderAdminPlansTable();
+        }
+      } catch (err) {
+        console.error("Lỗi nạp danh sách bảng giá admin:", err);
+      }
+    }
+
+    function renderAdminPlansTable() {
+      const tbody = document.getElementById("plansTableBody");
+      tbody.innerHTML = "";
+      document.getElementById("planCountLabel").textContent = `${allPricingPlans.length} Gói`;
+
+      if (allPricingPlans.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500 font-semibold">Chưa có gói dịch vụ nào. Nhấn "Thêm Gói Mới" để khởi tạo!</td></tr>`;
+        return;
+      }
+
+      allPricingPlans.forEach(plan => {
+        const isSale = plan.originalPrice > plan.salePrice;
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50 transition-colors";
+        tr.innerHTML = `
+          <td class="p-4 pl-6 font-mono font-extrabold text-indigo-700">${plan.planCode}</td>
+          <td class="p-4 font-bold text-slate-900">${plan.name}</td>
+          <td class="p-4 font-mono font-semibold text-slate-500 ${isSale ? 'line-through' : ''}">${(plan.originalPrice || 0).toLocaleString('vi-VN')}đ</td>
+          <td class="p-4 font-mono font-extrabold text-emerald-600">${(plan.salePrice || 0).toLocaleString('vi-VN')}đ</td>
+          <td class="p-4"><span class="badge-3d badge-3d-indigo text-[10px]">${plan.badgeText || 'Không có'}</span></td>
+          <td class="p-4">
+            <span class="badge-3d ${plan.isActive ? 'badge-3d-emerald' : 'badge-3d-indigo'} text-[10px]">
+              ${plan.isActive ? 'ĐANG KÍCH HOẠT' : 'ĐÃ ẨN'}
+            </span>
+          </td>
+          <td class="p-4 text-center pr-6 flex justify-center gap-2">
+            <button onclick="editPlan(${plan.id})" class="btn-3d btn-3d-primary px-3 py-1.5 text-xs font-bold shadow-md">Sửa / SALE</button>
+            <button onclick="deletePlan(${plan.id})" class="btn-3d btn-3d-secondary px-3 py-1.5 text-xs font-bold !text-rose-600">Xóa</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      lucide.createIcons();
+    }
+
+    function openPlanModal() {
+      document.getElementById("planForm").reset();
+      document.getElementById("planId").value = "";
+      document.getElementById("modalTitle").textContent = "Thêm Gói Dịch Vụ Mới";
+      document.getElementById("planCode").readOnly = false;
+      document.getElementById("originalPriceInput").value = "0";
+      document.getElementById("salePriceInput").value = "0";
+      document.getElementById("planModal").classList.remove("hidden");
+      lucide.createIcons();
+    }
+
+    function closePlanModal() {
+      document.getElementById("planModal").classList.add("hidden");
+    }
+
+    function editPlan(id) {
+      const plan = allPricingPlans.find(p => p.id === id);
+      if (!plan) return;
+
+      document.getElementById("planId").value = plan.id;
+      document.getElementById("planCode").value = plan.planCode;
+      document.getElementById("planCode").readOnly = true;
+      document.getElementById("planNameInput").value = plan.name || "";
+      document.getElementById("originalPriceInput").value = (plan.originalPrice || 0).toLocaleString('vi-VN');
+      document.getElementById("salePriceInput").value = (plan.salePrice || 0).toLocaleString('vi-VN');
+      document.getElementById("billingCycleInput").value = plan.billingCycle || "tháng";
+      document.getElementById("badgeTextInput").value = plan.badgeText || "";
+      document.getElementById("descriptionInput").value = plan.description || "";
+      document.getElementById("featuresInput").value = plan.features || "";
+      document.getElementById("isPopularInput").checked = !!plan.isPopular;
+      document.getElementById("isActiveInput").checked = plan.isActive !== false;
+
+      document.getElementById("modalTitle").textContent = `Chỉnh Sửa & Khuyến Mãi Gói ${plan.planCode}`;
+      document.getElementById("planModal").classList.remove("hidden");
+      lucide.createIcons();
+    }
+
+    async function submitPlanForm() {
+      const planData = {
+        id: document.getElementById("planId").value || null,
+        planCode: document.getElementById("planCode").value,
+        name: document.getElementById("planNameInput").value,
+        originalPrice: parseCurrencyValue(document.getElementById("originalPriceInput").value),
+        salePrice: parseCurrencyValue(document.getElementById("salePriceInput").value),
+        billingCycle: document.getElementById("billingCycleInput").value,
+        badgeText: document.getElementById("badgeTextInput").value,
+        description: document.getElementById("descriptionInput").value,
+        features: document.getElementById("featuresInput").value,
+        isPopular: document.getElementById("isPopularInput").checked,
+        isActive: document.getElementById("isActiveInput").checked
+      };
+
+      if (!planData.planCode || !planData.name) {
+        alert("Vui lòng điền đầy đủ Mã Gói và Tên Gói Dịch Vụ!");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/plans", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(planData)
+        });
+
+        if (res.ok) {
+          alert("Đã lưu bảng giá vào CSDL thành công!");
+          closePlanModal();
+          loadAdminPlans();
+        } else {
+          alert("Không thể lưu bảng giá!");
+        }
+      } catch (err) {
+        alert("Lỗi kết nối máy chủ.");
+      }
+    }
+
+    async function deletePlan(id) {
+      if (!confirm("Bạn có chắc chắn muốn xóa gói dịch vụ này khỏi CSDL?")) return;
+      try {
+        const res = await fetch(`/api/plans/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          alert("Đã xóa gói khỏi CSDL thành công.");
+          loadAdminPlans();
+        }
+      } catch (err) {
+        alert("Lỗi kết nối máy chủ.");
+      }
+    }
+
+    loadAdminPlans();
+    lucide.createIcons();
+  </script>
+</body>
+</html>
