@@ -1,247 +1,183 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Study AI - Bảng điều khiển</title>
+  <title>Study AI - Bảng Điều Khiển 3D Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style-3d.css">
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
 
-  <!-- Sidebar -->
-  <aside class="w-64 bg-slate-900/80 backdrop-blur-md border-r border-slate-800 text-slate-200 flex flex-col justify-between p-4 sticky top-0 h-screen z-20">
-    <div>
-      <div class="flex items-center gap-2 px-2 py-4 mb-6">
-        <div class="bg-gradient-to-tr from-indigo-500 to-purple-500 p-2 rounded-xl text-white shadow-lg shadow-indigo-500/30">
-          <i data-lucide="sparkles" class="h-6 w-6"></i>
-        </div>
-        <div>
-          <h1 class="font-bold text-lg bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Study AI</h1>
-          <span class="text-xs text-slate-500 font-medium">Assistant Hub</span>
-        </div>
-      </div>
-
-      <nav class="space-y-1">
-        <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-indigo-600/20 text-indigo-400 border-l-4 border-indigo-500 pl-2.5 transition-all">
-          <i data-lucide="layout-dashboard" class="h-5 w-5"></i>
-          Bảng điều khiển
-        </a>
-        <a href="documents.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all">
-          <i data-lucide="file-text" class="h-5 w-5"></i>
-          Tài liệu
-        </a>
-        <a href="map.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all">
-          <i data-lucide="network" class="h-5 w-5"></i>
-          Sơ đồ kiến thức
-        </a>
-        <a href="viewer.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="message-square" class="h-5 w-5"></i>
-          <span>Hỏi đáp AI</span>
-        </a>
-        <a href="flashcards.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all">
-          <i data-lucide="book-open" class="h-5 w-5"></i>
-          Thẻ ghi nhớ
-        </a>
-        <a href="quiz.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all">
-          <i data-lucide="help-circle" class="h-5 w-5"></i>
-          Trắc nghiệm
-        </a>
-        <a href="progress.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all">
-          <i data-lucide="bar-chart-3" class="h-5 w-5"></i>
-          Tiến độ học tập
-        </a>
-        <a href="profile.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all">
-          <i data-lucide="user" class="h-5 w-5"></i>
-          Thông tin cá nhân
-        </a>
-        <a href="admin.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all">
-          <i data-lucide="shield-alert" class="h-5 w-5"></i>
-          Quản trị viên
-        </a>
-      </nav>
-    </div>
-
-    <div class="border-t border-slate-800 pt-4 mt-auto">
-      <div class="flex items-center gap-3 px-2 py-2 mb-3 bg-slate-900/40 rounded-xl border border-slate-800/40">
-        <div class="w-9 h-9 rounded-full bg-indigo-650 text-white flex items-center justify-center font-bold shadow-md">JD</div>
-        <div class="flex-1 min-w-0">
-          <p id="userNameLabel" class="text-xs font-semibold text-slate-200 truncate">John Doe</p>
-          <p id="userEmailLabel" class="text-[10px] text-slate-500 truncate">john.doe@example.com</p>
-        </div>
-      </div>
-      <a href="login.html" class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all duration-200">
-        <i data-lucide="log-out" class="h-4 w-4"></i>
-        Đăng xuất
-      </a>
-    </div>
-  </aside>
+  <!-- 3D Sidebar -->
+  <aside></aside>
 
   <!-- Main Content -->
-  <main class="flex-1 p-8 overflow-y-auto">
-    <div class="flex justify-between items-center mb-8">
+  <main class="flex-1 p-6 md:p-10 overflow-y-auto relative z-10">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
       <div>
-        <h1 id="welcomeUser" class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent">Hello, User</h1>
-        <p class="text-slate-400 mt-1">Ready to learn something new today?</p>
+        <h1 id="welcomeUser" class="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">
+          Xin chào, Bạn học!
+        </h1>
+        <p class="text-slate-600 text-sm mt-1.5 font-semibold">Bạn đã sẵn sàng chinh phục tri thức mới cùng Trợ lý AI hôm nay chưa?</p>
       </div>
-      <a href="upload.html" class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-500/20 transition-all duration-150">
+      <a href="upload.html" class="btn-3d btn-3d-primary px-6 py-3 text-xs font-extrabold shadow-xl shadow-indigo-500/30 flex items-center gap-2.5">
         <i data-lucide="file-plus" class="h-4 w-4"></i>
-        Tải lên tài liệu
+        <span>Tải Tải Liệu Mới</span>
       </a>
     </div>
 
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <div class="bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
+    <!-- 3D Stat Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div class="glass-3d-card p-6">
         <div class="flex justify-between items-start">
           <div>
-            <p class="text-sm font-medium text-slate-400">Tổng số tài liệu</p>
-            <h3 id="statDocs" class="text-2xl font-bold text-slate-100 mt-2">0</h3>
+            <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Tổng Số Tài Liệu</p>
+            <h3 id="statDocs" class="text-3xl font-extrabold text-slate-900 mt-2">0</h3>
           </div>
-          <div class="p-2.5 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 text-white shadow-lg">
-            <i data-lucide="book-open" class="h-5 w-5"></i>
+          <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-200 flex items-center justify-center shadow-md">
+            <i data-lucide="book-open" class="h-6 w-6"></i>
           </div>
         </div>
       </div>
-      <div class="bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
+
+      <div class="glass-3d-card p-6">
         <div class="flex justify-between items-start">
           <div>
-            <p class="text-sm font-medium text-slate-400">Knowledge Topics</p>
-            <h3 id="statTopics" class="text-2xl font-bold text-slate-100 mt-2">0</h3>
+            <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Nút Chủ Đề 3D</p>
+            <h3 id="statTopics" class="text-3xl font-extrabold text-slate-900 mt-2">0</h3>
           </div>
-          <div class="p-2.5 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white shadow-lg">
-            <i data-lucide="network" class="h-5 w-5"></i>
+          <div class="w-12 h-12 rounded-2xl bg-cyan-50 text-cyan-600 border border-cyan-200 flex items-center justify-center shadow-md">
+            <i data-lucide="network" class="h-6 w-6"></i>
           </div>
         </div>
       </div>
-      <div class="bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
+
+      <div class="glass-3d-card p-6">
         <div class="flex justify-between items-start">
           <div>
-            <p class="text-sm font-medium text-slate-400">Total Thẻ ghi nhớs</p>
-            <h3 id="statThẻ ghi nhớs" class="text-2xl font-bold text-slate-100 mt-2">0</h3>
+            <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Thẻ Flashcard 3D</p>
+            <h3 id="statFlashcards" class="text-3xl font-extrabold text-slate-900 mt-2">0</h3>
           </div>
-          <div class="p-2.5 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white shadow-lg">
-            <i data-lucide="sparkles" class="h-5 w-5"></i>
+          <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 border border-purple-200 flex items-center justify-center shadow-md">
+            <i data-lucide="sparkles" class="h-6 w-6"></i>
           </div>
         </div>
       </div>
-      <div class="bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
+
+      <div class="glass-3d-card p-6">
         <div class="flex justify-between items-start">
           <div>
-            <p class="text-sm font-medium text-slate-400">Tỉ lệ đúng trung bình</p>
-            <h3 id="statAccuracy" class="text-2xl font-bold text-slate-100 mt-2">0%</h3>
+            <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Độ Chính Xác Trắc Nghiệm</p>
+            <h3 id="statAccuracy" class="text-3xl font-extrabold text-emerald-600 mt-2">0%</h3>
           </div>
-          <div class="p-2.5 rounded-xl bg-gradient-to-tr from-fuchsia-500 to-pink-500 text-white shadow-lg">
-            <i data-lucide="trending-up" class="h-5 w-5"></i>
+          <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center shadow-md">
+            <i data-lucide="trending-up" class="h-6 w-6"></i>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Main Content splits -->
+    <!-- Main Content Splits -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div class="lg:col-span-2 bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-2xl p-6">
+      <!-- Recent Docs List -->
+      <div class="lg:col-span-2 glass-3d-card p-8">
         <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-bold text-slate-200 flex items-center gap-2">
-            <i data-lucide="bookmark" class="h-5 w-5 text-indigo-400"></i>
-            Tài liệu gần đây
+          <h2 class="text-xl font-extrabold text-slate-900 flex items-center gap-2.5">
+            <i data-lucide="bookmark" class="h-5 w-5 text-indigo-600"></i>
+            Tài Liệu Đã Học Gần Đây
           </h2>
-          <a href="documents.html" class="text-indigo-400 hover:text-indigo-300 text-sm font-semibold flex items-center gap-1 transition-all">
-            View all
+          <a href="documents.html" class="text-indigo-600 hover:text-indigo-700 text-xs font-extrabold flex items-center gap-1 transition-all">
+            Xem Tất Cả
             <i data-lucide="arrow-right" class="h-4 w-4"></i>
           </a>
         </div>
 
         <div id="recentDocsList" class="space-y-4">
-          <!-- Documents populated here -->
-          <div class="text-slate-500 text-sm py-4 text-center">No documents uploaded yet. Click Upload above to start!</div>
+          <div class="text-slate-500 text-sm py-6 text-center font-semibold">Chưa có tài liệu nào. Nhấn vào Tải Tải Liệu Mới để bắt đầu!</div>
         </div>
       </div>
 
-      <div class="bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+      <!-- AI Insights Widget -->
+      <div class="glass-3d-card p-8 flex flex-col justify-between">
         <div>
-          <h2 class="text-xl font-bold text-slate-200 flex items-center gap-2 mb-4">
-            <i data-lucide="sparkles" class="h-5 w-5 text-purple-400"></i>
-            AI Insights
+          <h2 class="text-xl font-extrabold text-slate-900 flex items-center gap-2.5 mb-6">
+            <i data-lucide="cpu" class="h-5 w-5 text-purple-600"></i>
+            Gợi Ý Từ AI Assistant
           </h2>
-          <div class="bg-gradient-to-br from-indigo-950/40 to-purple-950/40 border border-indigo-900/40 p-4 rounded-xl mb-4">
-            <p class="text-sm font-semibold text-indigo-300">Daily Tip:</p>
-            <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
-              Testing yourself with flashcards is 150% more effective for long-term retention than re-reading the text. Try generating flashcards from your PDF documents!
+          <div class="bg-indigo-50/80 border border-indigo-200 p-5 rounded-2xl mb-6 shadow-inner">
+            <p class="text-xs font-extrabold text-indigo-800 uppercase tracking-wider mb-2">Mẹo Học Tối Ưu:</p>
+            <p class="text-xs text-slate-700 leading-relaxed font-semibold">
+              Kiểm tra lại bằng Thẻ Flashcard 3D giúp tăng tỷ lệ ghi nhớ lâu dài tới 150% so với chỉ đọc thụ động.
             </p>
           </div>
-          <div class="bg-slate-900/40 border border-slate-800 p-4 rounded-xl">
-            <p class="text-xs font-semibold text-slate-400">Weekly Target:</p>
-            <div class="w-full bg-slate-800 h-2.5 rounded-full mt-2.5 overflow-hidden">
-              <div class="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full w-2/3"></div>
+          <div class="bg-white/90 border border-slate-200 p-5 rounded-2xl shadow-sm">
+            <div class="flex justify-between text-xs font-extrabold mb-2">
+              <span class="text-slate-700">Mục Tiêu Tuần Này</span>
+              <span class="text-indigo-600">10/15 Giờ</span>
             </div>
-            <p class="text-[10px] text-slate-500 mt-1.5">10 of 15 hours studied this week</p>
+            <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden p-0.5 border border-slate-300">
+              <div class="bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 h-full rounded-full w-2/3 shadow-sm"></div>
+            </div>
           </div>
         </div>
-        <a href="progress.html" class="mt-6 flex justify-center items-center gap-2 py-3 px-4 border border-slate-800 bg-slate-950 hover:bg-slate-900 rounded-xl text-sm font-semibold text-indigo-400 transition-all duration-150">
-          Analyze Progress
+        <a href="progress.html" class="mt-8 btn-3d btn-3d-secondary py-3 text-xs font-bold">
+          Phân Tích Tiến Độ Chi Tiết
           <i data-lucide="arrow-right" class="h-4 w-4"></i>
         </a>
       </div>
     </div>
   </main>
 
+  <script src="auth-interceptor.js"></script>
+  <script src="sidebar.js"></script>
   <script>
+    renderUnifiedSidebar("dashboard");
+
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (!user.id) {
-      window.location.href = "login.html";
-    }
+    document.getElementById("welcomeUser").textContent = "Xin chào, " + (user.name ? user.name.split(" ")[0] : "Bạn học!");
 
-    document.getElementById("userNameLabel").textContent = user.name || "Guest";
-    document.getElementById("userEmailLabel").textContent = user.email || "guest@example.com";
-    document.getElementById("welcomeUser").textContent = "Hello, " + (user.name ? user.name.split(" ")[0] : "Learner");
-
-    
-    // Hide Admin sidebar link if not ADMIN
-    const adminLink = document.querySelector('a[href="admin.html"]');
-    if (adminLink && (user.role || "FREE").toUpperCase() !== "ADMIN") {
-      adminLink.remove();
-    }
     lucide.createIcons();
 
-    // Fetch real stats
-    async function loadBảng điều khiển() {
+    async function loadDashboardData() {
       try {
         const resStats = await fetch("/api/progress/dashboard/user/" + user.id);
         if (resStats.ok) {
           const stats = await resStats.json();
-          document.getElementById("statDocs").textContent = stats.totalDocuments;
-          document.getElementById("statTopics").textContent = stats.totalTopics;
-          document.getElementById("statThẻ ghi nhớs").textContent = stats.totalThẻ ghi nhớs;
-          document.getElementById("statAccuracy").textContent = stats.averageAccuracy;
+          document.getElementById("statDocs").textContent = stats.totalDocuments || 0;
+          document.getElementById("statTopics").textContent = stats.totalTopics || 0;
+          const flashElement = document.getElementById("statFlashcards");
+          if (flashElement) flashElement.textContent = stats.totalFlashcards || stats.totalThẻghi-nhớs || 0;
+          document.getElementById("statAccuracy").textContent = (stats.averageAccuracy || 0) + "%";
         }
 
         const resDocs = await fetch("/api/documents");
         if (resDocs.ok) {
           const docs = await resDocs.json();
           const list = document.getElementById("recentDocsList");
-          if (docs.length > 0) {
+          if (docs && docs.length > 0) {
             list.innerHTML = "";
             docs.slice(0, 3).forEach(doc => {
               const div = document.createElement("div");
-              div.className = "flex items-center justify-between p-4 bg-slate-950/40 border border-slate-800 hover:border-indigo-500/40 rounded-xl transition-all group";
+              div.className = "flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white/90 border border-slate-200 hover:border-indigo-400 rounded-2xl transition-all gap-4 shadow-sm";
               div.innerHTML = `
                 <div class="flex items-center gap-4">
-                  <div class="bg-indigo-950 text-indigo-400 border border-indigo-900 p-2.5 rounded-xl text-xs font-bold font-mono">
-                    ${doc.format}
+                  <div class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-2 rounded-xl text-xs font-extrabold uppercase font-mono shadow-sm">
+                    ${doc.format || 'PDF'}
                   </div>
                   <div>
-                    <h4 class="font-semibold text-slate-200 group-hover:text-indigo-400 transition-colors">
+                    <h4 class="font-extrabold text-slate-900 hover:text-indigo-600 transition-colors">
                       <a href="detail.html?id=${doc.id}">${doc.title}</a>
                     </h4>
-                    <p class="text-xs text-slate-500 mt-1">
-                      ${doc.size} • Uploaded ${doc.uploadDate}
+                    <p class="text-xs text-slate-500 mt-1 font-medium">
+                      ${doc.size || '2.4 MB'} • Ngày tải: ${doc.uploadDate || 'Gần đây'}
                     </p>
                   </div>
                 </div>
-                <div class="flex items-center gap-2">
-                  <a href="viewer.html?id=${doc.id}" class="px-3 py-1.5 bg-slate-900 border border-slate-800 hover:bg-slate-850 hover:border-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition-all">Read PDF</a>
-                  <a href="quiz.html?id=${doc.id}" class="px-3 py-1.5 bg-indigo-650 hover:bg-indigo-600 text-white rounded-lg text-xs font-semibold shadow-md transition-all">Take Trắc nghiệm</a>
+                <div class="flex items-center gap-2.5 shrink-0">
+                  <a href="viewer.html?id=${doc.id}" class="btn-3d btn-3d-secondary px-3.5 py-2 text-xs font-bold">Đọc PDF</a>
+                  <a href="quiz.html?id=${doc.id}" class="btn-3d btn-3d-primary px-3.5 py-2 text-xs font-bold shadow-md">Thi AI</a>
                 </div>
               `;
               list.appendChild(div);
@@ -249,11 +185,11 @@
           }
         }
       } catch (err) {
-        console.error("Failed to load dashboard content", err);
+        console.error("Lỗi nạp dữ liệu dashboard:", err);
       }
     }
 
-    loadBảng điều khiển();
+    loadDashboardData();
   </script>
 </body>
 </html>

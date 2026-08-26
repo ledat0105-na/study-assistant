@@ -1,220 +1,93 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Study AI - Thông tin cá nhân</title>
+  <title>Study AI - Hồ Sơ Cá Nhân 3D</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style-3d.css">
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
 
-  <!-- Sidebar -->
-  <aside class="w-64 bg-slate-900/80 backdrop-blur-md border-r border-slate-800 text-slate-202 flex flex-col justify-between p-4 sticky top-0 h-screen z-20">
-    <div>
-      <div class="flex items-center gap-2 px-2 py-4 mb-6">
-        <div class="bg-gradient-to-tr from-indigo-500 to-purple-500 p-2 rounded-xl text-white shadow-lg shadow-indigo-500/30">
-          <i data-lucide="sparkles" class="h-6 w-6"></i>
-        </div>
-        <div>
-          <h1 class="font-bold text-lg bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Study AI</h1>
-          <span class="text-xs text-slate-500 font-medium" data-i18n="brand_sub">Assistant Hub</span>
-        </div>
-      </div>
-
-      <nav class="space-y-1">
-        <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="layout-dashboard" class="h-5 w-5"></i>
-          <span data-i18n="nav_dashboard">Bảng điều khiển</span>
-        </a>
-        <a href="documents.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="file-text" class="h-5 w-5"></i>
-          <span data-i18n="nav_documents">Tài liệu</span>
-        </a>
-        <a href="map.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="network" class="h-5 w-5"></i>
-          <span data-i18n="nav_map">Sơ đồ kiến thức</span>
-        </a>
-        <a href="viewer.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="message-square" class="h-5 w-5"></i>
-          <span>Hỏi đáp AI</span>
-        </a>
-        <a href="flashcards.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="book-open" class="h-5 w-5"></i>
-          <span data-i18n="nav_flashcards">Thẻ ghi nhớ</span>
-        </a>
-        <a href="quiz.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="help-circle" class="h-5 w-5"></i>
-          <span data-i18n="nav_quiz">Trắc nghiệm</span>
-        </a>
-        <a href="progress.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="bar-chart-3" class="h-5 w-5"></i>
-          <span data-i18n="nav_progress">Tiến độ học tập</span>
-        </a>
-        <a href="profile.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-indigo-600/20 text-indigo-400 border-l-4 border-indigo-500 pl-2.5 transition-all">
-          <i data-lucide="user" class="h-5 w-5"></i>
-          <span data-i18n="nav_profile">Thông tin cá nhân</span>
-        </a>
-      </nav>
-    </div>
-
-    <div class="border-t border-slate-800 pt-4 mt-auto">
-      <div class="flex items-center gap-3 px-2 py-2 mb-3 bg-slate-900/40 rounded-xl border border-slate-800/40">
-        <div class="w-9 h-9 rounded-full bg-indigo-650 text-white flex items-center justify-center font-bold shadow-md">JD</div>
-        <div class="flex-1 min-w-0">
-          <p id="userNameLabel" class="text-xs font-semibold text-slate-202 truncate">John Doe</p>
-          <p id="userEmailLabel" class="text-[10px] text-slate-505 truncate">john.doe@example.com</p>
-        </div>
-      </div>
-      <a href="login.html" class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all duration-200">
-        <i data-lucide="log-out" class="h-4 w-4"></i>
-        <span data-i18n="nav_logout">Đăng xuất</span>
-      </a>
-    </div>
-  </aside>
+  <!-- 3D Sidebar -->
+  <aside></aside>
 
   <!-- Main Content -->
-  <main class="flex-1 p-8 overflow-y-auto">
-    <div class="max-w-3xl mx-auto">
+  <main class="flex-1 p-6 md:p-10 overflow-y-auto relative z-10">
+    <div class="max-w-4xl mx-auto">
       <div class="mb-8">
-        <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent" data-i18n="profile_title">Account Thông tin cá nhân</h1>
-        <p class="text-slate-400 mt-1" data-i18n="profile_sub">Manage credentials, details, and application settings</p>
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900" data-i18n="profile_title">
+          Hồ Sơ Cá Nhân
+        </h1>
+        <p class="text-slate-600 text-sm mt-1.5 font-semibold" data-i18n="profile_sub">Quản lý thông tin tài khoản, mật khẩu và cài đặt trải nghiệm 3D</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="bg-slate-900/40 border border-slate-850 p-6 rounded-3xl text-center flex flex-col items-center">
-          <div class="w-20 h-20 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-full flex items-center justify-center font-bold text-3xl text-white shadow-xl">
-            JD
+        <!-- Avatar Card -->
+        <div class="glass-3d-card p-6 text-center flex flex-col items-center">
+          <div class="w-24 h-24 bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-500 rounded-3xl flex items-center justify-center font-extrabold text-3xl text-white shadow-2xl ring-4 ring-white">
+            AI
           </div>
-          <h3 id="profileNameLabel" class="font-bold text-lg text-slate-202 mt-4">John Doe</h3>
-          <p id="profileEmailLabel" class="text-xs text-slate-500 mt-0.5">john@example.com</p>
+          <h3 id="profileNameLabel" class="font-extrabold text-xl text-slate-900 mt-5">Học Viên AI</h3>
+          <p id="profileEmailLabel" class="text-xs text-slate-500 mt-1 font-semibold">user@study.ai</p>
           
-          <div class="w-full border-t border-slate-800/80 mt-6 pt-6 space-y-3">
+          <div class="w-full border-t border-slate-200 mt-6 pt-6 space-y-3.5">
             <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-500 font-semibold" data-i18n="profile_role">User Vai trò:</span>
-              <span id="roleLabel" class="text-slate-300 font-bold">Học sinh</span>
+              <span class="text-slate-600 font-extrabold" data-i18n="profile_role">Vai trò:</span>
+              <span id="roleLabel" class="badge-3d badge-3d-indigo">Học sinh</span>
             </div>
             <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-500 font-semibold">Gói (Plan):</span>
-              <span id="tierLabel" class="text-indigo-405 font-extrabold bg-indigo-500/10 px-2 py-0.5 rounded-full">FREE</span>
+              <span class="text-slate-600 font-extrabold">Gói dịch vụ:</span>
+              <span id="tierLabel" class="badge-3d badge-3d-emerald">GÓI PRO 3D</span>
             </div>
           </div>
+
+          <a href="payment.html" class="mt-8 w-full btn-3d btn-3d-primary py-3 text-xs font-bold shadow-lg shadow-indigo-500/30">
+            Nâng Cấp Gói PRO
+          </a>
         </div>
 
-        <div class="md:col-span-2 space-y-6">
-          <!-- Pricing comparison cards -->
-          <div class="bg-slate-900/40 border border-slate-800 p-6 rounded-3xl space-y-4">
-            <h3 class="font-bold text-base text-slate-222 flex items-center gap-2 border-b border-slate-800 pb-3">
-              <i data-lucide="shield" class="h-4 w-4 text-indigo-400"></i> Các gói nâng cấp tài khoản
-            </h3>
-            
-            <div class="space-y-3">
-              <!-- FREE Package -->
-              <div class="bg-slate-950/40 border border-slate-850 p-4 rounded-xl flex justify-between items-center">
-                <div>
-                  <h4 class="font-bold text-sm text-slate-300">Gói Miễn phí (FREE)</h4>
-                  <p class="text-[11px] text-slate-500 mt-0.5">3 tài liệu • 50 lượt phân tích • 20 Trắc nghiệm</p>
-                </div>
-                <span class="text-xs font-semibold text-slate-400 bg-slate-900 px-2.5 py-1 rounded-lg">Đang sử dụng</span>
-              </div>
-
-              <!-- STUDENT Package -->
-              <div class="bg-slate-950/40 border border-slate-850 p-4 rounded-xl flex justify-between items-center">
-                <div>
-                  <h4 class="font-bold text-sm text-indigo-400">Gói Học sinh (STUDENT)</h4>
-                  <p class="text-[11px] text-slate-500 mt-0.5">50 tài liệu • Không giới hạn tìm kiếm • 500 AI/NLP</p>
-                </div>
-                <a href="payment.html?plan=STUDENT" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all shadow-md">
-                  49k / tháng
-                </a>
-              </div>
-
-              <!-- PRO Package -->
-              <div class="bg-slate-950/40 border border-slate-850 p-4 rounded-xl flex justify-between items-center">
-                <div>
-                  <h4 class="font-bold text-sm text-purple-400">Gói Chuyên nghiệp (PRO)</h4>
-                  <p class="text-[11px] text-slate-500 mt-0.5">200 tài liệu • Phân tích nâng cao • Thống kê tiến độ</p>
-                </div>
-                <a href="payment.html?plan=PRO" class="px-3 py-1.5 bg-purple-650 hover:bg-purple-600 text-white rounded-lg text-xs font-bold transition-all shadow-md">
-                  99k / tháng
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <form id="profileForm" class="bg-slate-900/40 border border-slate-850 p-6 rounded-3xl space-y-4">
-            <h3 class="font-bold text-base text-slate-202 flex items-center gap-2 border-b border-slate-850 pb-3">
-              <i data-lucide="user" class="h-4 w-4 text-indigo-400"></i> <span data-i18n="profile_info">Thông tin cá nhân</span>
-            </h3>
-            
+        <!-- Form Edit Info -->
+        <div class="md:col-span-2 glass-3d-card p-8">
+          <h3 class="text-lg font-extrabold text-slate-900 mb-6 flex items-center gap-2">
+            <i data-lucide="user-check" class="h-5 w-5 text-indigo-600"></i> Cập Nhật Thông Tin Tùy Chỉnh
+          </h3>
+          <form id="profileForm" class="space-y-5">
             <div>
-              <label class="block text-xs font-semibold text-slate-455 uppercase mb-1.5" data-i18n="profile_name">Họ và tên</label>
-              <input id="inputName" type="text" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-202 focus:outline-none focus:ring-1" />
+              <label for="fullNameInput" class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Họ và Tên</label>
+              <input type="text" id="fullNameInput" class="input-3d w-full font-semibold" placeholder="Nguyễn Văn A" />
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-455 uppercase mb-1.5" data-i18n="profile_email">Email Address</label>
-              <input id="inputEmail" type="email" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-202 focus:outline-none focus:ring-1" />
+              <label for="emailInput" class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Địa chỉ Email</label>
+              <input type="email" id="emailInput" class="input-3d w-full font-semibold" placeholder="email@example.com" />
             </div>
 
-            <div class="pt-2 flex justify-end">
-              <button type="submit" class="px-4 py-2 bg-indigo-650 hover:bg-indigo-600 text-white rounded-xl text-sm font-semibold transition-all" data-i18n="profile_save">
-                Lưu thay đổi
-              </button>
-            </div>
+            <button type="submit" class="btn-3d btn-3d-primary py-3 px-6 text-xs font-bold shadow-lg shadow-indigo-500/30">
+              Lưu Thay Đổi
+            </button>
           </form>
-
-          <div class="bg-slate-900/40 border border-slate-850 p-6 rounded-3xl space-y-4">
-            <h3 class="font-bold text-base text-slate-202 flex items-center gap-2 border-b border-slate-850 pb-3">
-              <i data-lucide="key" class="h-4 w-4 text-purple-400"></i> <span data-i18n="profile_change_pwd">Đổi mật khẩu</span>
-            </h3>
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs font-semibold text-slate-455 uppercase mb-1.5" data-i18n="profile_curr_pwd">Mật khẩu hiện tại</label>
-                <input type="password" placeholder="••••••••" class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-202 focus:outline-none focus:ring-1" />
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-slate-455 uppercase mb-1.5" data-i18n="profile_new_pwd">Mật khẩu mới</label>
-                <input type="password" placeholder="••••••••" class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-202 focus:outline-none focus:ring-1" />
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
   </main>
 
+  <script src="auth-interceptor.js"></script>
+  <script src="sidebar.js"></script>
   <script src="i18n.js"></script>
   <script>
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (!user.id) {
-      window.location.href = "login.html";
-    }
-
-    document.getElementById("userNameLabel").textContent = user.name || "Guest";
-    document.getElementById("userEmailLabel").textContent = user.email || "guest@example.com";
-    document.getElementById("profileNameLabel").textContent = user.name || "Guest";
-    document.getElementById("profileEmailLabel").textContent = user.email || "guest@example.com";
-    document.getElementById("roleLabel").textContent = user.role || "FREE";
-    document.getElementById("tierLabel").textContent = user.role || "FREE";
-
-    // Set plan badge color based on role
-    const tierLabel = document.getElementById("tierLabel");
-    if (user.role === "PRO") {
-      tierLabel.className = "text-purple-400 font-extrabold bg-purple-500/10 px-2 py-0.5 rounded-full";
-    } else if (user.role === "STUDENT") {
-      tierLabel.className = "text-indigo-400 font-extrabold bg-indigo-500/10 px-2 py-0.5 rounded-full";
-    } else {
-      tierLabel.className = "text-slate-400 font-extrabold bg-slate-500/10 px-2 py-0.5 rounded-full";
-    }
-
-    
-    // Hide Admin sidebar link if not ADMIN
-    const adminLink = document.querySelector('a[href="admin.html"]');
-    if (adminLink && (user.role || "FREE").toUpperCase() !== "ADMIN") {
-      adminLink.remove();
-    }
+    renderUnifiedSidebar("profile");
     lucide.createIcons();
+
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (user) {
+      document.getElementById("profileNameLabel").textContent = user.name || user.username || "Học Viên AI";
+      document.getElementById("profileEmailLabel").textContent = user.email || "user@study.ai";
+      document.getElementById("fullNameInput").value = user.name || user.username || "";
+      document.getElementById("emailInput").value = user.email || "";
+      if (document.getElementById("roleLabel")) document.getElementById("roleLabel").textContent = user.role || "FREE";
+    }
   </script>
 </body>
 </html>

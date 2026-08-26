@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study AI - Phê Duyệt Thanh Toán 3D</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style-3d.css">
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
+
+  <!-- 3D Sidebar -->
+  <aside></aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 md:p-10 overflow-y-auto relative z-10 space-y-8">
+    <div>
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">
+        Phê Duyệt Thanh Toán Nâng Cấp Gói
+      </h1>
+      <p class="text-slate-600 text-sm mt-1.5 font-semibold">Đối soát các giao dịch chuyển khoản nạp tiền và kích hoạt tự động gói nâng cấp cho học viên</p>
+    </div>
+
+    <!-- Pending Payment Requests Table -->
+    <div class="glass-3d-card rounded-3xl overflow-hidden shadow-2xl">
+      <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-white/90">
+        <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2.5">
+          <i data-lucide="credit-card" class="h-5 w-5 text-indigo-600"></i> Danh Sách Giao Dịch Chờ Phê Duyệt
+        </h3>
+        <span class="badge-3d badge-3d-indigo">Cập nhật Real-time</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="bg-slate-100/90 text-slate-600 font-extrabold uppercase border-b border-slate-200">
+              <th class="p-4 pl-6">Người Dùng</th>
+              <th class="p-4">Email</th>
+              <th class="p-4">Gói Đăng Ký</th>
+              <th class="p-4">Số Tiền Nạp</th>
+              <th class="p-4">Ghi Chú Giao Dịch</th>
+              <th class="p-4 text-center pr-6">Thao Tác Duyệt</th>
+            </tr>
+          </thead>
+          <tbody id="paymentRequestsBody" class="divide-y divide-slate-200">
+            <tr>
+              <td colspan="6" class="p-8 text-center text-slate-500 font-semibold">Đang tải danh sách yêu cầu nâng cấp...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="auth-interceptor.js"></script>
+  <script src="sidebar.js"></script>
+  <script>
+    renderUnifiedSidebar("admin-payments");
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if ((user.role || "FREE").toUpperCase() !== "ADMIN") {
+      alert("Quyền truy cập bị từ chối! Trang này chỉ dành cho Quản trị viên.");
+      window.location.href = "dashboard.html";
+    }
+
+    async function loadPendingPayments() {
+      try {
+        const res = await fetch("/api/payments/pending");
+        if (res.ok) {
+          const list = await res.json();
+          const tbody = document.getElementById("paymentRequestsBody");
+          tbody.innerHTML = "";
+
+          if (list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-500 font-semibold">Không có yêu cầu nâng cấp gói nào đang chờ phê duyệt.</td></tr>`;
+            return;
+          }
+
+          list.forEach(p => {
+            const tr = document.createElement("tr");
+            tr.className = "hover:bg-slate-50 transition-colors";
+            tr.innerHTML = `
+              <td class="p-4 pl-6 font-extrabold text-slate-900">${p.user.fullName || p.user.username}</td>
+              <td class="p-4 text-slate-600 font-semibold">${p.user.email}</td>
+              <td class="p-4"><span class="badge-3d badge-3d-indigo">${p.plan}</span></td>
+              <td class="p-4 font-mono font-extrabold text-indigo-700">${(p.amount || 0).toLocaleString('vi-VN')}đ</td>
+              <td class="p-4 text-slate-600 font-semibold max-w-xs truncate">${p.paymentNote || ''}</td>
+              <td class="p-4 text-center pr-6 flex justify-center gap-2">
+                <button onclick="approvePayment(${p.id})" class="btn-3d btn-3d-primary px-3.5 py-1.5 text-xs font-bold shadow-md">Duyệt Kích Hoạt</button>
+                <button onclick="rejectPayment(${p.id})" class="btn-3d btn-3d-secondary px-3.5 py-1.5 text-xs font-bold !text-rose-600">Từ chối</button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+          lucide.createIcons();
+        }
+      } catch (err) {
+        console.error("Lỗi nạp yêu cầu thanh toán", err);
+      }
+    }
+
+    async function approvePayment(id) {
+      if (!confirm("Xác nhận phê duyệt nâng cấp gói cho tài khoản này?")) return;
+      try {
+        const res = await fetch(`/api/payments/${id}/approve`, { method: "POST" });
+        if (res.ok) {
+          alert("Phê duyệt nâng cấp gói thành công!");
+          loadPendingPayments();
+        } else {
+          alert("Thao tác thất bại!");
+        }
+      } catch (err) {
+        alert("Lỗi kết nối máy chủ.");
+      }
+    }
+
+    async function rejectPayment(id) {
+      if (!confirm("Từ chối yêu cầu thanh toán nâng cấp này?")) return;
+      try {
+        const res = await fetch(`/api/payments/${id}/reject`, { method: "POST" });
+        if (res.ok) {
+          alert("Đã từ chối giao dịch thành công.");
+          loadPendingPayments();
+        } else {
+          alert("Thao tác thất bại!");
+        }
+      } catch (err) {
+        alert("Lỗi kết nối máy chủ.");
+      }
+    }
+
+    loadPendingPayments();
+    lucide.createIcons();
+  </script>
+</body>
+</html>

@@ -1,143 +1,85 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Study AI - Thẻ ghi nhớs</title>
+  <title>Study AI - Thẻ Ghi Nhớ 3D Active Recall</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <style>
-    .perspective { perspective: 1000px; }
-    .preserve-3d { transform-style: preserve-3d; }
-    .backface-hidden { backface-visibility: hidden; }
-    .rotate-y-180 { transform: rotateY(180deg); }
-  </style>
+  <link rel="stylesheet" href="css/style-3d.css">
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
 
-  <!-- Sidebar -->
-  <aside class="w-64 bg-slate-900/80 backdrop-blur-md border-r border-slate-800 text-slate-202 flex flex-col justify-between p-4 sticky top-0 h-screen z-20">
-    <div>
-      <div class="flex items-center gap-2 px-2 py-4 mb-6">
-        <div class="bg-gradient-to-tr from-indigo-500 to-purple-500 p-2 rounded-xl text-white shadow-lg shadow-indigo-500/30">
-          <i data-lucide="sparkles" class="h-6 w-6"></i>
-        </div>
-        <div>
-          <h1 class="font-bold text-lg bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Study AI</h1>
-          <span class="text-xs text-slate-500 font-medium">Assistant Hub</span>
-        </div>
-      </div>
-
-      <nav class="space-y-1">
-        <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="layout-dashboard" class="h-5 w-5"></i>
-          Bảng điều khiển
-        </a>
-        <a href="documents.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="file-text" class="h-5 w-5"></i>
-          Tài liệu
-        </a>
-        <a href="map.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="network" class="h-5 w-5"></i>
-          Sơ đồ kiến thức
-        </a>
-        <a href="viewer.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="message-square" class="h-5 w-5"></i>
-          <span>Hỏi đáp AI</span>
-        </a>
-        <a href="flashcards.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-indigo-600/20 text-indigo-400 border-l-4 border-indigo-500 pl-2.5 transition-all">
-          <i data-lucide="book-open" class="h-5 w-5"></i>
-          Thẻ ghi nhớ
-        </a>
-        <a href="quiz.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="help-circle" class="h-5 w-5"></i>
-          Trắc nghiệm
-        </a>
-        <a href="progress.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="bar-chart-3" class="h-5 w-5"></i>
-          Tiến độ học tập
-        </a>
-        <a href="profile.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="user" class="h-5 w-5"></i>
-          Thông tin cá nhân
-        </a>
-        <a href="admin.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="shield-alert" class="h-5 w-5"></i>
-          Quản trị viên
-        </a>
-      </nav>
-    </div>
-
-    <div class="border-t border-slate-800 pt-4 mt-auto">
-      <div class="flex items-center gap-3 px-2 py-2 mb-3 bg-slate-900/40 rounded-xl border border-slate-800/40">
-        <div class="w-9 h-9 rounded-full bg-indigo-650 text-white flex items-center justify-center font-bold shadow-md">JD</div>
-        <div class="flex-1 min-w-0">
-          <p id="userNameLabel" class="text-xs font-semibold text-slate-202 truncate">John Doe</p>
-          <p id="userEmailLabel" class="text-[10px] text-slate-505 truncate">john.doe@example.com</p>
-        </div>
-      </div>
-      <a href="login.html" class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all duration-200">
-        <i data-lucide="log-out" class="h-4 w-4"></i>
-        Đăng xuất
-      </a>
-    </div>
-  </aside>
+  <!-- 3D Sidebar -->
+  <aside></aside>
 
   <!-- Main Content -->
-  <main class="flex-1 p-8 overflow-y-auto flex flex-col items-center">
-    <div class="w-full max-w-2xl">
+  <main class="flex-1 p-6 md:p-10 overflow-y-auto flex flex-col items-center relative z-10">
+    <div class="w-full max-w-3xl">
       <div class="flex justify-between items-center mb-8 w-full">
         <div class="flex items-center gap-4">
-          <a id="backLink" href="documents.html" class="p-2.5 bg-slate-900 border border-slate-805 text-slate-404 hover:text-slate-205 rounded-xl transition-all">
+          <a id="backLink" href="documents.html" class="btn-3d btn-3d-secondary p-3 text-slate-700">
             <i data-lucide="arrow-left" class="h-5 w-5"></i>
           </a>
           <div>
-            <h1 class="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent border-none">
-              Study Thẻ ghi nhớs
+            <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">
+              Thẻ Ghi Nhớ Lật 3D
             </h1>
-            <p class="text-xs text-slate-500 mt-0.5">Active recall to boost your knowledge retention</p>
+            <p class="text-xs text-slate-600 mt-1 font-semibold">Ghi nhớ chủ động (Active Recall) tối ưu não bộ</p>
           </div>
         </div>
       </div>
 
       <!-- Progress bar -->
-      <div class="w-full mb-8">
-        <div class="flex justify-between text-xs text-slate-400 mb-2 font-medium">
-          <span>Card progress</span>
-          <span id="progressText">1 of 4 cards</span>
+      <div class="w-full mb-8 glass-3d-card p-4">
+        <div class="flex justify-between text-xs font-extrabold text-slate-700 mb-2">
+          <span>Tiến Độ Lật Thẻ</span>
+          <span id="progressText" class="text-indigo-600">1 / 4 Thẻ</span>
         </div>
-        <div class="w-full bg-slate-900 border border-slate-800 h-2.5 rounded-full overflow-hidden">
-          <div id="progressBar" class="bg-indigo-500 h-full rounded-full transition-all duration-300 w-1/4"></div>
+        <div class="w-full bg-slate-200 border border-slate-300 h-3 rounded-full overflow-hidden p-0.5">
+          <div id="progressBar" class="bg-gradient-to-r from-indigo-600 to-purple-600 h-full rounded-full transition-all duration-300 w-1/4 shadow-sm"></div>
         </div>
       </div>
 
-      <!-- Card Container -->
-      <div onclick="flipCard()" class="w-full aspect-[16/10] cursor-pointer group perspective mb-8">
-        <div id="flashCardInner" class="relative w-full h-full duration-550 preserve-3d transition-transform">
+      <!-- 3D Flashcard Component -->
+      <div class="flashcard-3d-wrapper mb-8" onclick="flipCard()">
+        <div id="flashCardInner" class="flashcard-3d-inner">
           
-          <!-- Front -->
-          <div class="absolute inset-0 bg-slate-900 border border-slate-800 rounded-3xl p-8 flex flex-col justify-between items-center text-center backface-hidden shadow-2xl">
-            <div class="flex justify-between w-full text-slate-500 text-xs font-semibold uppercase tracking-wider">
-              <span>Thẻ khái niệm</span>
-              <i data-lucide="sparkles" class="h-4 w-4 text-indigo-400"></i>
+          <!-- Front Side -->
+          <div class="flashcard-3d-front">
+            <div class="flex justify-between items-center w-full">
+              <span class="badge-3d badge-3d-indigo">KHÁI NIỆM</span>
+              <i data-lucide="sparkles" class="h-5 w-5 text-indigo-600 animate-pulse"></i>
             </div>
-            <h2 id="cardFront" class="text-3xl font-extrabold tracking-tight px-4 text-indigo-100">Perceptron</h2>
-            <div class="flex items-center gap-1.5 text-xs text-slate-450 font-semibold bg-slate-950/60 border border-slate-850 px-3 py-1.5 rounded-xl">
-              <i data-lucide="refresh-cw" class="h-3 w-3 animate-spin"></i> Click to Flip
+            
+            <div class="my-auto text-center px-4">
+              <h2 id="cardFront" class="text-3xl font-extrabold tracking-tight text-slate-900 drop-shadow-sm">Perceptron</h2>
+            </div>
+            
+            <div class="flex justify-center w-full">
+              <span class="inline-flex items-center gap-2 text-xs font-extrabold text-slate-600 bg-slate-100 border border-slate-300 px-4 py-2 rounded-xl">
+                <i data-lucide="rotate-3d" class="h-4 w-4 text-indigo-600"></i> Bấm để lật xem định nghĩa
+              </span>
             </div>
           </div>
 
-          <!-- Back -->
-          <div class="absolute inset-0 bg-indigo-955/40 border border-indigo-900/60 rounded-3xl p-8 flex flex-col justify-between items-center text-center backface-hidden rotate-y-180 shadow-2xl backdrop-blur-sm">
-            <div class="flex justify-between w-full text-indigo-400 text-xs font-semibold uppercase tracking-wider">
-              <span>Định nghĩa</span>
-              <i data-lucide="star" class="h-4 w-4 fill-indigo-405 text-indigo-400"></i>
+          <!-- Back Side -->
+          <div class="flashcard-3d-back">
+            <div class="flex justify-between items-center w-full">
+              <span class="badge-3d badge-3d-emerald">ĐỊNH NGHĨA CHI TIẾT</span>
+              <i data-lucide="star" class="h-5 w-5 text-amber-500 fill-amber-500"></i>
             </div>
-            <p id="cardBack" class="text-lg text-slate-205 leading-relaxed max-w-md">
-              A single layer artificial neuron model used as a binary classifier that calculates a weighted sum of inputs and applies a threshold step function.
-            </p>
-            <div class="flex items-center gap-1.5 text-xs text-indigo-300 font-semibold bg-indigo-955/60 border border-indigo-900/50 px-3 py-1.5 rounded-xl">
-              <i data-lucide="refresh-cw" class="h-3 w-3"></i> Click to Flip Back
+            
+            <div class="my-auto text-center px-4">
+              <p id="cardBack" class="text-lg font-bold text-indigo-950 leading-relaxed max-w-xl mx-auto">
+                Mô hình neuron nhân tạo đơn tầng được sử dụng làm bộ phân loại nhị phân.
+              </p>
+            </div>
+
+            <div class="flex justify-center w-full">
+              <span class="inline-flex items-center gap-2 text-xs font-extrabold text-indigo-700 bg-white/80 border border-indigo-200 px-4 py-2 rounded-xl shadow-sm">
+                <i data-lucide="rotate-3d" class="h-4 w-4"></i> Bấm để quay lại câu hỏi
+              </span>
             </div>
           </div>
 
@@ -146,47 +88,41 @@
 
       <!-- Controls -->
       <div class="flex justify-between gap-4">
-        <button onclick="prevCard()" class="flex items-center justify-center gap-2 py-3 px-6 bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-2xl text-sm font-semibold text-slate-300 transition-all flex-1">
-          <i data-lucide="chevron-left" class="h-4 w-4"></i> Quay lại
+        <button onclick="prevCard()" class="btn-3d btn-3d-secondary py-3.5 px-6 text-sm font-bold flex-1">
+          <i data-lucide="chevron-left" class="h-5 w-5"></i> Thẻ Trước
         </button>
-        <button onclick="nextCard()" class="flex items-center justify-center gap-2 py-3 px-6 bg-indigo-600 hover:bg-indigo-500 rounded-2xl text-sm font-semibold text-white transition-all shadow-lg flex-1">
-          Tiếp theo <i data-lucide="chevron-right" class="h-4 w-4"></i>
+        <button onclick="nextCard()" class="btn-3d btn-3d-primary py-3.5 px-6 text-sm font-bold shadow-xl shadow-indigo-500/30 flex-1">
+          Thẻ Tiếp Theo <i data-lucide="chevron-right" class="h-5 w-5"></i>
         </button>
       </div>
     </div>
   </main>
 
+  <script src="auth-interceptor.js"></script>
+  <script src="sidebar.js"></script>
   <script>
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (!user.id) {
-      window.location.href = "login.html";
-    }
-
-    document.getElementById("userNameLabel").textContent = user.name || "Guest";
-    document.getElementById("userEmailLabel").textContent = user.email || "guest@example.com";
+    renderUnifiedSidebar("flashcards");
 
     const urlParams = new URLSearchParams(window.location.search);
     const docId = urlParams.get("id") || "1";
     document.getElementById("backLink").href = `detail.html?id=${docId}`;
 
     let flashcards = [
-      { id: 1, front: "Perceptron", back: "A single layer artificial neuron model used as a binary classifier that calculates a weighted sum of inputs." },
-      { id: 2, front: "Activation Function", back: "A mathematical function added to help neural networks learn complex patterns (non-linearities)." },
-      { id: 3, front: "Backpropagation", back: "An algorithm commonly used to train neural networks by calculating loss gradients relative to weights." },
-      { id: 4, front: "ReLU (Rectified Linear Unit)", back: "An activation function defined as f(x) = max(0, x), outputting the input if positive." }
+      { id: 1, front: "Perceptron", back: "Mô hình neuron nhân tạo đơn tầng dùng làm bộ phân loại nhị phân tính tổng có trọng số của đầu vào." },
+      { id: 2, front: "Hàm Kích Hoạt (Activation Function)", back: "Hàm toán học giúp mạng neuron học các mẫu hình phi tuyến tính phức tạp." },
+      { id: 3, front: "Lan Truyền Ngược (Backpropagation)", back: "Thuật toán huấn luyện mạng neuron bằng cách tính đạo hàm độ lỗi theo trọng số." },
+      { id: 4, front: "ReLU (Rectified Linear Unit)", back: "Hàm kích hoạt phổ biến f(x) = max(0, x), trả về giá trị dương nếu x > 0." }
     ];
 
     let currentIndex = 0;
     let isFlipped = false;
 
-    async function loadThẻ ghi nhớs() {
+    async function loadFlashcards() {
       try {
-        // Query active topics
         const resTopics = await fetch(`/api/topics/document/${docId}`);
         if (resTopics.ok) {
           const topics = await resTopics.json();
           if (topics.length > 0) {
-            // Find child topics or use the first one
             const topicId = topics[0].children && topics[0].children.length > 0 ? topics[0].children[0].id : topics[0].id;
             const resCards = await fetch(`/api/flashcards/topic/${topicId}`);
             if (resCards.ok) {
@@ -198,7 +134,7 @@
           }
         }
       } catch (err) {
-        console.error("Failed to load flashcards from server. Utilizing mock cards.", err);
+        console.error("Dùng bộ dữ liệu mẫu flashcard", err);
       }
       updateCardDisplay();
     }
@@ -207,9 +143,9 @@
       isFlipped = !isFlipped;
       const inner = document.getElementById("flashCardInner");
       if (isFlipped) {
-        inner.classList.add("rotate-y-180");
+        inner.classList.add("is-flipped");
       } else {
-        inner.classList.remove("rotate-y-180");
+        inner.classList.remove("is-flipped");
       }
     }
 
@@ -220,13 +156,13 @@
       document.getElementById("cardBack").textContent = card.back;
       
       const pos = currentIndex + 1;
-      document.getElementById("progressText").textContent = `${pos} of ${flashcards.length} cards`;
+      document.getElementById("progressText").textContent = `${pos} / ${flashcards.length} Thẻ`;
       document.getElementById("progressBar").style.width = (pos / flashcards.length) * 100 + "%";
     }
 
     function nextCard() {
       isFlipped = false;
-      document.getElementById("flashCardInner").classList.remove("rotate-y-180");
+      document.getElementById("flashCardInner").classList.remove("is-flipped");
       setTimeout(() => {
         if (currentIndex < flashcards.length - 1) {
           currentIndex++;
@@ -234,12 +170,12 @@
           currentIndex = 0;
         }
         updateCardDisplay();
-      }, 150);
+      }, 200);
     }
 
     function prevCard() {
       isFlipped = false;
-      document.getElementById("flashCardInner").classList.remove("rotate-y-180");
+      document.getElementById("flashCardInner").classList.remove("is-flipped");
       setTimeout(() => {
         if (currentIndex > 0) {
           currentIndex--;
@@ -247,16 +183,10 @@
           currentIndex = flashcards.length - 1;
         }
         updateCardDisplay();
-      }, 150);
+      }, 200);
     }
 
-    loadThẻ ghi nhớs();
-    
-    // Hide Admin sidebar link if not ADMIN
-    const adminLink = document.querySelector('a[href="admin.html"]');
-    if (adminLink && (user.role || "FREE").toUpperCase() !== "ADMIN") {
-      adminLink.remove();
-    }
+    loadFlashcards();
     lucide.createIcons();
   </script>
 </body>

@@ -1,282 +1,194 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Study AI - Quản trị viên</title>
+  <title>Study AI - Tổng Quan Quản Trị Hệ Thống 3D</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style-3d.css">
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
 
-  <!-- Sidebar -->
-  <aside class="w-64 bg-slate-900/80 backdrop-blur-md border-r border-slate-800 text-slate-202 flex flex-col justify-between p-4 sticky top-0 h-screen z-20">
-    <div>
-      <div class="flex items-center gap-2 px-2 py-4 mb-6">
-        <div class="bg-gradient-to-tr from-indigo-500 to-purple-500 p-2 rounded-xl text-white shadow-lg shadow-indigo-500/30">
-          <i data-lucide="sparkles" class="h-6 w-6"></i>
-        </div>
-        <div>
-          <h1 class="font-bold text-lg bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Study AI</h1>
-          <span class="text-xs text-slate-500 font-medium" data-i18n="brand_sub">Assistant Hub</span>
-        </div>
-      </div>
-
-      <nav class="space-y-1">
-        <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="layout-dashboard" class="h-5 w-5"></i>
-          <span data-i18n="nav_dashboard">Bảng điều khiển</span>
-        </a>
-        <a href="documents.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="file-text" class="h-5 w-5"></i>
-          <span data-i18n="nav_documents">Tài liệu</span>
-        </a>
-        <a href="map.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="network" class="h-5 w-5"></i>
-          <span data-i18n="nav_map">Sơ đồ kiến thức</span>
-        </a>
-        <a href="viewer.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="message-square" class="h-5 w-5"></i>
-          <span>Hỏi đáp AI</span>
-        </a>
-        <a href="flashcards.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="book-open" class="h-5 w-5"></i>
-          <span data-i18n="nav_flashcards">Thẻ ghi nhớ</span>
-        </a>
-        <a href="quiz.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="help-circle" class="h-5 w-5"></i>
-          <span data-i18n="nav_quiz">Trắc nghiệm</span>
-        </a>
-        <a href="progress.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="bar-chart-3" class="h-5 w-5"></i>
-          <span data-i18n="nav_progress">Tiến độ học tập</span>
-        </a>
-        <a href="profile.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-202 hover:bg-slate-900 transition-all">
-          <i data-lucide="user" class="h-5 w-5"></i>
-          <span data-i18n="nav_profile">Thông tin cá nhân</span>
-        </a>
-        <a href="admin.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-indigo-600/20 text-indigo-400 border-l-4 border-indigo-500 pl-2.5 transition-all">
-          <i data-lucide="shield-alert" class="h-5 w-5"></i>
-          <span data-i18n="nav_admin">Quản trị viên</span>
-        </a>
-      </nav>
-    </div>
-
-    <div class="border-t border-slate-800 pt-4 mt-auto">
-      <div class="flex items-center gap-3 px-2 py-2 mb-3 bg-slate-900/40 rounded-xl border border-slate-800/40">
-        <div class="w-9 h-9 rounded-full bg-indigo-650 text-white flex items-center justify-center font-bold shadow-md">JD</div>
-        <div class="flex-1 min-w-0">
-          <p id="userNameLabel" class="text-xs font-semibold text-slate-202 truncate">John Doe</p>
-          <p id="userEmailLabel" class="text-[10px] text-slate-505 truncate">john.doe@example.com</p>
-        </div>
-      </div>
-      <a href="login.html" class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all duration-200">
-        <i data-lucide="log-out" class="h-4 w-4"></i>
-        <span data-i18n="nav_logout">Đăng xuất</span>
-      </a>
-    </div>
-  </aside>
+  <!-- 3D Sidebar -->
+  <aside></aside>
 
   <!-- Main Content -->
-  <main class="flex-1 p-8 overflow-y-auto">
-    <div class="mb-8">
-      <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent" data-i18n="admin_title">Quản trị viên</h1>
-      <p class="text-slate-400 mt-1" data-i18n="admin_sub">Manage platform users, document quotas, and system moderation</p>
+  <main class="flex-1 p-6 md:p-10 overflow-y-auto relative z-10 space-y-8">
+    <div>
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">
+        Tổng Quan Thống Kê Quản Trị Hệ Thống
+      </h1>
+      <p class="text-slate-600 text-sm mt-1.5 font-semibold">Báo cáo chỉ số hoạt động, tổng doanh thu và trạng thái vận hành hệ thống Study AI 3D real-time</p>
     </div>
 
-    <!-- Quick summary stats -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div class="bg-slate-900/40 border border-slate-850 p-6 rounded-2xl flex items-center gap-4">
-        <div class="p-3 bg-indigo-950/60 text-indigo-400 border border-indigo-900/50 rounded-xl">
+    <!-- Top Metric Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div class="glass-3d-card p-6 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-200 flex items-center justify-center shadow-md shrink-0">
           <i data-lucide="users" class="h-6 w-6"></i>
         </div>
         <div>
-          <p class="text-xs text-slate-500 font-semibold uppercase">Total Users</p>
-          <p class="text-lg font-extrabold text-slate-202 mt-0.5">5</p>
+          <p class="text-xs text-slate-500 font-extrabold uppercase tracking-wider">Tổng Người Dùng</p>
+          <p id="statTotalUsers" class="text-2xl font-extrabold text-slate-900 mt-0.5">0 Thành viên</p>
         </div>
       </div>
-      <div class="bg-slate-900/40 border border-slate-850 p-6 rounded-2xl flex items-center gap-4">
-        <div class="p-3 bg-purple-950/60 text-purple-400 border border-purple-900/50 rounded-xl">
+
+      <div class="glass-3d-card p-6 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center shadow-md shrink-0">
+          <i data-lucide="dollar-sign" class="h-6 w-6"></i>
+        </div>
+        <div>
+          <p class="text-xs text-slate-500 font-extrabold uppercase tracking-wider">Tổng Doanh Thu Nạp</p>
+          <p id="statTotalRevenue" class="text-2xl font-extrabold text-emerald-600 mt-0.5">0đ</p>
+        </div>
+      </div>
+
+      <div class="glass-3d-card p-6 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 border border-purple-200 flex items-center justify-center shadow-md shrink-0">
           <i data-lucide="file-text" class="h-6 w-6"></i>
         </div>
         <div>
-          <p class="text-xs text-slate-505 font-semibold uppercase">Tổng số tài liệu</p>
-          <p class="text-lg font-extrabold text-slate-202 mt-0.5">14 Files</p>
+          <p class="text-xs text-slate-500 font-extrabold uppercase tracking-wider">Tài Liệu Hệ Thống</p>
+          <p id="statTotalDocs" class="text-2xl font-extrabold text-slate-900 mt-0.5">0 Files</p>
         </div>
       </div>
-      <div class="bg-slate-900/40 border border-slate-850 p-6 rounded-2xl flex items-center gap-4">
-        <div class="p-3 bg-amber-950/60 text-amber-450 border border-amber-900/50 rounded-xl">
-          <i data-lucide="shield-alert" class="h-6 w-6"></i>
+
+      <div class="glass-3d-card p-6 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-cyan-50 text-cyan-600 border border-cyan-200 flex items-center justify-center shadow-md shrink-0">
+          <i data-lucide="bot" class="h-6 w-6"></i>
         </div>
         <div>
-          <p class="text-xs text-slate-505 font-semibold uppercase">Banned Users</p>
-          <p class="text-lg font-extrabold text-slate-202 mt-0.5">0</p>
+          <p class="text-xs text-slate-500 font-extrabold uppercase tracking-wider">Hội Thoại Chat AI</p>
+          <p id="statTotalChats" class="text-2xl font-extrabold text-slate-900 mt-0.5">0 Phiên</p>
         </div>
       </div>
     </div>
 
-    <!-- Pending Payment Approvals Table -->
-    <div class="bg-slate-900/30 border border-slate-850 rounded-3xl overflow-hidden shadow-2xl mb-8">
-      <div class="p-6 border-b border-slate-850 flex justify-between items-center">
-        <h3 class="font-bold text-base text-slate-202 flex items-center gap-2">
-          <i data-lucide="credit-card" class="h-5 w-5 text-indigo-400"></i> Phê duyệt nâng cấp gói thanh toán
-        </h3>
-        <span class="text-xs text-slate-500 font-semibold">Cập nhật theo thời gian thực</span>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs border-collapse">
-          <thead>
-            <tr class="bg-slate-950/60 text-slate-500 font-semibold uppercase border-b border-slate-850">
-              <th class="p-4 pl-6">Người dùng</th>
-              <th class="p-4">Email</th>
-              <th class="p-4">Gói đăng ký</th>
-              <th class="p-4">Số tiền nạp</th>
-              <th class="p-4">Mã giao dịch / Ghi chú</th>
-              <th class="p-4 text-center pr-6">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody id="paymentRequestsBody" class="divide-y divide-slate-850">
-            <tr>
-              <td colspan="6" class="p-8 text-center text-slate-500 font-semibold">Đang tải danh sách yêu cầu...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <!-- Second Row Analytics Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- System Health Card -->
+      <div class="glass-3d-card p-6 space-y-4 lg:col-span-2">
+        <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+          <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2">
+            <i data-lucide="activity" class="h-5 w-5 text-indigo-600"></i> Trạng Thái Vận Hành & AI Server
+          </h3>
+          <span class="badge-3d badge-3d-emerald">99.9% Operational</span>
+        </div>
 
-    <!-- User Table -->
-    <div class="bg-slate-900/30 border border-slate-855 rounded-3xl overflow-hidden shadow-2xl">
-      <div class="p-6 border-b border-slate-850">
-        <h3 class="font-bold text-base text-slate-202" data-i18n="admin_users">Registered Users</h3>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2">
+          <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+            <p class="text-[11px] font-bold text-slate-500 uppercase">CSDL MySQL</p>
+            <p class="text-sm font-extrabold text-emerald-600 mt-1 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Kết Nối Tốt
+            </p>
+          </div>
+          <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+            <p class="text-[11px] font-bold text-slate-500 uppercase">Phân Tích PDF / AI</p>
+            <p class="text-sm font-extrabold text-emerald-600 mt-1 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Sẵn Sàng
+            </p>
+          </div>
+          <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+            <p class="text-[11px] font-bold text-slate-500 uppercase">Tài Liệu Xử Lý Lỗi</p>
+            <p id="statFailedDocs" class="text-sm font-extrabold text-rose-600 mt-1">0 File Lỗi</p>
+          </div>
+        </div>
+
+        <!-- Quick navigation shortcuts -->
+        <div class="pt-4 border-t border-slate-200">
+          <p class="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-3">Truy Cập Nhanh Module Quản Trị</p>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <a href="admin-pricing.html" class="p-3 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded-xl text-center font-bold text-xs text-slate-800 hover:text-indigo-700 transition-all shadow-sm">
+              <i data-lucide="tags" class="h-4 w-4 mx-auto mb-1 text-indigo-600"></i> Quản Lý Bảng Giá
+            </a>
+            <a href="admin-payments.html" class="p-3 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded-xl text-center font-bold text-xs text-slate-800 hover:text-indigo-700 transition-all shadow-sm">
+              <i data-lucide="credit-card" class="h-4 w-4 mx-auto mb-1 text-purple-600"></i> Phê Duyệt Nạp
+            </a>
+            <a href="admin-users.html" class="p-3 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded-xl text-center font-bold text-xs text-slate-800 hover:text-indigo-700 transition-all shadow-sm">
+              <i data-lucide="users" class="h-4 w-4 mx-auto mb-1 text-emerald-600"></i> Quản Lý Người Dùng
+            </a>
+            <a href="admin-documents.html" class="p-3 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded-xl text-center font-bold text-xs text-slate-800 hover:text-indigo-700 transition-all shadow-sm">
+              <i data-lucide="folder-open" class="h-4 w-4 mx-auto mb-1 text-amber-600"></i> Quản Lý Tài Liệu
+            </a>
+          </div>
+        </div>
       </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs border-collapse">
-          <thead>
-            <tr class="bg-slate-950/60 text-slate-500 font-semibold uppercase border-b border-slate-850">
-              <th class="p-4 pl-6">Name</th>
-              <th class="p-4">Email</th>
-              <th class="p-4">Vai trò</th>
-              <th class="p-4 text-center">Docs</th>
-              <th class="p-4">Status</th>
-              <th class="p-4 text-center pr-6">Action</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-850">
-            <tr class="hover:bg-slate-900/30 transition-colors">
-              <td class="p-4 pl-6 font-bold text-slate-200">Nguyễn Văn An</td>
-              <td class="p-4 text-slate-400">an@gmail.com</td>
-              <td class="p-4 text-slate-300 font-medium">STUDENT</td>
-              <td class="p-4 text-center text-slate-400 font-mono">4</td>
-              <td class="p-4"><span class="inline-flex px-2 py-0.5 rounded-full font-bold text-[10px] bg-emerald-500/10 text-emerald-450 border border-emerald-500/20">Active</span></td>
-              <td class="p-4 text-center pr-6">
-                <button class="p-1.5 rounded-lg border bg-slate-950 hover:bg-rose-500/10 text-slate-500 hover:text-rose-455 border-slate-800" title="Ban User">
-                  <i data-lucide="ban" class="h-3.5 w-3.5"></i>
-                </button>
-              </td>
-            </tr>
-            <tr class="hover:bg-slate-900/30 transition-colors">
-              <td class="p-4 pl-6 font-bold text-slate-200">Lê Hoàng Nam</td>
-              <td class="p-4 text-slate-400">nam@gmail.com</td>
-              <td class="p-4 text-slate-300 font-medium">FREE</td>
-              <td class="p-4 text-center text-slate-400 font-mono">2</td>
-              <td class="p-4"><span class="inline-flex px-2 py-0.5 rounded-full font-bold text-[10px] bg-emerald-500/10 text-emerald-450 border border-emerald-500/20">Active</span></td>
-              <td class="p-4 text-center pr-6">
-                <button class="p-1.5 rounded-lg border bg-slate-950 hover:bg-rose-500/10 text-slate-500 hover:text-rose-455 border-slate-800" title="Ban User">
-                  <i data-lucide="ban" class="h-3.5 w-3.5"></i>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+
+      <!-- Quick Recent Audit Activity Log Feed -->
+      <div class="glass-3d-card p-6 space-y-4">
+        <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+          <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2">
+            <i data-lucide="shield" class="h-5 w-5 text-indigo-600"></i> Hoạt Động Audit Gần Đây
+          </h3>
+          <a href="admin-audit.html" class="text-xs font-bold text-indigo-600 hover:underline">Xem tất cả &rarr;</a>
+        </div>
+        <div id="recentAuditFeed" class="space-y-3 max-h-[300px] overflow-y-auto">
+          <p class="text-xs text-slate-500 font-semibold text-center py-4">Đang tải hoạt động hệ thống...</p>
+        </div>
       </div>
     </div>
   </main>
 
-  <script src="i18n.js"></script>
+  <script src="auth-interceptor.js"></script>
+  <script src="sidebar.js"></script>
   <script>
+    renderUnifiedSidebar("admin-overview");
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (!user.id) {
-      window.location.href = "login.html";
-    } else if ((user.role || "FREE").toUpperCase() !== "ADMIN") {
+    if ((user.role || "FREE").toUpperCase() !== "ADMIN") {
       alert("Quyền truy cập bị từ chối! Trang này chỉ dành cho Quản trị viên.");
       window.location.href = "dashboard.html";
     }
 
-    document.getElementById("userNameLabel").textContent = user.name || "Admin";
-    document.getElementById("userEmailLabel").textContent = user.email || "admin@example.com";
-
-    async function loadPendingPayments() {
+    async function loadOverviewStats() {
       try {
-        const res = await fetch("/api/payments/pending");
+        const res = await fetch("/api/admin/dashboard");
         if (res.ok) {
-          const list = await res.json();
-          const tbody = document.getElementById("paymentRequestsBody");
-          tbody.innerHTML = "";
+          const stats = await res.json();
+          document.getElementById("statTotalUsers").textContent = `${stats.totalUsers || 0} Thành viên`;
+          document.getElementById("statTotalRevenue").textContent = `${(stats.totalRevenue || 0).toLocaleString('vi-VN')}đ`;
+          document.getElementById("statTotalDocs").textContent = `${stats.totalDocuments || 0} Files`;
+          document.getElementById("statTotalChats").textContent = `${stats.totalConversations || 0} Phiên`;
+          document.getElementById("statFailedDocs").textContent = `${stats.failedProcessingDocs || 0} File Lỗi`;
+        }
+      } catch (err) {
+        console.error("Lỗi nạp thống kê overview:", err);
+      }
+    }
 
-          if (list.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-500 font-semibold">Không có yêu cầu nâng cấp gói nào đang chờ phê duyệt.</td></tr>`;
+    async function loadRecentAudit() {
+      try {
+        const res = await fetch("/api/admin/audit-logs");
+        if (res.ok) {
+          const logs = await res.json();
+          const feed = document.getElementById("recentAuditFeed");
+          feed.innerHTML = "";
+
+          if (logs.length === 0) {
+            feed.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Chưa có nhật ký audit nào.</p>`;
             return;
           }
 
-          list.forEach(p => {
-            const tr = document.createElement("tr");
-            tr.className = "hover:bg-slate-900/30 transition-colors";
-            tr.innerHTML = `
-              <td class="p-4 pl-6 font-bold text-slate-200">${p.user.fullName || p.user.username}</td>
-              <td class="p-4 text-slate-400">${p.user.email}</td>
-              <td class="p-4"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full ${p.plan === 'PRO' ? 'bg-purple-550/10 text-purple-400 border border-purple-900/20' : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'}">${p.plan}</span></td>
-              <td class="p-4 font-mono font-semibold text-slate-300">${p.amount.toLocaleString()}đ</td>
-              <td class="p-4 text-slate-400 max-w-xs truncate">${p.paymentNote || ''}</td>
-              <td class="p-4 text-center pr-6 flex justify-center gap-2">
-                <button onclick="approvePayment(${p.id})" class="px-2.5 py-1 bg-emerald-650 hover:bg-emerald-600 text-white font-bold rounded-lg text-[10px] transition-all shadow-md">Duyệt</button>
-                <button onclick="rejectPayment(${p.id})" class="px-2.5 py-1 bg-slate-950 hover:bg-rose-500/15 border border-slate-800 text-slate-400 hover:text-rose-455 rounded-lg text-[10px] transition-all">Từ chối</button>
-              </td>
+          logs.slice().reverse().slice(0, 5).forEach(log => {
+            const item = document.createElement("div");
+            item.className = "p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs";
+            item.innerHTML = `
+              <div class="flex justify-between font-bold text-slate-900">
+                <span class="text-indigo-600">${log.actor || 'SYSTEM'}</span>
+                <span class="text-[10px] text-slate-400 font-mono">${log.createdAt || ''}</span>
+              </div>
+              <p class="text-slate-700 font-semibold mt-1">${log.action || ''}</p>
             `;
-            tbody.appendChild(tr);
+            feed.appendChild(item);
           });
         }
       } catch (err) {
-        console.error("Failed to load pending payments", err);
+        console.error("Lỗi nạp audit feed:", err);
       }
     }
 
-    async function approvePayment(id) {
-      if (!confirm("Xác nhận phê duyệt nâng cấp gói cho tài khoản này?")) return;
-      try {
-        const res = await fetch(`/api/payments/${id}/approve`, { method: "POST" });
-        if (res.ok) {
-          alert("Phê duyệt nâng cấp gói thành công!");
-          loadPendingPayments();
-        } else {
-          alert("Thao tác thất bại!");
-        }
-      } catch (err) {
-        alert("Lỗi kết nối máy chủ.");
-      }
-    }
-
-    async function rejectPayment(id) {
-      if (!confirm("Từ chối yêu cầu thanh toán nâng cấp này?")) return;
-      try {
-        const res = await fetch(`/api/payments/${id}/reject`, { method: "POST" });
-        if (res.ok) {
-          alert("Đã từ chối giao dịch thành công.");
-          loadPendingPayments();
-        } else {
-          alert("Thao tác thất bại!");
-        }
-      } catch (err) {
-        alert("Lỗi kết nối máy chủ.");
-      }
-    }
-
-    loadPendingPayments();
-    
-    // Hide Admin sidebar link if not ADMIN
-    const adminLink = document.querySelector('a[href="admin.html"]');
-    if (adminLink && (user.role || "FREE").toUpperCase() !== "ADMIN") {
-      adminLink.remove();
-    }
+    loadOverviewStats();
+    loadRecentAudit();
     lucide.createIcons();
   </script>
 </body>

@@ -7,7 +7,7 @@ USE study_assistant;
 -- =========================
 -- 1. USERS
 -- =========================
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     full_name VARCHAR(150),
     username VARCHAR(100) NOT NULL UNIQUE,
@@ -22,7 +22,7 @@ CREATE TABLE users (
 -- =========================
 -- 2. DOCUMENTS
 -- =========================
-CREATE TABLE documents (
+CREATE TABLE IF NOT EXISTS documents (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
     file_name VARCHAR(255) NOT NULL,
@@ -43,21 +43,18 @@ CREATE TABLE documents (
 -- =========================
 -- 3. TOPICS
 -- =========================
-CREATE TABLE topics (
+CREATE TABLE IF NOT EXISTS topics (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     document_id BIGINT NOT NULL,
 
-    -- Topic cha để tạo cây Knowledge Map
     parent_id BIGINT NULL,
 
     name VARCHAR(255) NOT NULL,
     description TEXT,
 
-    -- Vị trí trong tài liệu
     page_start INT,
     page_end INT,
 
-    -- Dùng để sắp xếp các node
     sort_order INT DEFAULT 0,
 
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -76,7 +73,7 @@ CREATE TABLE topics (
 -- =========================
 -- 4. FLASHCARDS
 -- =========================
-CREATE TABLE flashcards (
+CREATE TABLE IF NOT EXISTS flashcards (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     topic_id BIGINT NOT NULL,
     question TEXT NOT NULL,
@@ -92,7 +89,7 @@ CREATE TABLE flashcards (
 -- =========================
 -- 5. QUIZZES
 -- =========================
-CREATE TABLE quizzes (
+CREATE TABLE IF NOT EXISTS quizzes (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     topic_id BIGINT NOT NULL,
     title VARCHAR(255) NOT NULL,
@@ -108,7 +105,7 @@ CREATE TABLE quizzes (
 -- =========================
 -- 6. QUIZ QUESTIONS
 -- =========================
-CREATE TABLE quiz_questions (
+CREATE TABLE IF NOT EXISTS quiz_questions (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     quiz_id BIGINT NOT NULL,
     question TEXT NOT NULL,
@@ -131,7 +128,7 @@ CREATE TABLE quiz_questions (
 -- =========================
 -- 7. QUIZ RESULTS
 -- =========================
-CREATE TABLE quiz_results (
+CREATE TABLE IF NOT EXISTS quiz_results (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
     quiz_id BIGINT NOT NULL,
@@ -156,7 +153,7 @@ CREATE TABLE quiz_results (
 -- =========================
 -- 8. STUDY PROGRESS
 -- =========================
-CREATE TABLE study_progress (
+CREATE TABLE IF NOT EXISTS study_progress (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
     topic_id BIGINT NOT NULL,
@@ -181,3 +178,31 @@ CREATE TABLE study_progress (
     CONSTRAINT uk_user_topic_progress
         UNIQUE (user_id, topic_id)
 );
+
+-- =========================
+-- 9. PRICING PLANS (Bảng Giá Dịch Vụ - SALE & CRUD)
+-- =========================
+CREATE TABLE IF NOT EXISTS pricing_plans (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    plan_code VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    original_price DOUBLE NOT NULL DEFAULT 0,
+    sale_price DOUBLE NOT NULL DEFAULT 0,
+    billing_cycle VARCHAR(50) DEFAULT 'tháng',
+    is_popular BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE,
+    badge_text VARCHAR(100) DEFAULT NULL,
+    description TEXT,
+    features TEXT,
+    document_limit INT DEFAULT 3,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Nạp dữ liệu mẫu khởi tạo bảng giá chuẩn UTF-8
+TRUNCATE TABLE pricing_plans;
+
+INSERT INTO pricing_plans (id, plan_code, name, original_price, sale_price, billing_cycle, is_popular, is_active, badge_text, description, features, document_limit) VALUES
+(1, 'FREE', 'Gói Miễn Phí (FREE)', 0, 0, 'vĩnh viễn', FALSE, TRUE, NULL, 'Phù hợp cho trải nghiệm ban đầu', 'Tải lên tối đa 3 tài liệu|Sơ đồ kiến thức cơ bản|10 Bài trắc nghiệm AI mỗi tháng', 3),
+(2, 'STUDENT', 'Gói Sinh Viên (STUDENT)', 79000, 49000, 'tháng', FALSE, TRUE, 'Giảm 38%', 'Dành cho học sinh sinh viên học tập hàng ngày', 'Tải lên tối đa 50 tài liệu|Sơ đồ kiến thức 3D nâng cao|50 Bài trắc nghiệm AI/tháng|Thẻ Flashcards lật 3D không giới hạn', 50),
+(3, 'PRO', 'Gói Chuyên Nghiệp (PRO)', 149000, 99000, 'tháng', TRUE, TRUE, 'Phổ Biến Nhất - GIẢM 33%', 'Dành cho người học tích cực & nghiên cứu chuyên sâu', 'Tải lên không giới hạn tài liệu|Sơ đồ kiến thức 3D không giới hạn|Không giới hạn Thẻ Flashcards & Bài thi AI|Phân tích chuyên sâu tiến độ học tập|Ưu tiên xử lý từ AI Model', 9999);

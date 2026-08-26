@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study AI - Nhật Ký Audit Hệ Thống 3D</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style-3d.css">
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
+
+  <!-- 3D Sidebar -->
+  <aside></aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 md:p-10 overflow-y-auto relative z-10 space-y-8">
+    <div>
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">
+        Nhật Ký Hệ Thống (Audit Logs Bảo Mật)
+      </h1>
+      <p class="text-slate-600 text-sm mt-1.5 font-semibold">Ghi chép lịch sử thời gian thực các thao tác quyền hạn, sửa đổi bảng giá và bảo mật hệ thống</p>
+    </div>
+
+    <!-- Audit Logs Table Card -->
+    <div class="glass-3d-card rounded-3xl overflow-hidden shadow-2xl">
+      <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-white/90">
+        <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2.5">
+          <i data-lucide="clipboard-list" class="h-5 w-5 text-indigo-600"></i> Lịch Sử Thao Tác Audit Real-time
+        </h3>
+        <span class="badge-3d badge-3d-emerald">Chỉ Đọc</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="bg-slate-100/90 text-slate-600 font-extrabold uppercase border-b border-slate-200">
+              <th class="p-4 pl-6">Thời Gian</th>
+              <th class="p-4">Người Thực Hiện</th>
+              <th class="p-4">Hành Động</th>
+              <th class="p-4">Giá Trị Cũ</th>
+              <th class="p-4">Giá Trị Mới</th>
+              <th class="p-4 pr-6">Địa Chỉ IP</th>
+            </tr>
+          </thead>
+          <tbody id="auditLogsBody" class="divide-y divide-slate-200">
+            <tr>
+              <td colspan="6" class="p-8 text-center text-slate-500 font-semibold">Đang tải nhật ký hệ thống...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="auth-interceptor.js"></script>
+  <script src="sidebar.js"></script>
+  <script>
+    renderUnifiedSidebar("admin-audit");
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if ((user.role || "FREE").toUpperCase() !== "ADMIN") {
+      alert("Quyền truy cập bị từ chối! Trang này chỉ dành cho Quản trị viên.");
+      window.location.href = "dashboard.html";
+    }
+
+    async function loadAdminAuditLogs() {
+      try {
+        const res = await fetch("/api/admin/audit-logs");
+        if (res.ok) {
+          const logs = await res.json();
+          const tbody = document.getElementById("auditLogsBody");
+          tbody.innerHTML = "";
+
+          if (logs.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-500 font-semibold">Chưa có nhật ký audit nào.</td></tr>`;
+            return;
+          }
+
+          logs.slice().reverse().forEach(log => {
+            const tr = document.createElement("tr");
+            tr.className = "hover:bg-slate-50 transition-colors";
+            tr.innerHTML = `
+              <td class="p-4 pl-6 font-mono text-[11px] text-slate-500">${log.createdAt || ''}</td>
+              <td class="p-4 font-bold text-indigo-700">${log.actor || 'SYSTEM'}</td>
+              <td class="p-4 font-mono font-bold text-slate-900">${log.action || ''}</td>
+              <td class="p-4 font-mono text-slate-500 max-w-xs truncate">${log.oldValue || '-'}</td>
+              <td class="p-4 font-mono text-slate-700 max-w-xs truncate">${log.newValue || '-'}</td>
+              <td class="p-4 pr-6 font-mono text-slate-500">${log.ipAddress || '127.0.0.1'}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+      } catch (err) {
+        console.error("Lỗi nạp nhật ký audit:", err);
+      }
+    }
+
+    loadAdminAuditLogs();
+    lucide.createIcons();
+  </script>
+</body>
+</html>

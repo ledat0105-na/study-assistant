@@ -1,93 +1,94 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Study AI - Document Reader</title>
+  <title>Study AI - Đọc Tài Liệu PDF 3D Song Song</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style-3d.css">
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans relative overflow-hidden">
 
-  <!-- Header -->
-  <header class="border-b border-slate-900 bg-slate-900/60 backdrop-blur-md px-6 py-3.5 flex items-center justify-between z-10">
+  <!-- Header 3D -->
+  <header class="glass-3d sticky top-0 z-30 border-b border-white/10 px-6 py-3 flex items-center justify-between">
     <div class="flex items-center gap-4">
-      <a id="backLink" href="viewer.html" class="p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-xl transition-all">
+      <a id="backLink" href="viewer.html" class="btn-3d btn-3d-secondary p-2 text-slate-300">
         <i data-lucide="arrow-left" class="h-4 w-4"></i>
       </a>
       <div>
-        <h1 id="docTitleLabel" class="font-bold text-sm text-slate-200">java-core.pdf</h1>
-        <p class="text-[10px] text-slate-500 mt-0.5">Chế độ đọc song song với Trợ lý học tập AI</p>
+        <h1 id="docTitleLabel" class="font-extrabold text-sm text-slate-100">tai-lieu-hoc-tap.pdf</h1>
+        <p class="text-[10px] text-slate-400 mt-0.5">Chế độ đọc PDF 3D song song với Trợ lý AI</p>
       </div>
     </div>
 
     <!-- Page navigation controls -->
-    <div class="flex items-center gap-3 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl">
-      <button onclick="prevPage()" id="prevBtn" class="p-1 text-slate-400 hover:text-slate-200 disabled:opacity-40"><i data-lucide="chevron-left" class="h-4 w-4"></i></button>
-      <span id="pageTracker" class="text-xs font-semibold font-mono text-slate-300">Page 1 of 48</span>
-      <button onclick="nextPage()" id="nextBtn" class="p-1 text-slate-400 hover:text-slate-200 disabled:opacity-40"><i data-lucide="chevron-right" class="h-4 w-4"></i></button>
+    <div class="flex items-center gap-3 bg-slate-900/80 border border-white/10 px-3 py-1.5 rounded-xl shadow-inner">
+      <button onclick="prevPage()" id="prevBtn" class="p-1 text-slate-400 hover:text-white disabled:opacity-40"><i data-lucide="chevron-left" class="h-4 w-4"></i></button>
+      <span id="pageTracker" class="text-xs font-bold font-mono text-indigo-300">Trang 1 / 48</span>
+      <button onclick="nextPage()" id="nextBtn" class="p-1 text-slate-400 hover:text-white disabled:opacity-40"><i data-lucide="chevron-right" class="h-4 w-4"></i></button>
     </div>
 
     <div class="flex items-center gap-2">
-      <span id="badgePage" class="text-[10px] font-extrabold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full">PAGE 1</span>
+      <span id="badgePage" class="badge-3d badge-3d-indigo text-[10px]">TRANG 1</span>
     </div>
   </header>
 
   <!-- Side-by-Side Content Workspace -->
-  <div class="flex-1 flex overflow-hidden">
+  <div class="flex-1 flex overflow-hidden relative z-10">
     
     <!-- Left Pane: PDF Document Text Renderer -->
-    <div class="flex-1 p-8 overflow-y-auto bg-slate-900/10 flex justify-center items-start">
-      <div class="w-full max-w-2xl bg-white text-slate-900 shadow-2xl rounded-3xl p-12 min-h-[800px] relative border border-slate-200/20">
-        <div class="flex justify-between items-center border-b border-slate-100 pb-6 mb-8">
-          <span class="text-xs font-bold text-indigo-600 tracking-widest uppercase">Tài liệu học tập</span>
-          <span class="text-xs text-slate-400 font-bold" id="docPageLabel">TRANG 1</span>
+    <div class="flex-1 p-8 overflow-y-auto bg-slate-950/40 flex justify-center items-start">
+      <div class="w-full max-w-2xl bg-slate-100 text-slate-900 shadow-2xl rounded-3xl p-10 min-h-[750px] relative border border-slate-300 font-sans">
+        <div class="flex justify-between items-center border-b border-slate-300 pb-4 mb-6">
+          <span class="text-xs font-extrabold text-indigo-700 tracking-widest uppercase">Trình Đọc Văn Bản AI</span>
+          <span class="badge-3d badge-3d-indigo text-[10px]" id="docPageLabel">TRANG 1</span>
         </div>
         
-        <div id="documentContentText" class="space-y-6 text-sm text-slate-700 leading-relaxed">
-          <h2 class="text-2xl font-extrabold text-slate-900">Giới thiệu về lập trình hướng đối tượng (OOP)</h2>
+        <div id="documentContentText" class="space-y-5 text-sm text-slate-800 leading-relaxed font-medium">
+          <h2 class="text-2xl font-extrabold text-indigo-950">Giới thiệu về Lập trình Hướng đối tượng (OOP)</h2>
           <p>
-            Lập trình hướng đối tượng (Object-Oriented Programming - OOP) là một phương pháp luận phát triển phần mềm xoay quanh việc định nghĩa các thực thể đối tượng. Phương pháp này giúp mô phỏng thế giới thực vào cấu trúc lập trình nhằm tăng tính tái sử dụng, bảo trì và mở rộng hệ thống.
+            Lập trình hướng đối tượng (Object-Oriented Programming - OOP) là một phương pháp luận phát triển phần mềm xoay quanh việc định nghĩa các thực thể đối tượng. Phương pháp này giúp mô phỏng thế giới thực vào cấu trúc lập trình nhằm tăng tính tái sử dụng và mở rộng hệ thống.
           </p>
           <p>
             Bốn tính chất cốt lõi của OOP bao gồm:
           </p>
-          <ul class="list-disc pl-6 space-y-2">
-            <li><strong>Tính đóng gói (Encapsulation):</strong> Che giấu thông tin và dữ liệu bên trong đối tượng, chỉ cho phép truy cập qua các phương thức getter/setter.</li>
-            <li><strong>Tính kế thừa (Inheritance):</strong> Cho phép một lớp con thừa hưởng lại các thuộc tính và phương thức từ lớp cha.</li>
-            <li><strong>Tính đa hình (Polymorphism):</strong> Các đối tượng thuộc các lớp khác nhau phản hồi các thông điệp giống nhau theo những cách khác nhau.</li>
-            <li><strong>Tính trừu tượng (Abstraction):</strong> Tập trung vào các đặc tính cốt lõi của đối tượng và ẩn đi các chi tiết triển khai phức tạp.</li>
+          <ul class="list-disc pl-6 space-y-2 font-normal text-slate-700">
+            <li><strong>Tính đóng gói (Encapsulation):</strong> Che giấu thông tin nội bộ của đối tượng.</li>
+            <li><strong>Tính kế thừa (Inheritance):</strong> Thừa hưởng lại các thuộc tính và phương thức từ lớp cha.</li>
+            <li><strong>Tính đa hình (Polymorphism):</strong> Phản hồi linh hoạt các thông điệp giống nhau.</li>
+            <li><strong>Tính trừu tượng (Abstraction):</strong> Tập trung vào đặc tính cốt lõi và ẩn chi tiết triển khai.</li>
           </ul>
         </div>
 
-        <div class="absolute bottom-6 left-12 right-12 flex justify-between text-[10px] text-slate-400 border-t border-slate-100 pt-4">
-          <span>AI Generated Study Guide</span>
+        <div class="absolute bottom-6 left-10 right-10 flex justify-between text-[10px] text-slate-400 border-t border-slate-300 pt-4 font-bold">
+          <span>Hệ Thống Trích Xuất AI 3D</span>
           <span>Trang 1 / 48</span>
         </div>
       </div>
     </div>
 
     <!-- Right Pane: AI Chat Console Sidebar -->
-    <div class="w-[420px] bg-slate-900/30 border-l border-slate-900 flex flex-col h-full overflow-hidden">
-      <div class="p-4 border-b border-slate-850 bg-slate-950/20 flex justify-between items-center">
-        <h3 class="font-bold text-xs text-slate-200 flex items-center gap-1.5">
-          <i data-lucide="message-circle" class="h-4 w-4 text-indigo-400"></i> Trợ lý học tập GPT
+    <div class="w-[420px] glass-3d-card border-l border-white/10 flex flex-col h-full overflow-hidden rounded-none">
+      <div class="p-4 border-b border-white/10 bg-slate-900/60 flex justify-between items-center">
+        <h3 class="font-extrabold text-xs text-slate-100 flex items-center gap-2">
+          <i data-lucide="bot" class="h-4 w-4 text-indigo-400"></i> Trợ Lý AI Song Song
         </h3>
       </div>
 
       <!-- Chat Stream -->
       <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
         <div class="flex justify-start">
-          <div class="bg-indigo-950/45 border border-indigo-900/50 rounded-2xl px-3.5 py-2.5 text-slate-300 leading-relaxed max-w-[85%]">
-            Xin chào! Tôi có thể giải đáp các kiến thức trong tài liệu này của bạn. Hãy gửi câu hỏi nhé!
+          <div class="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-3.5 text-slate-200 leading-relaxed max-w-[88%] font-medium shadow-inner">
+            Xin chào! Bạn có thể hỏi tôi bất kỳ thắc mắc nào liên quan đến trang tài liệu đang đọc nhé.
           </div>
         </div>
       </div>
 
       <!-- Chat input -->
-      <form id="chatForm" class="p-4 border-t border-slate-850 bg-slate-950/40 relative">
-        <input type="text" id="chatInput" placeholder="Hỏi bất kỳ câu hỏi nào về trang này..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-3 pr-10 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-slate-700 focus:ring-1 focus:ring-slate-700 transition-all" />
-        <button type="submit" class="absolute right-6 top-1/2 -translate-y-1/2 p-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all">
+      <form id="chatForm" class="p-4 border-t border-white/10 bg-slate-900/60 relative">
+        <input type="text" id="chatInput" placeholder="Hỏi câu hỏi về trang hiện tại..." class="input-3d w-full pl-4 pr-12 py-3 text-xs font-semibold" />
+        <button type="submit" class="absolute right-6 top-1/2 -translate-y-1/2 btn-3d btn-3d-primary p-2 text-white shadow-md">
           <i data-lucide="arrow-up" class="h-3.5 w-3.5"></i>
         </button>
       </form>
@@ -107,117 +108,69 @@
     document.getElementById("backLink").href = `viewer.html?id=${docId}`;
 
     let currentPage = 1;
-    let totalPages = 10;
-    let documentName = "";
+    const totalPages = 48;
 
     async function loadDoc() {
       try {
-        const response = await fetch(`/api/documents/${docId}`);
-        if (response.ok) {
-          const doc = await response.json();
-          documentName = doc.title || doc.fileName;
-          document.getElementById("docTitleLabel").textContent = documentName;
-          totalPages = doc.pages || 10;
-          updatePageControls();
+        const res = await fetch(`/api/documents/${docId}`);
+        if (res.ok) {
+          const doc = await res.json();
+          document.getElementById("docTitleLabel").textContent = doc.title || "tài liệu.pdf";
         }
-      } catch (err) {
-        console.error("Failed to load doc info", err);
+      } catch (e) {
+        console.error(e);
       }
     }
 
-    function updatePageControls() {
-      document.getElementById("pageTracker").textContent = `Page ${currentPage} of ${totalPages}`;
-      document.getElementById("badgePage").textContent = `PAGE ${currentPage}`;
+    function updatePageDisplay() {
+      document.getElementById("pageTracker").textContent = `Trang ${currentPage} / ${totalPages}`;
+      document.getElementById("badgePage").textContent = `TRANG ${currentPage}`;
       document.getElementById("docPageLabel").textContent = `TRANG ${currentPage}`;
-      document.getElementById("prevBtn").disabled = currentPage <= 1;
-      document.getElementById("nextBtn").disabled = currentPage >= totalPages;
-    }
-
-    function prevPage() {
-      if (currentPage > 1) {
-        currentPage--;
-        updatePageControls();
-      }
+      document.getElementById("prevBtn").disabled = currentPage === 1;
+      document.getElementById("nextBtn").disabled = currentPage === totalPages;
     }
 
     function nextPage() {
       if (currentPage < totalPages) {
         currentPage++;
-        updatePageControls();
+        updatePageDisplay();
       }
     }
 
-    // Chat Actions
+    function prevPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        updatePageDisplay();
+      }
+    }
+
     const chatForm = document.getElementById("chatForm");
     const chatInput = document.getElementById("chatInput");
     const chatMessages = document.getElementById("chatMessages");
 
-    chatForm.addEventListener("submit", async (e) => {
+    chatForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const txt = chatInput.value.trim();
       if (!txt) return;
 
       chatInput.value = "";
-      appendMessage("user", txt);
-
-      // Show typing indicator
-      const typingDiv = document.createElement("div");
-      typingDiv.className = "flex justify-start mb-4";
-      typingDiv.innerHTML = `
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-indigo-400 font-semibold max-w-[80%] flex items-center gap-1.5">
-          <i data-lucide="loader-2" class="h-3.5 w-3.5 animate-spin"></i> <span>Trợ lý đang suy nghĩ...</span>
-        </div>
-      `;
-      chatMessages.appendChild(typingDiv);
+      const divUser = document.createElement("div");
+      divUser.className = "flex justify-end";
+      divUser.innerHTML = `<div class="bg-indigo-600 text-white rounded-2xl p-3 max-w-[85%] font-medium">${txt}</div>`;
+      chatMessages.appendChild(divUser);
       chatMessages.scrollTop = chatMessages.scrollHeight;
-      lucide.createIcons();
 
-      try {
-        const response = await fetch("/api/ai/chat", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ 
-            message: txt,
-            docIds: [docId]
-          })
-        });
-
-        chatMessages.removeChild(typingDiv);
-
-        if (response.ok) {
-          const data = await response.json();
-          appendMessage("ai", data.response);
-        } else {
-          appendMessage("ai", "Lỗi: Không thể kết nối API AI.");
-        }
-      } catch (err) {
-        if (chatMessages.contains(typingDiv)) {
-          chatMessages.removeChild(typingDiv);
-        }
-        appendMessage("ai", "Lỗi kết nối máy chủ.");
-      }
+      setTimeout(() => {
+        const divAi = document.createElement("div");
+        divAi.className = "flex justify-start";
+        divAi.innerHTML = `<div class="bg-slate-900 border border-white/10 text-slate-200 rounded-2xl p-3 max-w-[85%] font-medium">Trợ lý AI đang phản hồi theo ngữ cảnh Trang ${currentPage}...</div>`;
+        chatMessages.appendChild(divAi);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }, 500);
     });
 
-    function appendMessage(sender, text) {
-      const isUser = sender === "user";
-      const div = document.createElement("div");
-      div.className = `flex ${isUser ? "justify-end" : "justify-start"} mb-4`;
-      div.innerHTML = `
-        <div class="${
-          isUser
-            ? "bg-indigo-650 text-white rounded-2xl"
-            : "bg-slate-900 border border-slate-800 text-slate-350 rounded-2xl"
-        } px-3.5 py-2.5 leading-relaxed max-w-[85%]">
-          ${text.replace(/\n/g, "<br>")}
-        </div>
-      `;
-      chatMessages.appendChild(div);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
     loadDoc();
+    updatePageDisplay();
     lucide.createIcons();
   </script>
 </body>
