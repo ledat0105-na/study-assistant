@@ -124,9 +124,20 @@ body {
 }
 
 .glass-3d-card:hover {
-  transform: translateY(-8px) scale(1.015) rotateX(2deg);
+  transform: translateY(-2px);
   border-color: rgba(99, 102, 241, 0.4);
-  box-shadow: var(--shadow-3d-lg);
+  box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.15), 0 4px 6px -2px rgba(15, 23, 42, 0.05);
+}
+
+.glass-3d-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.6s ease;
 }
 
 .glass-3d-card:hover::before {
@@ -142,7 +153,7 @@ body {
   gap: 0.5rem;
   font-weight: 700;
   border-radius: 1rem;
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
   transform-style: preserve-3d;
   cursor: pointer;
   user-select: none;
@@ -151,39 +162,39 @@ body {
 .btn-3d-primary {
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   color: #ffffff;
-  box-shadow: 0 6px 0 #3730a3, 0 12px 25px rgba(79, 70, 229, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  box-shadow: 0 3px 0 #3730a3, 0 8px 15px rgba(79, 70, 229, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .btn-3d-primary:hover {
   background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 0 #3730a3, 0 16px 30px rgba(79, 70, 229, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 #3730a3, 0 10px 20px rgba(79, 70, 229, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.5);
 }
 
 .btn-3d-primary:active {
-  transform: translateY(4px);
-  box-shadow: 0 2px 0 #3730a3, 0 6px 12px rgba(79, 70, 229, 0.25);
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #3730a3, 0 4px 8px rgba(79, 70, 229, 0.2);
 }
 
 .btn-3d-secondary {
   background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
   color: #1e293b;
   border: 1px solid rgba(203, 213, 225, 0.9);
-  box-shadow: 0 4px 0 #cbd5e1, 0 8px 15px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 1);
+  box-shadow: 0 2px 0 #cbd5e1, 0 4px 10px rgba(0, 0, 0, 0.04), inset 0 1px 1px rgba(255, 255, 255, 1);
 }
 
 .btn-3d-secondary:hover {
   border-color: rgba(99, 102, 241, 0.4);
   background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
   color: #4f46e5;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 0 #cbd5e1, 0 12px 20px rgba(99, 102, 241, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 0 #cbd5e1, 0 6px 14px rgba(99, 102, 241, 0.1);
 }
 
 .btn-3d-secondary:active {
-  transform: translateY(3px);
-  box-shadow: 0 1px 0 #cbd5e1, 0 4px 8px rgba(0, 0, 0, 0.05);
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #cbd5e1, 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 /* --- 3D Flashcard Flip System --- */

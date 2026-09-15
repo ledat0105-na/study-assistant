@@ -40,124 +40,231 @@
   </header>
 
   <!-- Main 3-Column Layout -->
-  <div class="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 p-6 h-[calc(100vh-68px)] min-h-0 overflow-hidden relative z-10">
+  <div class="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-4 p-4 h-[calc(100vh-68px)] min-h-0 overflow-hidden relative z-10">
     
-    <!-- Column 1: Sources (Nguồn) -->
-    <div class="glass-3d-card p-6 flex flex-col h-full min-h-0 overflow-hidden">
-      <div class="flex justify-between items-center mb-4 border-b border-slate-200 pb-3">
-        <h3 class="font-extrabold text-xs text-slate-900 uppercase tracking-wider flex items-center gap-2">
-          <i data-lucide="folder-open" class="h-4 w-4 text-indigo-600"></i> Nguồn Tài Liệu
+    <!-- Column 1: Sources (Nguồn) - Compact 1 Column -->
+    <div class="lg:col-span-1 glass-3d-card p-4 flex flex-col h-full min-h-0 overflow-hidden">
+      <div class="flex justify-between items-center mb-3 border-b border-slate-200 pb-2 flex-shrink-0">
+        <h3 class="font-extrabold text-[11px] text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+          <i data-lucide="folder-open" class="h-3.5 w-3.5 text-indigo-600"></i> Nguồn Tài Liệu
         </h3>
-        <span id="sourceCount" class="badge-3d badge-3d-indigo text-[10px]">0 tài liệu</span>
+        <span id="sourceCount" class="badge-3d badge-3d-indigo text-[9px]">0 tài liệu</span>
       </div>
 
       <!-- Add source button -->
-      <a href="upload.html" class="btn-3d btn-3d-secondary py-3 px-4 text-xs font-bold mb-4">
-        <i data-lucide="plus" class="h-4 w-4"></i> Thêm Nguồn Học Tập
+      <a href="upload.html" class="btn-3d btn-3d-secondary py-2 px-3 text-[11px] font-bold mb-3 flex-shrink-0 justify-center">
+        <i data-lucide="plus" class="h-3.5 w-3.5"></i> Thêm Nguồn
       </a>
 
       <!-- Selection controls -->
-      <div class="flex justify-between items-center mb-3 text-[10px] font-extrabold text-slate-600 px-1">
+      <div class="flex justify-between items-center mb-2 text-[10px] font-extrabold text-slate-600 px-0.5 flex-shrink-0">
         <button onclick="selectAllSources()" class="hover:text-indigo-600 transition-colors">Chọn tất cả</button>
         <button onclick="deselectAllSources()" class="hover:text-indigo-600 transition-colors">Bỏ chọn tất cả</button>
       </div>
 
       <!-- Sources List -->
-      <div id="sourcesList" class="flex-1 overflow-y-auto space-y-2.5 pr-1">
-        <div class="text-center py-8 text-xs text-slate-500 font-semibold">Đang tải danh sách tài liệu...</div>
+      <div id="sourcesList" class="flex-1 overflow-y-auto space-y-2 pr-1 min-h-0">
+        <div class="text-center py-6 text-[11px] text-slate-500 font-semibold">Đang tải danh sách tài liệu...</div>
       </div>
     </div>
 
     <!-- Column 2 & 3: Chat Assistant (Cuộc trò chuyện) -->
-    <div class="lg:col-span-2 glass-3d-card p-6 flex flex-col h-full min-h-0 overflow-hidden relative">
-      <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200">
-        <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+    <div id="chatPanel" onclick="expandChatPanel()" class="lg:col-span-2 glass-3d-card p-5 flex flex-col h-full min-h-0 overflow-hidden relative transition-all duration-300 cursor-pointer">
+      <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-200 flex-shrink-0">
+        <h3 class="font-extrabold text-xs text-slate-900 flex items-center gap-2">
           <i data-lucide="bot" class="h-4 w-4 text-indigo-600"></i> Trợ Lý Hỏi Đáp Chatbot AI
         </h3>
-        <span class="badge-3d badge-3d-emerald text-[10px]">AI MODEL ACTIVE</span>
+        <span class="badge-3d badge-3d-emerald text-[9px]">AI MODEL ACTIVE</span>
       </div>
 
-      <!-- Message stream -->
-      <div id="chatMessages" class="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 text-xs">
-        <div class="flex justify-start mb-4">
-          <div class="bg-indigo-50/90 border border-indigo-200 rounded-2xl p-4 text-slate-800 leading-relaxed max-w-[88%] shadow-sm font-semibold">
+      <!-- Message stream (Fixed Flex Scroll & Padding) -->
+      <div id="chatMessages" class="flex-1 overflow-y-auto space-y-3 mb-3 pr-2 text-xs min-h-0 max-h-full">
+        <div class="flex justify-start mb-3">
+          <div class="bg-indigo-50/90 border border-indigo-200 rounded-2xl p-3.5 text-slate-800 leading-relaxed max-w-[88%] shadow-sm font-semibold">
             Chào mừng bạn đến với Phòng Chatbot AI 3D! Bạn có thể chọn các tài liệu bên trái để đặt câu hỏi, yêu cầu tóm tắt hoặc giải thích ngữ cảnh chi tiết.
           </div>
         </div>
       </div>
 
       <!-- Prompt Input bar -->
-      <form id="chatForm" class="relative mt-auto">
-        <input type="text" id="chatInput" placeholder="Đặt câu hỏi hoặc yêu cầu AI từ tài liệu của bạn..." class="input-3d w-full pl-4 pr-14 py-3.5 text-xs font-semibold" />
+      <form id="chatForm" class="relative mt-auto flex-shrink-0 pt-2 border-t border-slate-100" onclick="event.stopPropagation(); expandChatPanel();">
+        <input type="text" id="chatInput" onfocus="expandChatPanel()" placeholder="Đặt câu hỏi hoặc yêu cầu AI từ tài liệu của bạn..." class="input-3d w-full pl-4 pr-14 py-3 text-xs font-semibold" />
         <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 btn-3d btn-3d-primary p-2 text-white shadow-md">
           <i data-lucide="arrow-up" class="h-4 w-4"></i>
         </button>
       </form>
     </div>
 
-    <!-- Column 4: Studio Toolkit -->
-    <div class="glass-3d-card p-6 flex flex-col h-full min-h-0 overflow-hidden">
-      <div class="mb-4 border-b border-slate-200 pb-3">
-        <h3 class="font-extrabold text-xs text-slate-900 uppercase tracking-wider flex items-center gap-2">
-          <i data-lucide="grid" class="h-4 w-4 text-purple-600"></i> Bộ Công Cụ 3D
-        </h3>
+    <!-- Column 4 & 5: Interactive 3D Studio Toolkit & Embedded Workspace -->
+    <div id="studioPanel" class="lg:col-span-2 glass-3d-card p-5 flex flex-col h-full min-h-0 overflow-hidden relative transition-all duration-300">
+      <!-- Header & Tab Navigation Bar -->
+      <div class="mb-3 border-b border-slate-200 pb-2 flex-shrink-0">
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="font-extrabold text-xs text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="grid" class="h-4 w-4 text-purple-600"></i> Bộ Công Cụ 3D Trực Tiếp
+          </h3>
+          <span id="activeTabBadge" class="badge-3d badge-3d-indigo text-[9px] uppercase px-2 py-0.5">TỔNG QUAN</span>
+        </div>
+
+        <!-- Scrollable & Draggable Tab Slider Bar -->
+        <div class="relative flex items-center">
+          <div id="studioTabBar" class="studio-tab-bar flex items-center gap-1.5 overflow-x-auto w-full py-1 text-[11px] font-bold cursor-grab active:cursor-grabbing">
+            <button onclick="switchStudioTab('overview')" id="tabBtn-overview" class="studio-tab-btn active px-3 py-1.5 rounded-xl border flex items-center gap-1 shrink-0 transition-all">
+              <i data-lucide="layout-grid" class="h-3.5 w-3.5 text-indigo-600"></i> <span>Menu</span>
+            </button>
+            <button onclick="switchStudioTab('map')" id="tabBtn-map" class="studio-tab-btn px-3 py-1.5 rounded-xl border flex items-center gap-1 shrink-0 transition-all">
+              <i data-lucide="network" class="h-3.5 w-3.5 text-purple-600"></i> <span>Sơ đồ 3D</span>
+            </button>
+            <button onclick="switchStudioTab('flashcard')" id="tabBtn-flashcard" class="studio-tab-btn px-3 py-1.5 rounded-xl border flex items-center gap-1 shrink-0 transition-all">
+              <i data-lucide="layers" class="h-3.5 w-3.5 text-amber-600"></i> <span>Flashcard 3D</span>
+            </button>
+            <button onclick="switchStudioTab('quiz')" id="tabBtn-quiz" class="studio-tab-btn px-3 py-1.5 rounded-xl border flex items-center gap-1 shrink-0 transition-all">
+              <i data-lucide="help-circle" class="h-3.5 w-3.5 text-emerald-600"></i> <span>Trắc nghiệm</span>
+            </button>
+            <button onclick="switchStudioTab('summary')" id="tabBtn-summary" class="studio-tab-btn px-3 py-1.5 rounded-xl border flex items-center gap-1 shrink-0 transition-all">
+              <i data-lucide="clipboard" class="h-3.5 w-3.5 text-rose-600"></i> <span>Tóm tắt AI</span>
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div class="flex-1 overflow-y-auto space-y-3 pr-1">
-        <!-- PDF Reader card -->
-        <button id="toolRead" class="glass-3d-card w-full text-left p-4 hover:border-indigo-400 flex items-center justify-between group">
-          <div>
-            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2"><i data-lucide="book-open" class="h-4 w-4 text-indigo-600"></i> Đọc Tài Liệu PDF</h4>
-            <p class="text-[10px] text-slate-500 font-semibold mt-1">Đọc trực tiếp chế độ song song</p>
-          </div>
-          <i data-lucide="chevron-right" class="h-4 w-4 text-slate-400 group-hover:text-indigo-600 transition-transform group-hover:translate-x-1"></i>
-        </button>
+      <!-- Tab Content Area -->
+      <div class="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+        
+        <!-- Tab 0: Overview / Menu Launcher -->
+        <div id="tabContent-overview" class="studio-tab-panel flex-1 overflow-y-auto space-y-2.5 pr-1 min-h-0">
+          <button onclick="switchStudioTab('map')" class="glass-3d-card w-full text-left p-3.5 hover:border-purple-400 flex items-center justify-between group transition-all">
+            <div>
+              <h4 class="text-xs font-extrabold text-slate-900 flex items-center gap-2"><i data-lucide="network" class="h-4 w-4 text-purple-600"></i> Sơ Đồ Kiến Thức 3D</h4>
+              <p class="text-[10px] text-slate-500 font-semibold mt-0.5">Cấu trúc cây chủ đề &amp; liên kết tri thức</p>
+            </div>
+            <i data-lucide="chevron-right" class="h-4 w-4 text-slate-400 group-hover:text-purple-600 transition-transform group-hover:translate-x-1"></i>
+          </button>
 
-        <!-- Mind Map card -->
-        <button id="toolMap" class="glass-3d-card w-full text-left p-4 hover:border-purple-400 flex items-center justify-between group">
-          <div>
-            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2"><i data-lucide="network" class="h-4 w-4 text-purple-600"></i> Sơ Đồ Tư Duy 3D</h4>
-            <p class="text-[10px] text-slate-500 font-semibold mt-1">Sơ đồ chủ đề liên kết tự động</p>
-          </div>
-          <i data-lucide="chevron-right" class="h-4 w-4 text-slate-400 group-hover:text-purple-600 transition-transform group-hover:translate-x-1"></i>
-        </button>
+          <button onclick="switchStudioTab('flashcard')" class="glass-3d-card w-full text-left p-3.5 hover:border-amber-400 flex items-center justify-between group transition-all">
+            <div>
+              <h4 class="text-xs font-extrabold text-slate-900 flex items-center gap-2"><i data-lucide="layers" class="h-4 w-4 text-amber-600"></i> Thẻ Ghi Nhớ Flashcard 3D</h4>
+              <p class="text-[10px] text-slate-500 font-semibold mt-0.5">Lật thẻ 3D ôn tập Active Recall ghi nhớ sâu</p>
+            </div>
+            <i data-lucide="chevron-right" class="h-4 w-4 text-slate-400 group-hover:text-amber-600 transition-transform group-hover:translate-x-1"></i>
+          </button>
 
-        <!-- Flashcards card -->
-        <button id="toolFlash" class="glass-3d-card w-full text-left p-4 hover:border-amber-400 flex items-center justify-between group">
-          <div>
-            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2"><i data-lucide="layers" class="h-4 w-4 text-amber-600"></i> Thẻ Flashcard Lật 3D</h4>
-            <p class="text-[10px] text-slate-500 font-semibold mt-1">Ôn tập chủ động Active Recall</p>
-          </div>
-          <i data-lucide="chevron-right" class="h-4 w-4 text-slate-400 group-hover:text-amber-600 transition-transform group-hover:translate-x-1"></i>
-        </button>
+          <button onclick="switchStudioTab('quiz')" class="glass-3d-card w-full text-left p-3.5 hover:border-emerald-400 flex items-center justify-between group transition-all">
+            <div>
+              <h4 class="text-xs font-extrabold text-slate-900 flex items-center gap-2"><i data-lucide="help-circle" class="h-4 w-4 text-emerald-600"></i> Trắc Nghiệm AI Thông Minh</h4>
+              <p class="text-[10px] text-slate-500 font-semibold mt-0.5">Thi thử &amp; giải thích đáp án trực tiếp</p>
+            </div>
+            <i data-lucide="chevron-right" class="h-4 w-4 text-slate-400 group-hover:text-emerald-600 transition-transform group-hover:translate-x-1"></i>
+          </button>
 
-        <!-- Quiz card -->
-        <button id="toolQuiz" class="glass-3d-card w-full text-left p-4 hover:border-emerald-400 flex items-center justify-between group">
-          <div>
-            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2"><i data-lucide="help-circle" class="h-4 w-4 text-emerald-600"></i> Trắc Nghiệm Tự Động</h4>
-            <p class="text-[10px] text-slate-500 font-semibold mt-1">Tạo bài thi đánh giá trình độ</p>
-          </div>
-          <i data-lucide="chevron-right" class="h-4 w-4 text-slate-400 group-hover:text-emerald-600 transition-transform group-hover:translate-x-1"></i>
-        </button>
+          <button onclick="switchStudioTab('summary')" class="glass-3d-card w-full text-left p-3.5 hover:border-rose-400 flex items-center justify-between group transition-all">
+            <div>
+              <h4 class="text-xs font-extrabold text-slate-900 flex items-center gap-2"><i data-lucide="clipboard" class="h-4 w-4 text-rose-600"></i> Tóm Tắt Tự Động AI</h4>
+              <p class="text-[10px] text-slate-500 font-semibold mt-0.5">Trích xuất khái niệm &amp; nội dung cốt lõi</p>
+            </div>
+            <i data-lucide="chevron-right" class="h-4 w-4 text-slate-400 group-hover:text-rose-600 transition-transform group-hover:translate-x-1"></i>
+          </button>
+        </div>
 
-        <!-- Report card -->
-        <button id="toolReport" class="glass-3d-card w-full text-left p-4 hover:border-rose-400 flex items-center justify-between group">
-          <div>
-            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2"><i data-lucide="clipboard" class="h-4 w-4 text-rose-600"></i> Tóm Tắt Chi Tiết</h4>
-            <p class="text-[10px] text-slate-500 font-semibold mt-1">Trích xuất khái niệm nhanh</p>
+        <!-- Tab 2: 3D Knowledge Mind Map -->
+        <div id="tabContent-map" class="studio-tab-panel hidden flex flex-col h-full min-h-0 overflow-hidden space-y-2.5">
+          <div class="flex justify-between items-center bg-purple-50/80 p-2.5 rounded-xl border border-purple-200 flex-shrink-0">
+            <span class="text-[11px] font-bold text-purple-800 flex items-center gap-1.5"><i data-lucide="network" class="h-3.5 w-3.5"></i> Sơ đồ tư duy chủ đề 3D</span>
+            <span class="badge-3d badge-3d-indigo text-[9px]">CHI TIẾT MỞ RỘNG</span>
           </div>
-          <i data-lucide="chevron-right" class="h-4 w-4 text-slate-400 group-hover:text-rose-600 transition-transform group-hover:translate-x-1"></i>
-        </button>
+          <div id="mapInlineBox" class="flex-1 space-y-2 overflow-y-auto pr-1 min-h-0">
+            <p class="text-slate-400 text-center py-8 font-semibold">Đang tải sơ đồ tư duy...</p>
+          </div>
+        </div>
+
+        <!-- Tab 3: 3D Flashcards -->
+        <div id="tabContent-flashcard" class="studio-tab-panel hidden flex flex-col h-full min-h-0 overflow-hidden space-y-2.5">
+          <div class="flex justify-between items-center bg-amber-50/80 p-2.5 rounded-xl border border-amber-200 flex-shrink-0">
+            <span id="flashcardCounter" class="text-[11px] font-bold text-amber-800 flex items-center gap-1.5"><i data-lucide="layers" class="h-3.5 w-3.5"></i> Thẻ Flashcard 3D (0/0)</span>
+            <span class="badge-3d badge-3d-amber text-[9px]">ACTIVE RECALL</span>
+          </div>
+          
+          <div id="flashcardInlineBox" class="flex flex-col items-center justify-center p-2 flex-1 overflow-y-auto min-h-0">
+            <!-- 3D Flip Card Container -->
+            <div id="flashcard3D" onclick="flipFlashcard()" class="w-full h-56 bg-white rounded-3xl border border-amber-200 shadow-lg p-5 cursor-pointer flex flex-col justify-between transition-all duration-500 hover:shadow-amber-200/50 hover:border-amber-400 transform-gpu relative">
+              <div class="flex justify-between items-center border-b border-amber-100 pb-2">
+                <span id="fcSideBadge" class="badge-3d badge-3d-amber text-[9px]">MẶT TRƯỚC (THUẬT NGỮ)</span>
+                <span class="text-[10px] text-slate-400 font-bold flex items-center gap-1"><i data-lucide="rotate-cw" class="h-3 w-3"></i> Nhấp để lật 3D</span>
+              </div>
+              <div id="fcContentText" class="text-center font-extrabold text-sm text-slate-800 px-2 my-auto leading-relaxed">
+                Đang nạp thẻ ghi nhớ...
+              </div>
+              <div id="fcHintText" class="text-[10px] text-center text-slate-500 italic font-semibold">
+                Bấm vào thẻ để xem định nghĩa
+              </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex justify-between items-center w-full mt-3 gap-2">
+              <button onclick="prevFlashcard()" class="btn-3d btn-3d-secondary flex-1 py-1.5 text-xs font-bold flex justify-center items-center gap-1">
+                <i data-lucide="chevron-left" class="h-3.5 w-3.5"></i> Trước
+              </button>
+              <button onclick="nextFlashcard()" class="btn-3d btn-3d-primary flex-1 py-1.5 text-xs font-bold flex justify-center items-center gap-1">
+                Tiếp <i data-lucide="chevron-right" class="h-3.5 w-3.5"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 4: Interactive AI Quiz -->
+        <div id="tabContent-quiz" class="studio-tab-panel hidden flex flex-col h-full min-h-0 overflow-hidden space-y-2.5">
+          <div class="flex justify-between items-center bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200 flex-shrink-0">
+            <span id="quizCounter" class="text-[11px] font-bold text-emerald-800 flex items-center gap-1.5"><i data-lucide="help-circle" class="h-3.5 w-3.5"></i> Bài Trắc Nghiệm AI</span>
+            <span class="badge-3d badge-3d-emerald text-[9px]">KIỂM TRA KIẾN THỨC</span>
+          </div>
+          <div id="quizInlineBox" class="flex-1 space-y-3 overflow-y-auto pr-1 min-h-0">
+            <p class="text-slate-400 text-center py-8 font-semibold">Đang nạp bài trắc nghiệm...</p>
+          </div>
+        </div>
+
+        <!-- Tab 5: AI Document Summary -->
+        <div id="tabContent-summary" class="studio-tab-panel hidden flex flex-col h-full min-h-0 overflow-hidden space-y-2.5">
+          <div class="flex justify-between items-center bg-rose-50/80 p-2.5 rounded-xl border border-rose-200 flex-shrink-0">
+            <span class="text-[11px] font-bold text-rose-800 flex items-center gap-1.5"><i data-lucide="clipboard" class="h-3.5 w-3.5"></i> Tóm tắt tài liệu AI</span>
+            <span class="badge-3d badge-3d-rose text-[9px]">NỘI DUNG CỐT LÕI</span>
+          </div>
+          <div id="summaryInlineBox" class="flex-1 bg-white p-4 rounded-2xl border border-slate-200 overflow-y-auto text-xs text-slate-800 leading-relaxed font-medium min-h-0">
+            <p class="text-slate-400 text-center py-8 font-semibold">Đang nạp tóm tắt tài liệu...</p>
+          </div>
+        </div>
+
       </div>
 
-      <div class="border-t border-slate-200 pt-4 mt-auto">
-        <a href="dashboard.html" class="btn-3d btn-3d-secondary w-full py-2.5 text-xs font-bold">
-          <i data-lucide="layout-dashboard" class="h-4 w-4"></i> Trở Về Bảng Điều Khiển
+      <!-- Bottom Dashboard Link -->
+      <div class="border-t border-slate-200 pt-3 mt-auto flex-shrink-0">
+        <a href="dashboard.html" class="btn-3d btn-3d-secondary w-full py-2 text-xs font-bold flex justify-center items-center gap-1.5">
+          <i data-lucide="layout-dashboard" class="h-3.5 w-3.5"></i> Trở Về Bảng Điều Khiển
         </a>
       </div>
     </div>
 
   </div>
+
+  <style>
+    .studio-tab-btn {
+      background: rgba(241, 245, 249, 0.8);
+      border-color: #e2e8f0;
+      color: #64748b;
+    }
+    .studio-tab-btn.active {
+      background: #ffffff;
+      border-color: #6366f1;
+      color: #4f46e5;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
 
   <script src="citations.js"></script>
   <script src="i18n.js"></script>
@@ -169,6 +276,32 @@
 
     let selectedDocIds = [];
     let documents = [];
+    let activeStudioTab = "overview";
+
+    // Data states for inline tools
+    let currentFlashcards = [];
+    let currentFcIndex = 0;
+    let isFcShowingFront = true;
+    let currentQuizQuestions = [];
+    let quizUserAnswers = {};
+
+    const STORAGE_KEY = `study_ai_selected_docs_${user.id || 'guest'}`;
+
+    function saveSelectedDocIds() {
+      try {
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(selectedDocIds));
+      } catch (e) {}
+    }
+
+    function getSavedSelectedDocIds() {
+      try {
+        const saved = sessionStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          return JSON.parse(saved);
+        }
+      } catch (e) {}
+      return null;
+    }
 
     async function loadDocuments() {
       try {
@@ -177,9 +310,31 @@
           documents = await response.json();
           document.getElementById("sourceCount").textContent = `${documents.length} tài liệu`;
 
-          if (documents.length > 0) {
-            selectedDocIds = [documents[0].id];
+          const urlParams = new URLSearchParams(window.location.search);
+          const paramId = urlParams.get("id");
+          const paramTab = urlParams.get("tab");
+
+          if (paramId) {
+            const numId = parseInt(paramId, 10);
+            selectedDocIds = [numId];
+            saveSelectedDocIds();
+          } else {
+            const saved = getSavedSelectedDocIds();
+            if (saved !== null && Array.isArray(saved)) {
+              const validIds = documents.map(d => d.id);
+              selectedDocIds = saved.filter(id => validIds.includes(id));
+            } else {
+              // Khi khởi động lại server hoặc phiên làm việc mới: bỏ chọn tất cả
+              selectedDocIds = [];
+            }
+          }
+
+          if (selectedDocIds.length > 0) {
             autoSummarizeActiveDoc();
+          }
+
+          if (paramTab) {
+            switchStudioTab(paramTab);
           }
 
           renderSources();
@@ -264,6 +419,7 @@
     function openDocument(id) {
       if (!selectedDocIds.includes(id)) {
         selectedDocIds = [id];
+        saveSelectedDocIds();
         renderSources();
         updateActiveDocumentDetails();
       }
@@ -276,6 +432,7 @@
         const response = await fetch(`/api/documents/${id}`, { method: "DELETE" });
         if (response.ok) {
           selectedDocIds = selectedDocIds.filter(dId => dId !== id);
+          saveSelectedDocIds();
           loadDocuments();
         }
       } catch (err) {
@@ -290,18 +447,21 @@
       } else {
         selectedDocIds.splice(idx, 1);
       }
+      saveSelectedDocIds();
       renderSources();
       updateActiveDocumentDetails();
     }
 
     function selectAllSources() {
       selectedDocIds = documents.map(d => d.id);
+      saveSelectedDocIds();
       renderSources();
       updateActiveDocumentDetails();
     }
 
     function deselectAllSources() {
       selectedDocIds = [];
+      saveSelectedDocIds();
       renderSources();
       updateActiveDocumentDetails();
     }
@@ -311,12 +471,6 @@
       
       if (selectedDocIds.length === 0) {
         titleLabel.textContent = "Vui lòng chọn nguồn tài liệu";
-        const disableTool = () => alert("Vui lòng chọn ít nhất một nguồn tài liệu ở cột bên trái!");
-        document.getElementById("toolRead").onclick = disableTool;
-        document.getElementById("toolMap").onclick = disableTool;
-        document.getElementById("toolFlash").onclick = disableTool;
-        document.getElementById("toolQuiz").onclick = disableTool;
-        document.getElementById("toolReport").onclick = disableTool;
         return;
       }
 
@@ -330,11 +484,321 @@
       }
 
       const primaryDocId = selectedDocIds[0];
-      document.getElementById("toolRead").onclick = () => window.location.href = `reader.html?id=${primaryDocId}`;
-      document.getElementById("toolMap").onclick = () => window.location.href = `map.html?id=${primaryDocId}`;
-      document.getElementById("toolFlash").onclick = () => window.location.href = `flashcards.html?id=${primaryDocId}`;
-      document.getElementById("toolQuiz").onclick = () => window.location.href = `quiz.html?id=${primaryDocId}`;
-      document.getElementById("toolReport").onclick = () => window.location.href = `detail.html?id=${primaryDocId}`;
+      
+      // Update full screen launcher buttons
+      const btnMap = document.getElementById("btnOpenMapFull");
+      if (btnMap) btnMap.onclick = () => window.location.href = `map.html?id=${primaryDocId}`;
+      const btnFlash = document.getElementById("btnOpenFlashFull");
+      if (btnFlash) btnFlash.onclick = () => window.location.href = `flashcards.html?id=${primaryDocId}`;
+      const btnQuiz = document.getElementById("btnOpenQuizFull");
+      if (btnQuiz) btnQuiz.onclick = () => window.location.href = `quiz.html?id=${primaryDocId}`;
+      const btnReport = document.getElementById("btnOpenReportFull");
+      if (btnReport) btnReport.onclick = () => window.location.href = `detail.html?id=${primaryDocId}`;
+
+      // Refresh current active tab data
+      loadStudioTabData(activeStudioTab);
+    }
+
+    // Dynamic Grid Panel Resizing Logic (5-Column Grid)
+    function expandStudioPanel() {
+      const chatPanel = document.getElementById("chatPanel");
+      const studioPanel = document.getElementById("studioPanel");
+      if (chatPanel && studioPanel) {
+        chatPanel.classList.remove("lg:col-span-3", "lg:col-span-2");
+        chatPanel.classList.add("lg:col-span-1");
+
+        studioPanel.classList.remove("lg:col-span-1", "lg:col-span-2");
+        studioPanel.classList.add("lg:col-span-3");
+      }
+    }
+
+    function expandChatPanel() {
+      const chatPanel = document.getElementById("chatPanel");
+      const studioPanel = document.getElementById("studioPanel");
+      if (chatPanel && studioPanel) {
+        studioPanel.classList.remove("lg:col-span-3", "lg:col-span-2");
+        studioPanel.classList.add("lg:col-span-1");
+
+        chatPanel.classList.remove("lg:col-span-1", "lg:col-span-2");
+        chatPanel.classList.add("lg:col-span-3");
+      }
+    }
+
+    // Tab Switcher for Studio Panel
+    function switchStudioTab(tabKey) {
+      activeStudioTab = tabKey;
+      const tabs = ["overview", "map", "flashcard", "quiz", "summary"];
+      
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tabBtn-${t}`);
+        const panel = document.getElementById(`tabContent-${t}`);
+        if (btn) btn.classList.toggle("active", t === tabKey);
+        if (panel) panel.classList.toggle("hidden", t !== tabKey);
+      });
+
+      const badge = document.getElementById("activeTabBadge");
+      const badgeTitles = {
+        overview: "TỔNG QUAN",
+        map: "SƠ ĐỒ 3D",
+        flashcard: "FLASHCARD 3D",
+        quiz: "TRẮC NGHIỆM AI",
+        summary: "TÓM TẮT AI"
+      };
+      if (badge) badge.textContent = badgeTitles[tabKey] || "STUDIO";
+
+      if (tabKey === "overview") {
+        expandChatPanel();
+      } else {
+        expandStudioPanel();
+      }
+
+      loadStudioTabData(tabKey);
+      lucide.createIcons();
+    }
+
+    async function loadStudioTabData(tabKey) {
+      if (selectedDocIds.length === 0) return;
+      const docId = selectedDocIds[0];
+
+      if (tabKey === "read") {
+        const box = document.getElementById("readerInlineBox");
+        try {
+          const res = await fetch(`/api/documents/${docId}/content`);
+          if (res.ok) {
+            const data = await res.json();
+            box.innerHTML = `<pre class="whitespace-pre-wrap font-sans text-xs leading-relaxed text-slate-800">${data.content || "Chưa có nội dung trích xuất."}</pre>`;
+          } else {
+            box.innerHTML = `<p class="text-slate-400 text-center py-6">Không thể nạp nội dung tài liệu.</p>`;
+          }
+        } catch (e) {
+          box.innerHTML = `<p class="text-slate-400 text-center py-6">Lỗi tải nội dung tài liệu.</p>`;
+        }
+      } else if (tabKey === "map") {
+        const box = document.getElementById("mapInlineBox");
+        try {
+          const res = await fetch(`/api/topics/document/${docId}`);
+          if (res.ok) {
+            const topics = await res.json();
+            if (topics.length === 0) {
+              box.innerHTML = `<p class="text-slate-500 text-center py-6 text-xs font-semibold">Chưa tạo sơ đồ tư duy cho tài liệu này.</p>`;
+              return;
+            }
+            let html = `<div class="space-y-2">`;
+            topics.forEach((tp, idx) => {
+              html += `
+                <div class="p-3 bg-white border border-purple-100 rounded-2xl shadow-sm hover:border-purple-300 transition-all">
+                  <div class="flex justify-between items-center">
+                    <span class="text-xs font-extrabold text-purple-900 flex items-center gap-1.5"><i data-lucide="circle-dot" class="h-3.5 w-3.5 text-purple-600"></i> ${tp.title || tp.name || 'Chủ đề ' + (idx+1)}</span>
+                    <span class="badge-3d badge-3d-indigo text-[9px]">Cấp ${tp.level || 1}</span>
+                  </div>
+                  ${tp.description ? `<p class="text-[10px] text-slate-600 mt-1 line-clamp-2">${tp.description}</p>` : ''}
+                </div>
+              `;
+            });
+            html += `</div>`;
+            box.innerHTML = html;
+            lucide.createIcons();
+          } else {
+            box.innerHTML = `<p class="text-slate-400 text-center py-6 font-semibold">Chưa có sơ đồ tư duy.</p>`;
+          }
+        } catch (e) {
+          box.innerHTML = `<p class="text-slate-400 text-center py-6 font-semibold">Lỗi nạp sơ đồ tư duy.</p>`;
+        }
+      } else if (tabKey === "flashcard") {
+        try {
+          const res = await fetch(`/api/flashcards/document/${docId}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data)) {
+              currentFlashcards = data;
+            } else if (data && Array.isArray(data.cards)) {
+              currentFlashcards = data.cards;
+            } else {
+              currentFlashcards = [];
+            }
+            currentFcIndex = 0;
+            isFcShowingFront = true;
+            renderFlashcard();
+          }
+        } catch (e) {
+          console.error("Lỗi nạp flashcard", e);
+          currentFlashcards = [];
+          renderFlashcard();
+        }
+      } else if (tabKey === "quiz") {
+        const box = document.getElementById("quizInlineBox");
+        try {
+          const res = await fetch(`/api/quizzes/document/${docId}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data)) {
+              currentQuizQuestions = data;
+            } else if (data && Array.isArray(data.questions)) {
+              currentQuizQuestions = data.questions;
+            } else {
+              currentQuizQuestions = [];
+            }
+            renderQuizInline();
+          } else {
+            box.innerHTML = `<p class="text-slate-400 text-center py-6 font-semibold">Chưa có bài trắc nghiệm.</p>`;
+          }
+        } catch (e) {
+          box.innerHTML = `<p class="text-slate-400 text-center py-6 font-semibold">Lỗi nạp bài trắc nghiệm.</p>`;
+        }
+      } else if (tabKey === "summary") {
+        const box = document.getElementById("summaryInlineBox");
+        try {
+          const res = await fetch(`/api/ai/summary/${docId}`);
+          if (res.ok) {
+            const data = await res.json();
+            box.innerHTML = `<div class="leading-relaxed text-slate-800 text-xs">${(data.summary || '').replace(/\n/g, '<br>')}</div>`;
+          } else {
+            box.innerHTML = `<p class="text-slate-400 text-center py-6 font-semibold">Chưa thể nạp tóm tắt.</p>`;
+          }
+        } catch (e) {
+          box.innerHTML = `<p class="text-slate-400 text-center py-6 font-semibold">Lỗi nạp tóm tắt.</p>`;
+        }
+      }
+    }
+
+    // Flashcard Render & Flip Functions
+    function renderFlashcard() {
+      const counter = document.getElementById("flashcardCounter");
+      const sideBadge = document.getElementById("fcSideBadge");
+      const content = document.getElementById("fcContentText");
+      const hint = document.getElementById("fcHintText");
+
+      if (!Array.isArray(currentFlashcards) || currentFlashcards.length === 0) {
+        if (counter) counter.textContent = "Thẻ Flashcard 3D (0/0)";
+        if (content) content.textContent = "Chưa có thẻ flashcard nào cho tài liệu này.";
+        if (hint) hint.textContent = "Tải tài liệu mới để tự động sinh flashcard 3D.";
+        return;
+      }
+
+      if (currentFcIndex < 0 || currentFcIndex >= currentFlashcards.length || isNaN(currentFcIndex)) {
+        currentFcIndex = 0;
+      }
+
+      if (counter) counter.textContent = `Thẻ Flashcard 3D (${currentFcIndex + 1}/${currentFlashcards.length})`;
+      const card = currentFlashcards[currentFcIndex];
+
+      const frontText = card.question || card.front || card.frontText || card.term || "Khái niệm";
+      const backText = card.answer || card.back || card.backText || card.definition || "Định nghĩa chi tiết";
+
+      if (isFcShowingFront) {
+        if (sideBadge) sideBadge.textContent = "MẶT TRƯỚC (THUẬT NGỮ)";
+        if (content) content.textContent = frontText;
+        if (hint) hint.textContent = card.hint ? `Gợi ý: ${card.hint}` : "Bấm vào thẻ để xem định nghĩa 3D";
+      } else {
+        if (sideBadge) sideBadge.textContent = "MẶT SAU (ĐỊNH NGHĨA)";
+        if (content) content.textContent = backText;
+        if (hint) hint.textContent = "Bấm để quay lại mặt trước";
+      }
+    }
+
+    function flipFlashcard() {
+      if (!Array.isArray(currentFlashcards) || currentFlashcards.length === 0) return;
+      const cardEl = document.getElementById("flashcard3D");
+      if (cardEl) {
+        cardEl.style.transform = "rotateY(90deg)";
+        setTimeout(() => {
+          isFcShowingFront = !isFcShowingFront;
+          renderFlashcard();
+          cardEl.style.transform = "rotateY(0deg)";
+        }, 150);
+      } else {
+        isFcShowingFront = !isFcShowingFront;
+        renderFlashcard();
+      }
+    }
+
+    function nextFlashcard() {
+      if (!Array.isArray(currentFlashcards) || currentFlashcards.length === 0) return;
+      currentFcIndex = (currentFcIndex + 1) % currentFlashcards.length;
+      isFcShowingFront = true;
+      renderFlashcard();
+    }
+
+    function prevFlashcard() {
+      if (!Array.isArray(currentFlashcards) || currentFlashcards.length === 0) return;
+      currentFcIndex = (currentFcIndex - 1 + currentFlashcards.length) % currentFlashcards.length;
+      isFcShowingFront = true;
+      renderFlashcard();
+    }
+
+    // Quiz Render & Interactive Answers
+    function renderQuizInline() {
+      const box = document.getElementById("quizInlineBox");
+      const counter = document.getElementById("quizCounter");
+
+      if (!Array.isArray(currentQuizQuestions) || currentQuizQuestions.length === 0) {
+        if (counter) counter.textContent = "Bài Trắc Nghiệm AI (0 câu)";
+        box.innerHTML = `<p class="text-slate-500 text-center py-6 text-xs font-semibold">Chưa tạo câu hỏi trắc nghiệm cho tài liệu này.</p>`;
+        return;
+      }
+
+      if (counter) counter.textContent = `Bài Trắc Nghiệm AI (${currentQuizQuestions.length} câu)`;
+
+      let html = `<div class="space-y-4">`;
+      currentQuizQuestions.forEach((q, qIdx) => {
+        const qId = q.id || qIdx;
+        const selectedOpt = quizUserAnswers[qId];
+        const isAnswered = selectedOpt !== undefined;
+        const isCorrect = isAnswered && selectedOpt === q.correctAnswer;
+
+        html += `
+          <div class="p-3.5 bg-white border border-emerald-100 rounded-2xl shadow-sm space-y-2">
+            <p class="text-xs font-extrabold text-slate-800 leading-snug">
+              <span class="text-emerald-600 font-mono">Câu ${qIdx + 1}:</span> ${q.question || q.questionText || 'Câu hỏi'}
+            </p>
+            <div class="space-y-1.5 pt-1">
+        `;
+
+        const options = q.options || [
+          q.answerA || q.optionA,
+          q.answerB || q.optionB,
+          q.answerC || q.optionC,
+          q.answerD || q.optionD
+        ].filter(Boolean);
+
+        options.forEach((opt, optIdx) => {
+          const optLetter = String.fromCharCode(65 + optIdx);
+          let btnClass = "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100";
+
+          if (isAnswered) {
+            if (optLetter === q.correctAnswer || opt === q.correctAnswer) {
+              btnClass = "bg-emerald-50 border-emerald-400 text-emerald-800 font-bold";
+            } else if (selectedOpt === optLetter || selectedOpt === opt) {
+              btnClass = "bg-rose-50 border-rose-300 text-rose-700 font-bold";
+            }
+          }
+
+          html += `
+            <button onclick="answerQuizQuestion(${qId}, '${optLetter}')" ${isAnswered ? 'disabled' : ''} class="w-full text-left p-2 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2 ${btnClass}">
+              <span class="w-5 h-5 rounded-lg bg-white border border-slate-200 flex items-center justify-center font-bold text-[10px] shrink-0">${optLetter}</span>
+              <span class="flex-1">${opt}</span>
+            </button>
+          `;
+        });
+
+        if (isAnswered) {
+          html += `
+            <div class="mt-2 p-2 rounded-xl ${isCorrect ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-800'} text-[10px] font-semibold">
+              ${isCorrect ? '✓ Chính xác!' : '✗ Chưa đúng.'} ${q.explanation ? `Giải thích: ${q.explanation}` : ''}
+            </div>
+          `;
+        }
+
+        html += `</div></div>`;
+      });
+      html += `</div>`;
+
+      box.innerHTML = html;
+    }
+
+    function answerQuizQuestion(qId, optLetter) {
+      quizUserAnswers[qId] = optLetter;
+      renderQuizInline();
     }
 
     // Chat Actions
@@ -414,6 +878,27 @@
 
     loadDocuments();
     lucide.createIcons();
+
+    // Mouse drag-to-scroll for top tab slider bar
+    const tabSlider = document.getElementById("studioTabBar");
+    if (tabSlider) {
+      let isMouseDown = false;
+      let startXPos, scrollLeftPos;
+      tabSlider.addEventListener('mousedown', (e) => {
+        isMouseDown = true;
+        startXPos = e.pageX - tabSlider.offsetLeft;
+        scrollLeftPos = tabSlider.scrollLeft;
+      });
+      tabSlider.addEventListener('mouseleave', () => { isMouseDown = false; });
+      tabSlider.addEventListener('mouseup', () => { isMouseDown = false; });
+      tabSlider.addEventListener('mousemove', (e) => {
+        if (!isMouseDown) return;
+        e.preventDefault();
+        const x = e.pageX - tabSlider.offsetLeft;
+        const walk = (x - startXPos) * 2;
+        tabSlider.scrollLeft = scrollLeftPos - walk;
+      });
+    }
   </script>
 </body>
 </html>

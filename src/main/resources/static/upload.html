@@ -201,7 +201,7 @@
             document.getElementById("uploadedName").textContent = file.name;
             const readNowBtn = document.getElementById("readNowBtn");
             if (readNowBtn && savedDoc && savedDoc.id) {
-              readNowBtn.href = `reader.html?id=${savedDoc.id}`;
+              readNowBtn.href = `viewer.html?id=${savedDoc.id}&tab=summary`;
             }
             lucide.createIcons();
           }, 300);

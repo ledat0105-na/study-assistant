@@ -9,63 +9,80 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <link rel="stylesheet" href="css/style-3d.css">
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans relative overflow-hidden">
+<body class="bg-slate-50 text-slate-800 h-screen max-h-screen flex flex-col font-sans relative overflow-hidden">
 
-  <header class="glass-3d sticky top-0 z-30 border-b border-white/10 px-6 py-3 flex items-center justify-between">
+  <!-- 3D Background Floating Orbs -->
+  <div class="orb-container">
+    <div class="orb-3d orb-1"></div>
+    <div class="orb-3d orb-2"></div>
+    <div class="orb-3d orb-3"></div>
+  </div>
+
+  <!-- Synchronized 3D Pearl Header -->
+  <header class="glass-3d sticky top-0 z-30 border-b border-slate-200/80 px-6 py-3 flex items-center justify-between shrink-0 bg-white/80 backdrop-blur-xl">
     <div class="flex items-center gap-4">
-      <a id="backLink" href="viewer.html" class="btn-3d btn-3d-secondary p-2 text-slate-300">
+      <a id="backLink" href="viewer.html" class="btn-3d btn-3d-secondary p-2 text-slate-700">
         <i data-lucide="arrow-left" class="h-4 w-4"></i>
       </a>
       <div>
-        <h1 id="docTitleLabel" class="font-extrabold text-sm text-slate-100">Đang tải...</h1>
-        <p class="text-[10px] text-slate-400 mt-0.5">Trợ lý AI đọc trực tiếp nội dung tài liệu</p>
+        <h1 id="docTitleLabel" class="font-extrabold text-sm text-slate-900">Đang tải...</h1>
+        <p class="text-[10px] text-slate-500 mt-0.5 font-semibold">Trợ lý AI đọc &amp; trích xuất nội dung trực tiếp</p>
       </div>
     </div>
 
-    <div id="pageNav" class="flex items-center gap-3 bg-slate-900/80 border border-white/10 px-3 py-1.5 rounded-xl shadow-inner">
-      <button onclick="prevPage()" id="prevBtn" class="p-1 text-slate-400 hover:text-white disabled:opacity-40"><i data-lucide="chevron-left" class="h-4 w-4"></i></button>
-      <span id="pageTracker" class="text-xs font-bold font-mono text-indigo-300">-- / --</span>
-      <button onclick="nextPage()" id="nextBtn" class="p-1 text-slate-400 hover:text-white disabled:opacity-40"><i data-lucide="chevron-right" class="h-4 w-4"></i></button>
+    <div id="pageNav" class="flex items-center gap-3 bg-white/90 border border-slate-200/80 px-3.5 py-1.5 rounded-xl shadow-sm">
+      <button onclick="prevPage()" id="prevBtn" class="p-1 text-slate-500 hover:text-indigo-600 disabled:opacity-40 transition-colors"><i data-lucide="chevron-left" class="h-4 w-4"></i></button>
+      <span id="pageTracker" class="text-xs font-extrabold font-mono text-indigo-700">-- / --</span>
+      <button onclick="nextPage()" id="nextBtn" class="p-1 text-slate-500 hover:text-indigo-600 disabled:opacity-40 transition-colors"><i data-lucide="chevron-right" class="h-4 w-4"></i></button>
     </div>
   </header>
 
-  <div class="flex-1 flex overflow-hidden relative z-10">
+  <!-- Main Viewer Content Split -->
+  <div class="flex-1 flex min-h-0 overflow-hidden relative z-10">
 
-    <div class="flex-1 p-8 overflow-y-auto bg-slate-950/40 flex justify-center items-start">
+    <!-- Document Reading Area -->
+    <div class="flex-1 p-8 overflow-y-auto h-full max-h-full bg-slate-100/60 flex justify-center items-start">
 
-      <div id="pdfWrap" class="hidden bg-white shadow-2xl rounded-2xl overflow-hidden border border-slate-300 relative">
+      <!-- PDF Canvas Wrap -->
+      <div id="pdfWrap" class="hidden glass-3d-card p-2 bg-white shadow-2xl rounded-2xl overflow-hidden border border-slate-300 relative">
         <canvas id="pdfCanvas"></canvas>
-        <div id="textLayer" class="absolute top-0 left-0 origin-top-left pointer-events-none" style="line-height:1;"></div>
+        <div id="textLayer" class="absolute top-2 left-2 origin-top-left pointer-events-none" style="line-height:1;"></div>
       </div>
 
-      <div id="textWrap" class="hidden w-full max-w-3xl bg-slate-100 text-slate-900 shadow-2xl rounded-3xl p-10 min-h-[750px] border border-slate-300">
-        <div class="flex justify-between items-center border-b border-slate-300 pb-4 mb-6">
-          <span class="text-xs font-extrabold text-indigo-700 tracking-widest uppercase">Nội dung trích xuất</span>
+      <!-- Text / DOCX Wrap -->
+      <div id="textWrap" class="hidden w-full max-w-3xl glass-3d-card bg-white text-slate-900 shadow-2xl rounded-3xl p-8 min-h-[750px] border border-slate-300">
+        <div class="flex justify-between items-center border-b border-slate-200 pb-4 mb-6">
+          <span class="text-xs font-extrabold text-indigo-700 tracking-widest uppercase flex items-center gap-2">
+            <i data-lucide="file-text" class="h-4 w-4 text-indigo-600"></i> Nội dung trích xuất
+          </span>
         </div>
-        <pre id="documentContentText" class="whitespace-pre-wrap text-sm text-slate-800 leading-relaxed font-medium"></pre>
+        <pre id="documentContentText" class="whitespace-pre-wrap text-xs text-slate-800 leading-relaxed font-sans font-medium"></pre>
       </div>
 
-      <div id="statusWrap" class="text-slate-400 text-sm font-semibold mt-10 text-center max-w-md">
+      <!-- Status Wrap -->
+      <div id="statusWrap" class="text-slate-500 text-sm font-semibold mt-10 text-center max-w-md bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         Đang tải tài liệu...
       </div>
     </div>
 
-    <div class="w-[420px] glass-3d-card border-l border-white/10 flex flex-col h-full overflow-hidden rounded-none">
-      <div class="p-4 border-b border-white/10 bg-slate-900/60 flex justify-between items-center">
-        <h3 class="font-extrabold text-xs text-slate-100 flex items-center gap-2">
-          <i data-lucide="bot" class="h-4 w-4 text-indigo-400"></i> Trợ Lý AI
+    <!-- Right Side Synchronized AI Chat Panel -->
+    <div class="w-[400px] glass-3d-card border-l border-slate-200/80 flex flex-col h-full overflow-hidden rounded-none bg-white/80 backdrop-blur-xl">
+      <div class="p-4 border-b border-slate-200 bg-slate-50/90 flex justify-between items-center">
+        <h3 class="font-extrabold text-xs text-slate-900 flex items-center gap-2">
+          <i data-lucide="bot" class="h-4 w-4 text-indigo-600"></i> Trợ Lý Chatbot AI
         </h3>
+        <span class="badge-3d badge-3d-emerald text-[9px]">AI ACTIVE</span>
       </div>
 
       <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
         <div class="flex justify-start">
-          <div class="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-3.5 text-slate-200 leading-relaxed max-w-[88%] font-medium shadow-inner">
-            Xin chào! Tôi đã đọc tài liệu này, bạn hỏi gì cũng được nhé.
+          <div class="bg-indigo-50/90 border border-indigo-200 rounded-2xl p-3.5 text-slate-800 leading-relaxed max-w-[88%] font-semibold shadow-sm">
+            Xin chào! Tôi đã đọc tài liệu này, bạn có thể đặt bất kỳ câu hỏi nào về nội dung.
           </div>
         </div>
       </div>
 
-      <form id="chatForm" class="p-4 border-t border-white/10 bg-slate-900/60 relative">
+      <form id="chatForm" class="p-4 border-t border-slate-200 bg-slate-50/90 relative">
         <input type="text" id="chatInput" placeholder="Hỏi câu hỏi về tài liệu..." class="input-3d w-full pl-4 pr-12 py-3 text-xs font-semibold" />
         <button type="submit" class="absolute right-6 top-1/2 -translate-y-1/2 btn-3d btn-3d-primary p-2 text-white shadow-md">
           <i data-lucide="arrow-up" class="h-3.5 w-3.5"></i>
@@ -301,9 +318,10 @@
 
       const typing = document.createElement("div");
       typing.className = "flex justify-start";
-      typing.innerHTML = `<div class="bg-slate-900 border border-white/10 text-indigo-300 rounded-2xl p-3 max-w-[85%] font-medium">Đang đọc và tóm tắt tài liệu...</div>`;
+      typing.innerHTML = `<div class="bg-white border border-slate-200 text-indigo-600 rounded-2xl p-3 max-w-[85%] font-extrabold shadow-sm flex items-center gap-2"><i data-lucide="loader-2" class="h-4 w-4 animate-spin"></i> Đang đọc và tóm tắt tài liệu...</div>`;
       document.getElementById("chatMessages").appendChild(typing);
       document.getElementById("chatMessages").scrollTop = document.getElementById("chatMessages").scrollHeight;
+      lucide.createIcons();
 
       try {
         const res = await fetch(`/api/ai/summary/${docId}`, {
@@ -328,8 +346,8 @@
       const div = document.createElement("div");
       div.className = role === "user" ? "flex justify-end" : "flex justify-start";
       const bubbleClass = role === "user"
-        ? "bg-indigo-600 text-white rounded-2xl p-3 max-w-[85%] font-medium"
-        : "bg-slate-900 border border-white/10 text-slate-200 rounded-2xl p-3 max-w-[85%] font-medium whitespace-pre-wrap";
+        ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl p-3.5 max-w-[88%] font-semibold shadow-md"
+        : "bg-white border border-slate-200 text-slate-800 rounded-2xl p-3.5 max-w-[88%] font-semibold shadow-sm leading-relaxed";
       div.innerHTML = `<div class="${bubbleClass}"></div>`;
       const bubble = div.firstElementChild;
       if (role === "ai") {
@@ -354,9 +372,10 @@
 
       const typing = document.createElement("div");
       typing.className = "flex justify-start";
-      typing.innerHTML = `<div class="bg-slate-900 border border-white/10 text-indigo-300 rounded-2xl p-3 max-w-[85%] font-medium">Đang suy nghĩ...</div>`;
+      typing.innerHTML = `<div class="bg-white border border-slate-200 text-indigo-600 rounded-2xl p-3 max-w-[85%] font-extrabold shadow-sm flex items-center gap-2"><i data-lucide="loader-2" class="h-4 w-4 animate-spin"></i> Đang suy nghĩ...</div>`;
       document.getElementById("chatMessages").appendChild(typing);
       document.getElementById("chatMessages").scrollTop = document.getElementById("chatMessages").scrollHeight;
+      lucide.createIcons();
 
       try {
         const res = await fetch("/api/ai/chat", {

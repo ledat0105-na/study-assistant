@@ -65,19 +65,42 @@ public class PaymentController {
         }
     }
 
-    // Tự động khởi tạo bảng giá mẫu nếu CSDL chưa có
+    private boolean isMojibake(String text) {
+        if (text == null) return false;
+        return text.contains("Ã") || text.contains("Â") || text.contains("") || text.contains("™") || text.contains("ª");
+    }
+
+    // Tự động khởi tạo và sửa lỗi font (Mojibake) bảng giá mẫu trong CSDL
     private List<PricingPlan> ensureSeedPricingPlans() {
         List<PricingPlan> dbPlans = pricingPlanRepository.findAll();
-        if (dbPlans.isEmpty()) {
-            PricingPlan free = new PricingPlan(null, "FREE", "Gói Miễn Phí (FREE)", 0.0, 0.0, "vĩnh viễn", false, true, null, "Phù hợp cho trải nghiệm ban đầu", "Tải lên tối đa 3 tài liệu|Sơ đồ kiến thức cơ bản|10 Bài trắc nghiệm AI mỗi tháng", 3, LocalDateTime.now(), LocalDateTime.now());
-            PricingPlan student = new PricingPlan(null, "STUDENT", "Gói Sinh Viên (STUDENT)", 79000.0, 49000.0, "tháng", false, true, "Giảm 38%", "Dành cho học sinh sinh viên học tập hàng ngày", "Tải lên tối đa 50 tài liệu|Sơ đồ kiến thức 3D nâng cao|50 Bài trắc nghiệm AI/tháng|Thẻ Flashcards lật 3D không giới hạn", 50, LocalDateTime.now(), LocalDateTime.now());
-            PricingPlan pro = new PricingPlan(null, "PRO", "Gói Chuyên Nghiệp (PRO)", 149000.0, 99000.0, "tháng", true, true, "Phổ Biến Nhất - GIẢM 33%", "Dành cho người học tích cực & nghiên cứu chuyên sâu", "Tải lên không giới hạn tài liệu|Sơ đồ kiến thức 3D không giới hạn|Không giới hạn Thẻ Flashcards & Bài thi AI|Phân tích chuyên sâu tiến độ học tập|Ưu tiên xử lý từ AI Model", 9999, LocalDateTime.now(), LocalDateTime.now());
+        boolean hasMojibake = dbPlans.stream().anyMatch(p -> isMojibake(p.getName()) || isMojibake(p.getDescription()) || isMojibake(p.getBadgeText()) || isMojibake(p.getFeatures()));
 
-            pricingPlanRepository.saveAll(List.of(free, student, pro));
+        if (dbPlans.isEmpty() || hasMojibake) {
+            Map<String, PricingPlan> defaults = Map.of(
+                "FREE", new PricingPlan(null, "FREE", "Gói Miễn Phí (FREE)", 0.0, 0.0, "vĩnh viễn", false, true, null, "Phù hợp cho trải nghiệm ban đầu", "Tải lên tối đa 3 tài liệu|Sơ đồ kiến thức cơ bản|10 Bài trắc nghiệm AI mỗi tháng", 3, LocalDateTime.now(), LocalDateTime.now()),
+                "STUDENT", new PricingPlan(null, "STUDENT", "Gói Sinh Viên (STUDENT)", 79000.0, 49000.0, "tháng", false, true, "Giảm 38%", "Dành cho học sinh sinh viên học tập hàng ngày", "Tải lên tối đa 50 tài liệu|Sơ đồ kiến thức 3D nâng cao|50 Bài trắc nghiệm AI/tháng|Thẻ Flashcards lật 3D không giới hạn", 50, LocalDateTime.now(), LocalDateTime.now()),
+                "PRO", new PricingPlan(null, "PRO", "Gói Chuyên Nghiệp (PRO)", 149000.0, 99000.0, "tháng", true, true, "Phổ Biến Nhất - GIẢM 33%", "Dành cho người học tích cực & nghiên cứu chuyên sâu", "Tải lên không giới hạn tài liệu|Sơ đồ kiến thức 3D không giới hạn|Không giới hạn Thẻ Flashcards & Bài thi AI|Phân tích chuyên sâu tiến độ học tập|Ưu tiên xử lý từ AI Model", 9999, LocalDateTime.now(), LocalDateTime.now())
+            );
+
+            for (PricingPlan def : defaults.values()) {
+                Optional<PricingPlan> existingOpt = pricingPlanRepository.findByPlanCode(def.getPlanCode());
+                if (existingOpt.isPresent()) {
+                    PricingPlan existing = existingOpt.get();
+                    existing.setName(def.getName());
+                    existing.setDescription(def.getDescription());
+                    existing.setFeatures(def.getFeatures());
+                    existing.setBadgeText(def.getBadgeText());
+                    existing.setBillingCycle(def.getBillingCycle());
+                    pricingPlanRepository.save(existing);
+                } else {
+                    pricingPlanRepository.save(def);
+                }
+            }
             return pricingPlanRepository.findAll();
         }
         return dbPlans;
     }
+
 
     // PLAN-01: Xem danh sách các gói dịch vụ và bảng giá công khai từ CSDL
     @GetMapping("/plans")

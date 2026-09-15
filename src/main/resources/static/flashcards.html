@@ -18,7 +18,7 @@
     <div class="w-full max-w-3xl">
       <div class="flex justify-between items-center mb-8 w-full">
         <div class="flex items-center gap-4">
-          <a id="backLink" href="documents.html" class="btn-3d btn-3d-secondary p-3 text-slate-700">
+          <a id="backLink" href="viewer.html" class="btn-3d btn-3d-secondary p-3 text-slate-700" title="Trở về Trợ lý Chat AI">
             <i data-lucide="arrow-left" class="h-5 w-5"></i>
           </a>
           <div>
@@ -121,25 +121,22 @@
             flashcards = data;
           } else if (data && Array.isArray(data.cards)) {
             flashcards = data.cards;
-            if (flashcards.length === 0 && data.message) {
-              document.getElementById("cardFront").textContent = "Chưa có Flashcard";
-              document.getElementById("cardBack").textContent = data.message;
-            }
+          } else {
+            flashcards = [];
           }
         } else {
-          const err = await res.json().catch(() => ({}));
-          document.getElementById("cardFront").textContent = "Lỗi tạo Flashcard";
-          document.getElementById("cardBack").textContent = err.error || "Không thể tạo bộ thẻ cho tài liệu này.";
+          flashcards = [];
         }
       } catch (err) {
         console.error("Lỗi tải flashcard", err);
-        document.getElementById("cardFront").textContent = "Lỗi kết nối";
-        document.getElementById("cardBack").textContent = "Không thể kết nối máy chủ để tạo Flashcard.";
+        flashcards = [];
       }
+      currentIndex = 0;
       updateCardDisplay();
     }
 
     function flipCard() {
+      if (!Array.isArray(flashcards) || flashcards.length === 0) return;
       isFlipped = !isFlipped;
       const inner = document.getElementById("flashCardInner");
       if (isFlipped) {
@@ -150,10 +147,24 @@
     }
 
     function updateCardDisplay() {
-      if (flashcards.length === 0) return;
+      if (!Array.isArray(flashcards) || flashcards.length === 0) {
+        document.getElementById("cardFront").textContent = "Chưa có thẻ Flashcard";
+        document.getElementById("cardBack").textContent = "Tài liệu này chưa sinh được thẻ flashcard hoặc chưa có dữ liệu.";
+        document.getElementById("progressText").textContent = "0 / 0 Thẻ";
+        document.getElementById("progressBar").style.width = "0%";
+        return;
+      }
+
+      if (currentIndex < 0 || currentIndex >= flashcards.length || isNaN(currentIndex)) {
+        currentIndex = 0;
+      }
+
       const card = flashcards[currentIndex];
-      document.getElementById("cardFront").textContent = card.front;
-      document.getElementById("cardBack").textContent = card.back;
+      const frontText = card.question || card.front || card.frontText || card.term || "Khái niệm";
+      const backText = card.answer || card.back || card.backText || card.definition || "Định nghĩa chi tiết";
+
+      document.getElementById("cardFront").textContent = frontText;
+      document.getElementById("cardBack").textContent = backText;
       
       const pos = currentIndex + 1;
       document.getElementById("progressText").textContent = `${pos} / ${flashcards.length} Thẻ`;
@@ -161,27 +172,21 @@
     }
 
     function nextCard() {
+      if (!Array.isArray(flashcards) || flashcards.length === 0) return;
       isFlipped = false;
       document.getElementById("flashCardInner").classList.remove("is-flipped");
       setTimeout(() => {
-        if (currentIndex < flashcards.length - 1) {
-          currentIndex++;
-        } else {
-          currentIndex = 0;
-        }
+        currentIndex = (currentIndex + 1) % flashcards.length;
         updateCardDisplay();
       }, 200);
     }
 
     function prevCard() {
+      if (!Array.isArray(flashcards) || flashcards.length === 0) return;
       isFlipped = false;
       document.getElementById("flashCardInner").classList.remove("is-flipped");
       setTimeout(() => {
-        if (currentIndex > 0) {
-          currentIndex--;
-        } else {
-          currentIndex = flashcards.length - 1;
-        }
+        currentIndex = (currentIndex - 1 + flashcards.length) % flashcards.length;
         updateCardDisplay();
       }, 200);
     }

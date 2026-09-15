@@ -92,14 +92,11 @@ public class QuizController {
             return ResponseEntity.ok(Map.of("quizId", 0, "questions", List.of(), "message", "OpenAI API Key chưa được cấu hình nên chưa thể tự động tạo bài trắc nghiệm."));
         }
 
-        String snippet = text.length() > 30000 ? text.substring(0, 30000) : text;
-        String prompt = "Đọc kỹ nội dung tài liệu học tập dưới đây và tạo bài trắc nghiệm 4 đáp án bằng tiếng Việt để kiểm tra mức độ hiểu bài. " +
+        String snippet = text.length() > 5000 ? text.substring(0, 5000) : text;
+        String prompt = "Đọc kỹ nội dung tài liệu học tập dưới đây và tạo bài trắc nghiệm 5-8 câu hỏi cốt lõi (4 đáp án A, B, C, D) bằng tiếng Việt. " +
                 "Trả về CHỈ MỘT đối tượng JSON (không thêm chữ nào khác), dạng:\n" +
-                "{\"questions\": [{\"question\": \"Nội dung câu hỏi\", \"answerA\": \"...\", \"answerB\": \"...\", \"answerC\": \"...\", \"answerD\": \"...\", \"correctAnswer\": \"A\", \"explanation\": \"Giải thích ngắn vì sao đáp án đúng\"}]}\n\n" +
-                "YÊU CẦU:\n" +
-                "- Số lượng câu hỏi PHẢI DỰA THEO ĐỘ PHONG PHÚ THỰC TẾ của tài liệu, không ép cứng 1 con số; tài liệu càng nhiều khái niệm quan trọng thì càng nhiều câu (thường 10-30 câu), KHÔNG bịa thêm câu trùng lặp/vô nghĩa chỉ để đủ số lượng, tối đa 30 câu.\n" +
-                "- Mỗi câu hỏi kiểm tra 1 khái niệm/kiến thức có thật trong tài liệu, không tự bịa nội dung không có trong tài liệu.\n" +
-                "- 4 đáp án phải hợp lý, chỉ có đúng 1 đáp án đúng, correctAnswer là 1 trong 4 ký tự A/B/C/D viết hoa.\n\n" +
+                "{\"questions\": [{\"question\": \"Nội dung câu hỏi ngắn\", \"answerA\": \"...\", \"answerB\": \"...\", \"answerC\": \"...\", \"answerD\": \"...\", \"correctAnswer\": \"A\", \"explanation\": \"Lời giải 1 câu ngắn gọn\"}]}\n\n" +
+                "YÊU CẦU: Tạo siêu nhanh, ngắn gọn, chính xác, không lan man dài dòng.\n\n" +
                 "TÀI LIỆU:\n" + snippet;
 
         try {
