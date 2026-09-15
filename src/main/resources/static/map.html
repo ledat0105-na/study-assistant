@@ -29,60 +29,56 @@
       </div>
     </div>
 
-    <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[580px]">
-      <!-- Left Tree Panel -->
-      <div class="glass-3d-card p-6 md:p-8 flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between mb-4 border-b border-slate-200 pb-3">
-            <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-              <i data-lucide="network" class="h-4 w-4 text-indigo-600"></i> Cấu Trúc Phân Cấp Chủ Đề
-            </h3>
-            <span class="badge-3d badge-3d-indigo">Cập nhật 3D</span>
-          </div>
-
-          <div id="treeContainer" class="space-y-2 max-h-[380px] overflow-y-auto pr-2">
-            <!-- Render tree here -->
+    <div class="flex-1 flex flex-col gap-6 min-h-[580px]">
+      <!-- Mind Map Canvas: sơ đồ phân nhánh thật (đường cong SVG), có zoom/pan,
+           màu theo cấp độ, nút mở/thu từng nhánh -->
+      <div class="glass-3d-card p-4 md:p-6 flex flex-col" style="height: 560px;">
+        <div class="flex items-center justify-between mb-3 border-b border-slate-200 pb-3 flex-shrink-0">
+          <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+            <i data-lucide="network" class="h-4 w-4 text-indigo-600"></i> Sơ Đồ Tư Duy
+          </h3>
+          <div class="flex items-center gap-2">
+            <button onclick="mapZoom(-0.1)" class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600" title="Thu nhỏ"><i data-lucide="zoom-out" class="h-3.5 w-3.5"></i></button>
+            <span id="zoomLabel" class="text-[11px] font-mono font-bold text-indigo-700 w-10 text-center">100%</span>
+            <button onclick="mapZoom(0.1)" class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600" title="Phóng to"><i data-lucide="zoom-in" class="h-3.5 w-3.5"></i></button>
+            <button onclick="fitMapToScreen()" class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600" title="Vừa màn hình"><i data-lucide="maximize" class="h-3.5 w-3.5"></i></button>
+            <button onclick="expandAllNodes()" class="text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600">Mở hết</button>
+            <button onclick="collapseAllNodes()" class="text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600">Thu hết</button>
           </div>
         </div>
 
-        <div class="bg-indigo-50/90 border border-indigo-200 p-5 rounded-2xl mt-6 shadow-inner">
-          <span class="badge-3d badge-3d-indigo text-[10px]">
-            Chi Tiết Khái Niệm Đang Chọn
-          </span>
-          <h4 id="activeLabel" class="font-extrabold text-base text-slate-900 mt-2.5">Chọn một chủ đề để xem chi tiết</h4>
-          <p id="activeDesc" class="text-xs text-slate-700 mt-1.5 leading-relaxed font-semibold">Click vào các nút nhánh ở danh sách phía trên để chuyển trang PDF tự động.</p>
+        <div id="mapViewport" class="flex-1 relative overflow-hidden rounded-2xl bg-slate-50 border border-slate-200 cursor-grab active:cursor-grabbing">
+          <div id="mapCanvas" class="absolute top-0 left-0 origin-top-left" style="transform-origin: 0 0;">
+            <svg id="mapSvg" class="absolute top-0 left-0 pointer-events-none" style="overflow: visible;"></svg>
+            <div id="mapNodes" class="relative"></div>
+          </div>
         </div>
       </div>
 
-      <!-- Right PDF Panel -->
-      <div class="glass-3d-card rounded-3xl overflow-hidden flex flex-col">
-        <div class="bg-white/90 border-b border-slate-200 p-4 flex justify-between items-center">
-          <div class="flex items-center gap-2.5">
-            <i data-lucide="book-open" class="h-4 w-4 text-indigo-600"></i>
-            <span id="pageReaderLabel" class="text-xs font-extrabold text-slate-900">Trình Đọc PDF (Trang 1)</span>
-          </div>
-          <div class="flex items-center gap-1.5 bg-slate-100 border border-slate-200 px-3 py-1 rounded-xl shadow-inner">
-            <button onclick="zoomOut()" aria-label="Thu nhỏ" class="p-1 hover:bg-slate-200 rounded text-slate-600 hover:text-slate-900"><i data-lucide="zoom-out" class="h-4 w-4"></i></button>
-            <span id="zoomLabel" class="text-xs text-indigo-700 font-mono font-bold">100%</span>
-            <button onclick="zoomIn()" aria-label="Phóng to" class="p-1 hover:bg-slate-200 rounded text-slate-600 hover:text-slate-900"><i data-lucide="zoom-in" class="h-4 w-4"></i></button>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="glass-3d-card p-6 flex flex-col justify-between">
+          <div>
+            <span class="badge-3d badge-3d-indigo text-[10px]">Chi Tiết Khái Niệm Đang Chọn</span>
+            <h4 id="activeLabel" class="font-extrabold text-base text-slate-900 mt-2.5">Chọn một chủ đề để xem chi tiết</h4>
+            <p id="activeDesc" class="text-xs text-slate-700 mt-1.5 leading-relaxed font-semibold">Click vào 1 nhánh trong sơ đồ phía trên để xem trang tương ứng.</p>
           </div>
         </div>
 
-        <div class="flex-1 p-6 overflow-y-auto flex justify-center items-start">
-          <div id="pdfCanvas" class="w-full max-w-md bg-white text-slate-900 shadow-xl rounded-2xl p-8 min-h-[480px] flex flex-col justify-between font-sans relative transition-all duration-300 border border-slate-300">
-            <div id="pdfPageBadge" class="absolute top-4 right-4 bg-indigo-600 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-md select-none">TRANG 1</div>
-            <div>
-              <h3 id="pdfPageTitle" class="text-lg font-extrabold border-b border-slate-200 pb-3 mb-4 text-indigo-950">Mô Hình Perceptron Cơ Bản</h3>
-              <p class="leading-relaxed text-xs text-slate-800 font-medium">
-                Phần này giới thiệu cấu trúc cốt lõi của các mô hình học máy. Phân tích tham số trọng số, phép toán ma trận và tối ưu hóa lan truyền ngược. Perceptron đơn tầng thực hiện phân loại nhị phân đơn giản.
-              </p>
-              <p class="leading-relaxed text-xs text-slate-700 mt-4">
-                Kiểm tra các công thức toán học liên quan ở các trang tiếp theo.
-              </p>
+        <!-- Right PDF Panel: nhúng thẳng trình đọc PDF thật (reader.html), nhảy
+             đúng trang thật khi bấm vào 1 chủ đề trong sơ đồ -->
+        <div class="glass-3d-card rounded-3xl overflow-hidden flex flex-col lg:col-span-2">
+          <div class="bg-white/90 border-b border-slate-200 p-4 flex justify-between items-center">
+            <div class="flex items-center gap-2.5">
+              <i data-lucide="book-open" class="h-4 w-4 text-indigo-600"></i>
+              <span id="pageReaderLabel" class="text-xs font-extrabold text-slate-900">Trình Đọc Tài Liệu</span>
             </div>
-            <div class="text-[10px] text-slate-500 text-center border-t border-slate-200 pt-3 font-bold select-none">
-              Trình Xem Trích Xuất Văn Bản PDF AI
-            </div>
+            <a id="openFullReaderLink" href="#" target="_blank" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+              Mở toàn màn hình <i data-lucide="external-link" class="h-3 w-3"></i>
+            </a>
+          </div>
+
+          <div class="flex-1 min-h-[320px]">
+            <iframe id="readerFrame" class="w-full h-full min-h-[320px] border-0" title="Trình đọc tài liệu"></iframe>
           </div>
         </div>
       </div>
@@ -99,19 +95,45 @@
 
     let topics = [];
     let selectedTopic = null;
-    let zoom = 100;
     let expanded = {};
+    let rootTitle = "Tài liệu";
+
+    // Cấu hình layout sơ đồ
+    const NODE_H_GAP = 64;   // khoảng cách dọc giữa 2 node lá liền kề
+    const LEVEL_W = 260;     // khoảng cách ngang giữa các cấp
+    const NODE_HEIGHT = 46;
+    const CHAR_WIDTH = 8;    // ước lượng bề rộng mỗi ký tự để tính width node
+    const NODE_PAD = 56;
+
+    const DEPTH_STYLES = [
+      { bg: "#c7d2fe", border: "#818cf8", text: "#1e1b4b" },  // root - indigo
+      { bg: "#bae6fd", border: "#38bdf8", text: "#0c4a6e" },  // depth1 - sky
+      { bg: "#a7f3d0", border: "#34d399", text: "#064e3b" },  // depth2 - emerald
+      { bg: "#99f6e4", border: "#2dd4bf", text: "#134e4a" },  // depth3+ - teal
+    ];
 
     async function loadTopics() {
+      try {
+        const docRes = await fetch(`/api/documents/${docId}`, { credentials: "same-origin" });
+        if (docRes.ok) {
+          const doc = await docRes.json();
+          rootTitle = doc.title || doc.fileName || "Tài liệu";
+        }
+      } catch (e) {
+        console.error("Không lấy được tên tài liệu:", e);
+      }
+
       try {
         const response = await fetch(`/api/topics/document/${docId}`);
         if (response.ok) {
           topics = await response.json();
           if (topics.length > 0) {
-            selectedTopic = topics[0].children && topics[0].children.length > 0 ? topics[0].children[0] : topics[0];
-            topics.forEach(t => expanded[t.id] = true);
-            renderTree();
+            expanded["root"] = true;
+            topics.forEach(t => { expanded[t.id] = true; });
+            selectedTopic = topics[0];
+            renderMindMap();
             updateActiveTopicDisplay();
+            setTimeout(fitMapToScreen, 50);
           }
         }
       } catch (err) {
@@ -119,108 +141,226 @@
       }
     }
 
-    function renderTree() {
-      const container = document.getElementById("treeContainer");
-      container.innerHTML = "";
+    function nodeWidth(label) {
+      return Math.max(140, Math.min(280, label.length * CHAR_WIDTH + NODE_PAD));
+    }
 
-      topics.forEach(node => {
-        container.appendChild(createNodeElement(node, 0));
+    // Thuật toán layout cây kinh điển: node lá xếp dọc cách đều nhau, node cha
+    // đặt ở vị trí trung bình (y) của các con -> ra hình toả nhánh cân đối
+    // giống NotebookLM.
+    function layoutTree(rootNodes) {
+      const yCounter = { value: 0 };
+      let maxDepth = 0;
+
+      function visit(node, depth) {
+        node.depth = depth;
+        node.x = depth * LEVEL_W;
+        node.width = nodeWidth(node.label);
+        maxDepth = Math.max(maxDepth, depth);
+        const isOpen = expanded[node.id] !== false;
+        const kids = (isOpen && node.children && node.children.length > 0) ? node.children : null;
+
+        if (!kids) {
+          node.y = yCounter.value * NODE_H_GAP;
+          yCounter.value += 1;
+        } else {
+          const startIdx = yCounter.value;
+          kids.forEach(child => visit(child, depth + 1));
+          const endIdx = yCounter.value;
+          node.y = ((startIdx + endIdx - 1) / 2) * NODE_H_GAP;
+        }
+      }
+
+      rootNodes.forEach(n => visit(n, 1));
+
+      // Root ảo bên trái, nối vào tất cả chương ở depth 1
+      const rootY = rootNodes.length > 0 ? (rootNodes[0].y + rootNodes[rootNodes.length - 1].y) / 2 : 0;
+      const virtualRoot = { id: "root", label: rootTitle, depth: 0, x: 0, y: rootY, width: nodeWidth(rootTitle), children: rootNodes };
+
+      return { virtualRoot, maxDepth, totalHeight: yCounter.value * NODE_H_GAP };
+    }
+
+    function renderMindMap() {
+      if (topics.length === 0) return;
+
+      const { virtualRoot, maxDepth, totalHeight } = layoutTree(topics);
+
+      const svg = document.getElementById("mapSvg");
+      const nodesLayer = document.getElementById("mapNodes");
+      svg.innerHTML = "";
+      nodesLayer.innerHTML = "";
+
+      const allNodes = [];
+      const edges = [];
+      function collect(node, parent) {
+        allNodes.push(node);
+        if (parent) edges.push({ from: parent, to: node });
+        const isOpen = expanded[node.id] !== false;
+        if (isOpen && node.children) {
+          node.children.forEach(c => collect(c, node));
+        }
+      }
+      collect(virtualRoot, null);
+
+      const totalWidth = (maxDepth + 1) * LEVEL_W + 260;
+      const canvasHeight = Math.max(totalHeight + NODE_HEIGHT * 2, 400);
+
+      document.getElementById("mapCanvas").style.width = totalWidth + "px";
+      document.getElementById("mapCanvas").style.height = canvasHeight + "px";
+      svg.setAttribute("width", totalWidth);
+      svg.setAttribute("height", canvasHeight);
+
+      const yOffset = NODE_HEIGHT;
+
+      // Vẽ đường cong nối cha-con
+      edges.forEach(({ from, to }) => {
+        const x1 = from.x + from.width;
+        const y1 = from.y + yOffset;
+        const x2 = to.x;
+        const y2 = to.y + yOffset;
+        const dx = Math.max(30, (x2 - x1) * 0.5);
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`);
+        const style = DEPTH_STYLES[Math.min(to.depth, DEPTH_STYLES.length - 1)];
+        path.setAttribute("stroke", style.border);
+        path.setAttribute("stroke-width", "2");
+        path.setAttribute("fill", "none");
+        path.setAttribute("opacity", "0.75");
+        svg.appendChild(path);
       });
+
+      // Vẽ node
+      allNodes.forEach(node => {
+        const hasChildren = node.children && node.children.length > 0;
+        const isOpen = expanded[node.id] !== false;
+        const isSelected = selectedTopic && selectedTopic.id === node.id;
+        const style = DEPTH_STYLES[Math.min(node.depth, DEPTH_STYLES.length - 1)];
+
+        const el = document.createElement("div");
+        el.className = "absolute rounded-2xl flex items-center px-4 shadow-sm border-2 font-bold text-xs cursor-pointer transition-transform hover:scale-[1.03] select-none";
+        el.style.left = node.x + "px";
+        el.style.top = node.y + "px";
+        el.style.width = node.width + "px";
+        el.style.height = NODE_HEIGHT + "px";
+        el.style.background = style.bg;
+        el.style.borderColor = isSelected ? "#4f46e5" : style.border;
+        el.style.color = style.text;
+        if (isSelected) el.style.boxShadow = "0 0 0 3px rgba(79,70,229,0.35)";
+        el.title = node.label;
+
+        const labelSpan = document.createElement("span");
+        labelSpan.className = "truncate flex-1";
+        labelSpan.textContent = node.label;
+        el.appendChild(labelSpan);
+
+        if (node.id !== "root") {
+          el.addEventListener("click", (e) => {
+            if (e.target.closest(".map-toggle-btn")) return;
+            selectedTopic = node;
+            updateActiveTopicDisplay();
+            renderMindMap();
+          });
+        }
+
+        if (hasChildren) {
+          const toggle = document.createElement("button");
+          toggle.className = "map-toggle-btn absolute -right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white border-2 flex items-center justify-center shadow-md hover:scale-110 transition-all";
+          toggle.style.borderColor = style.border;
+          toggle.style.color = style.text;
+          toggle.innerHTML = `<i data-lucide="${isOpen ? 'chevron-left' : 'chevron-right'}" class="h-3.5 w-3.5"></i>`;
+          toggle.addEventListener("click", (e) => {
+            e.stopPropagation();
+            expanded[node.id] = !isOpen;
+            renderMindMap();
+          });
+          el.appendChild(toggle);
+        }
+
+        nodesLayer.appendChild(el);
+      });
+
       lucide.createIcons();
     }
 
-    function createNodeElement(node, depth) {
-      const hasChildren = node.children && node.children.length > 0;
-      const isExpanded = expanded[node.id];
-      const isSelected = selectedTopic && selectedTopic.id === node.id;
-
-      const wrapper = document.createElement("div");
-      wrapper.className = "select-none";
-
-      const item = document.createElement("div");
-      item.className = `flex items-center gap-2.5 py-2.5 px-3.5 rounded-2xl cursor-pointer transition-all ${
-        isSelected 
-          ? "bg-indigo-600 text-white shadow-md ring-2 ring-indigo-400" 
-          : "hover:bg-slate-100 text-slate-700"
-      }`;
-      item.style.marginLeft = `${depth * 18}px`;
-      item.addEventListener("click", () => {
-        selectedTopic = node;
-        updateActiveTopicDisplay();
-        renderTree();
-      });
-
-      let iconHtml = `<div class="w-5 h-5 flex items-center justify-center text-[10px] ${isSelected ? 'text-white' : 'text-indigo-600'} font-bold">•</div>`;
-      if (hasChildren) {
-        const toggleId = `toggle-${node.id}`;
-        iconHtml = `
-          <button id="${toggleId}" class="p-1 ${isSelected ? 'text-white hover:bg-indigo-700' : 'text-slate-500 hover:bg-slate-200'} rounded-lg transition-all">
-            <i data-lucide="${isExpanded ? 'chevron-down' : 'chevron-right'}" class="h-4 w-4"></i>
-          </button>
-        `;
+    function expandAllNodes() {
+      function setAll(nodes) {
+        nodes.forEach(n => {
+          expanded[n.id] = true;
+          if (n.children) setAll(n.children);
+        });
       }
-
-      item.innerHTML = `
-        ${iconHtml}
-        <div class="flex-1 min-w-0">
-          <p class="text-xs font-bold truncate">${node.label}</p>
-          <p class="text-[10px] ${isSelected ? 'text-indigo-100' : 'text-slate-500'} truncate">Bắt đầu từ Trang ${node.pageStart || 1}</p>
-        </div>
-      `;
-
-      wrapper.appendChild(item);
-
-      if (hasChildren) {
-        const toggleBtn = item.querySelector(`#toggle-${node.id}`);
-        if (toggleBtn) {
-          toggleBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            expanded[node.id] = !expanded[node.id];
-            renderTree();
-          });
-        }
-
-        if (isExpanded) {
-          const childrenWrapper = document.createElement("div");
-          childrenWrapper.className = "mt-1 space-y-1";
-          node.children.forEach(child => {
-            childrenWrapper.appendChild(createNodeElement(child, depth + 1));
-          });
-          wrapper.appendChild(childrenWrapper);
-        }
-      }
-
-      return wrapper;
+      setAll(topics);
+      renderMindMap();
     }
+
+    function collapseAllNodes() {
+      function setAll(nodes, depth) {
+        nodes.forEach(n => {
+          if (depth >= 1) expanded[n.id] = false;
+          if (n.children) setAll(n.children, depth + 1);
+        });
+      }
+      setAll(topics, 0);
+      renderMindMap();
+    }
+
+    // --- Zoom & Pan ---
+    let mapZoomLevel = 1;
+    let panX = 60, panY = 40;
+    let isPanning = false, panStartX = 0, panStartY = 0, panOriginX = 0, panOriginY = 0;
+
+    function applyMapTransform() {
+      document.getElementById("mapCanvas").style.transform = `translate(${panX}px, ${panY}px) scale(${mapZoomLevel})`;
+      document.getElementById("zoomLabel").textContent = Math.round(mapZoomLevel * 100) + "%";
+    }
+
+    function mapZoom(delta) {
+      mapZoomLevel = Math.min(2, Math.max(0.3, mapZoomLevel + delta));
+      applyMapTransform();
+    }
+
+    function fitMapToScreen() {
+      const viewport = document.getElementById("mapViewport");
+      const canvas = document.getElementById("mapCanvas");
+      const cw = parseFloat(canvas.style.width) || 800;
+      const ch = parseFloat(canvas.style.height) || 400;
+      const availW = viewport.clientWidth - 40;
+      const availH = viewport.clientHeight - 40;
+      mapZoomLevel = Math.min(1, Math.min(availW / cw, availH / ch));
+      panX = 30;
+      panY = Math.max(20, (availH - ch * mapZoomLevel) / 2 + 20);
+      applyMapTransform();
+    }
+
+    const mapViewport = document.getElementById("mapViewport");
+    mapViewport.addEventListener("mousedown", (e) => {
+      isPanning = true;
+      panStartX = e.clientX;
+      panStartY = e.clientY;
+      panOriginX = panX;
+      panOriginY = panY;
+    });
+    window.addEventListener("mousemove", (e) => {
+      if (!isPanning) return;
+      panX = panOriginX + (e.clientX - panStartX);
+      panY = panOriginY + (e.clientY - panStartY);
+      applyMapTransform();
+    });
+    window.addEventListener("mouseup", () => { isPanning = false; });
+    mapViewport.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      mapZoom(e.deltaY < 0 ? 0.08 : -0.08);
+    }, { passive: false });
 
     function updateActiveTopicDisplay() {
       if (!selectedTopic) return;
       document.getElementById("activeLabel").textContent = selectedTopic.label;
       document.getElementById("activeDesc").textContent = selectedTopic.description || "Không có mô tả chi tiết cho chủ đề này.";
-      document.getElementById("pageReaderLabel").textContent = `Trình Đọc PDF (Trang ${selectedTopic.pageStart || 1})`;
-      document.getElementById("pdfPageBadge").textContent = `TRANG ${selectedTopic.pageStart || 1}`;
-      document.getElementById("pdfPageTitle").textContent = selectedTopic.label;
-    }
-
-    function zoomIn() {
-      if (zoom < 150) {
-        zoom += 10;
-        applyZoom();
-      }
-    }
-
-    function zoomOut() {
-      if (zoom > 50) {
-        zoom -= 10;
-        applyZoom();
-      }
-    }
-
-    function applyZoom() {
-      document.getElementById("zoomLabel").textContent = zoom + "%";
-      const canvas = document.getElementById("pdfCanvas");
-      canvas.style.transform = `scale(${zoom / 100})`;
-      canvas.style.transformOrigin = "top center";
+      const page = selectedTopic.pageStart || 1;
+      document.getElementById("pageReaderLabel").textContent = `Trình Đọc Tài Liệu (Trang ${page})`;
+      const readerUrl = `reader.html?id=${docId}&page=${page}`;
+      document.getElementById("readerFrame").src = readerUrl;
+      document.getElementById("openFullReaderLink").href = readerUrl;
     }
 
     loadTopics();

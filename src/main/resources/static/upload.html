@@ -55,10 +55,15 @@
           <h3 class="text-xl font-extrabold text-slate-900" data-i18n="upload_done">Tải Lên Hoàn Tất!</h3>
           <p id="uploadedName" class="text-xs text-slate-700 mt-2 font-bold"></p>
           <p class="text-xs text-slate-500 font-semibold mt-1" data-i18n="upload_done_sub">AI đã tự động phân tích và tạo Sơ đồ kiến thức 3D cho bạn!</p>
-          <a href="documents.html" class="mt-6 inline-flex items-center gap-2 btn-3d btn-3d-primary py-3 px-6 text-xs font-bold shadow-xl shadow-indigo-500/30">
-            <span data-i18n="upload_done_btn">Đi Đến Kho Tài Liệu</span>
-            <i data-lucide="arrow-right" class="h-4 w-4"></i>
-          </a>
+          <div class="mt-6 flex flex-col items-center gap-3">
+            <a id="readNowBtn" href="documents.html" class="inline-flex items-center gap-2 btn-3d btn-3d-primary py-3 px-6 text-xs font-bold shadow-xl shadow-indigo-500/30">
+              <i data-lucide="sparkles" class="h-4 w-4"></i>
+              <span>Đọc &amp; Xem AI Tóm Tắt Ngay</span>
+            </a>
+            <a href="documents.html" class="text-[11px] font-bold text-slate-500 hover:text-indigo-600">
+              <span data-i18n="upload_done_btn">Đi Đến Kho Tài Liệu</span>
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -188,11 +193,16 @@
         clearInterval(timer);
 
         if (response.ok) {
+          const savedDoc = await response.json();
           progressBar.style.width = "100%";
           setTimeout(() => {
             uploadingState.classList.add("hidden");
             completedState.classList.remove("hidden");
             document.getElementById("uploadedName").textContent = file.name;
+            const readNowBtn = document.getElementById("readNowBtn");
+            if (readNowBtn && savedDoc && savedDoc.id) {
+              readNowBtn.href = `reader.html?id=${savedDoc.id}`;
+            }
             lucide.createIcons();
           }, 300);
         } else {

@@ -32,16 +32,11 @@ public class TopicController {
     @Autowired
     private StudyProgressRepository studyProgressRepository;
 
+    // userId chỉ lấy từ session đã đăng nhập, KHÔNG tin header X-User-Id từ client
     private Long getCurrentUserId(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute("userId") != null) {
             return (Long) session.getAttribute("userId");
-        }
-        String headerUserId = request.getHeader("X-User-Id");
-        if (headerUserId != null && !headerUserId.isEmpty()) {
-            try {
-                return Long.parseLong(headerUserId);
-            } catch (NumberFormatException ignored) {}
         }
         return null;
     }

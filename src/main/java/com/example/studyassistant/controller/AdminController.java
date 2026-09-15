@@ -54,18 +54,12 @@ public class AdminController {
     private DocumentService documentService;
 
     // Helper kiểm tra quyền ADMIN
+    // userId chỉ lấy từ session, KHÔNG tin header X-User-Id
     private User verifyAdminRole(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         Long userId = null;
         if (session != null && session.getAttribute("userId") != null) {
             userId = (Long) session.getAttribute("userId");
-        } else {
-            String headerUserId = request.getHeader("X-User-Id");
-            if (headerUserId != null && !headerUserId.isEmpty()) {
-                try {
-                    userId = Long.parseLong(headerUserId);
-                } catch (NumberFormatException ignored) {}
-            }
         }
 
         if (userId == null) {

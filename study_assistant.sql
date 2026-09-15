@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS documents (
     file_size BIGINT,
     total_pages INT,
     status VARCHAR(30) DEFAULT 'UPLOADED',
+    ai_summary LONGTEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_documents_user

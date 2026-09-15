@@ -2,6 +2,9 @@ package com.example.studyassistant.controller;
 
 import com.example.studyassistant.entity.*;
 import com.example.studyassistant.repository.*;
+import com.example.studyassistant.service.AiService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,18 +35,106 @@ public class FlashcardController {
     @Autowired
     private StudyProgressRepository studyProgressRepository;
 
+    @Autowired
+    private DocumentRepository documentRepository;
+
+    @Autowired
+    private AiService aiService;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    // userId chỉ lấy từ session đã đăng nhập, KHÔNG tin header X-User-Id từ client
     private Long getCurrentUserId(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute("userId") != null) {
             return (Long) session.getAttribute("userId");
         }
-        String headerUserId = request.getHeader("X-User-Id");
-        if (headerUserId != null && !headerUserId.isEmpty()) {
-            try {
-                return Long.parseLong(headerUserId);
-            } catch (NumberFormatException ignored) {}
-        }
         return null;
+    }
+
+    @GetMapping("/document/{docId}")
+    public ResponseEntity<?> getOrGenerateFlashcardsForDocument(@PathVariable Long docId, HttpServletRequest request) {
+        Long userId = getCurrentUserId(request);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
+        }
+
+        Document doc = documentRepository.findByIdAndUserId(docId, userId).orElse(null);
+        if (doc == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Tài liệu không tồn tại hoặc bạn không có quyền truy cập"));
+        }
+
+        List<Flashcard> existing = flashcardRepository.findByDocumentId(docId);
+        if (!existing.isEmpty()) {
+            return ResponseEntity.ok(existing);
+        }
+
+        String text = doc.getExtractedText();
+        if (text == null || text.isBlank()) {
+            return ResponseEntity.ok(Map.of("cards", List.of(), "message", "Tài liệu chưa có nội dung trích xuất để tạo Flashcard."));
+        }
+        if (!aiService.hasApiKey()) {
+            return ResponseEntity.ok(Map.of("cards", List.of(), "message", "OpenAI API Key chưa được cấu hình nên chưa thể tự động tạo Flashcard."));
+        }
+
+        String snippet = text.length() > 30000 ? text.substring(0, 30000) : text;
+        String prompt = "Đọc kỹ nội dung tài liệu học tập dưới đây và tạo bộ Flashcard ôn tập (câu hỏi - câu trả lời ngắn gọn) " +
+                "bằng tiếng Việt. Trả về CHỈ MỘT đối tượng JSON (không thêm chữ nào khác), dạng:\n" +
+                "{\"cards\": [{\"front\": \"Câu hỏi hoặc thuật ngữ\", \"back\": \"Câu trả lời/định nghĩa ngắn gọn\"}]}\n\n" +
+                "YÊU CẦU:\n" +
+                "- Số lượng thẻ PHẢI DỰA THEO ĐỘ PHONG PHÚ THỰC TẾ của tài liệu (bao nhiêu khái niệm/định nghĩa/thuật ngữ quan trọng thì tạo bấy nhiêu thẻ), không ép cứng theo 1 con số cố định; với tài liệu đủ dài, phong phú thì có thể ra khoảng 30-60 thẻ, nhưng KHÔNG bịa thêm thẻ trùng lặp/vô nghĩa chỉ để cho đủ số lượng, và không vượt quá 60 thẻ.\n" +
+                "- Mỗi thẻ tập trung 1 khái niệm/thuật ngữ/ý cụ thể có thật trong tài liệu, không tự bịa nội dung không có trong tài liệu.\n" +
+                "- Câu hỏi (front) ngắn gọn, câu trả lời (back) súc tích (1-3 câu).\n\n" +
+                "TÀI LIỆU:\n" + snippet;
+
+        try {
+            String raw = aiService.callOpenAI(prompt, true);
+            JsonNode cardsNode = objectMapper.readTree(extractJsonObject(raw)).get("cards");
+            if (cardsNode == null || !cardsNode.isArray() || cardsNode.isEmpty()) {
+                return ResponseEntity.ok(Map.of("cards", List.of(), "message", "AI không tạo được thẻ nào từ tài liệu này."));
+            }
+
+            List<Flashcard> saved = new ArrayList<>();
+            for (JsonNode node : cardsNode) {
+                String front = node.hasNonNull("front") ? node.get("front").asText().trim() : null;
+                String back = node.hasNonNull("back") ? node.get("back").asText().trim() : null;
+                if (front != null && !front.isEmpty() && back != null && !back.isEmpty()) {
+                    Flashcard card = new Flashcard();
+                    card.setQuestion(front);
+                    card.setAnswer(back);
+                    card.setDocument(doc);
+                    saved.add(flashcardRepository.save(card));
+                }
+            }
+            return ResponseEntity.ok(saved);
+        } catch (AiService.NoApiKeyException e) {
+            return ResponseEntity.ok(Map.of("cards", List.of(), "message", "OpenAI API Key chưa được cấu hình."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Không thể tạo Flashcard: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/document/{docId}")
+    public ResponseEntity<?> regenerateFlashcardsForDocument(@PathVariable Long docId, HttpServletRequest request) {
+        Long userId = getCurrentUserId(request);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
+        }
+        Document doc = documentRepository.findByIdAndUserId(docId, userId).orElse(null);
+        if (doc == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Tài liệu không tồn tại hoặc bạn không có quyền truy cập"));
+        }
+        flashcardRepository.deleteAll(flashcardRepository.findByDocumentId(docId));
+        return ResponseEntity.ok(Map.of("message", "Đã xoá bộ thẻ cũ, lần sau mở lại sẽ tạo bộ thẻ mới."));
+    }
+
+    private String extractJsonObject(String raw) {
+        int start = raw.indexOf('{');
+        int end = raw.lastIndexOf('}');
+        if (start == -1 || end == -1 || end < start) {
+            throw new IllegalStateException("Phản hồi của AI không chứa JSON hợp lệ");
+        }
+        return raw.substring(start, end + 1);
     }
 
     // FC-01: Tạo Flashcard từ Topic (Kiểm tra quota, Topic phải thuộc user, giới hạn số thẻ/lần)

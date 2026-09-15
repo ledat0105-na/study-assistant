@@ -85,44 +85,33 @@
     const docId = urlParams.get("id") || "1";
     document.getElementById("backLink").href = `detail.html?id=${docId}`;
 
-    let questions = [
-      { id: 1, question: "Minsky và Papert đã chứng minh Perceptron đơn tầng không thể giải quyết hàm số nào?", options: ["Cổng AND", "Cổng OR", "Cổng XOR", "Cổng NOT"], answer: 2 },
-      { id: 2, question: "Hàm kích hoạt nào xuất kết quả nằm trong khoảng từ 0 đến 1?", options: ["ReLU", "Sigmoid", "Tanh", "Leaky ReLU"], answer: 1 },
-      { id: 3, question: "Trong huấn luyện mạng neuron, thuật toán nào tính đạo hàm của độ lỗi theo trọng số?", options: ["Forward propagation", "Backpropagation", "Bias calculation", "Pooling"], answer: 1 }
-    ];
-
+    let questions = [];
+    let quizId = null;
     let currentIndex = 0;
     let selectedAnswers = {};
 
     async function loadQuiz() {
       try {
-        const resTopics = await fetch(`/api/topics/document/${docId}`);
-        if (resTopics.ok) {
-          const topics = await resTopics.json();
-          if (topics.length > 0) {
-            const topicId = topics[0].children && topics[0].children.length > 0 ? topics[0].children[0].id : topics[0].id;
-            const resQuizzes = await fetch(`/api/quizzes/topic/${topicId}`);
-            if (resQuizzes.ok) {
-              const quizzes = await resQuizzes.json();
-              if (quizzes.length > 0) {
-                const resQuestions = await fetch(`/api/quizzes/${quizzes[0].id}/questions`);
-                if (resQuestions.ok) {
-                  const serverQs = await resQuestions.json();
-                  if (serverQs.length > 0) {
-                    questions = serverQs.map(q => ({
-                      id: q.id,
-                      question: q.question,
-                      options: [q.optionA, q.optionB, q.optionC, q.optionD],
-                      answer: q.correctAnswer
-                    }));
-                  }
-                }
-              }
-            }
+        const res = await fetch(`/api/quizzes/document/${docId}`, { credentials: "same-origin" });
+        if (res.ok) {
+          const data = await res.json();
+          quizId = data.quizId;
+          questions = (data.questions || []).map(q => ({
+            id: q.id,
+            question: q.question,
+            options: [q.answerA, q.answerB, q.answerC, q.answerD]
+          }));
+          if (questions.length === 0 && data.message) {
+            document.getElementById("questionText").textContent = data.message;
+            document.getElementById("optionsContainer").innerHTML = "";
           }
+        } else {
+          const err = await res.json().catch(() => ({}));
+          document.getElementById("questionText").textContent = err.error || "Không thể tạo bài trắc nghiệm cho tài liệu này.";
         }
       } catch (err) {
-        console.error("Lỗi nạp bài thi từ máy chủ, dùng dữ liệu mẫu", err);
+        console.error("Lỗi nạp bài thi", err);
+        document.getElementById("questionText").textContent = "Lỗi kết nối máy chủ.";
       }
       updateQuestionDisplay();
     }
@@ -132,7 +121,7 @@
       const q = questions[currentIndex];
       document.getElementById("questionText").textContent = q.question;
       document.getElementById("questionCountLabel").textContent = `Câu ${currentIndex + 1} / ${questions.length}`;
-      
+
       const completePct = Math.round((Object.keys(selectedAnswers).length / questions.length) * 100);
       document.getElementById("completeLabel").textContent = `${completePct}% Hoàn thành`;
       document.getElementById("progressBar").style.width = ((currentIndex + 1) / questions.length) * 100 + "%";
@@ -142,9 +131,10 @@
 
       const optionLetters = ["A", "B", "C", "D"];
       q.options.forEach((opt, idx) => {
-        const isSelected = selectedAnswers[q.id] === idx;
+        const letter = optionLetters[idx];
+        const isSelected = selectedAnswers[q.id] === letter;
         const btn = document.createElement("button");
-        btn.onclick = () => selectOption(idx);
+        btn.onclick = () => selectOption(letter);
         btn.className = `w-full flex items-center justify-between p-4 rounded-2xl text-sm font-semibold border transition-all text-left ${
           isSelected
             ? "border-indigo-500 bg-indigo-50 text-indigo-900 shadow-md ring-2 ring-indigo-400"
@@ -154,7 +144,7 @@
           <div class="flex items-center gap-3.5">
             <span class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-extrabold ${
               isSelected ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 border border-slate-300'
-            }">${optionLetters[idx]}</span>
+            }">${letter}</span>
             <span class="text-sm font-bold">${opt}</span>
           </div>
           ${isSelected ? '<i data-lucide="check-circle-2" class="h-5 w-5 text-indigo-600"></i>' : ''}
@@ -174,9 +164,9 @@
       lucide.createIcons();
     }
 
-    function selectOption(index) {
+    function selectOption(letter) {
       const q = questions[currentIndex];
-      selectedAnswers[q.id] = index;
+      selectedAnswers[q.id] = letter;
       updateQuestionDisplay();
     }
 
@@ -194,14 +184,33 @@
       }
     }
 
-    function submitQuiz() {
-      let score = 0;
-      questions.forEach(q => {
-        if (selectedAnswers[q.id] === q.answer) {
-          score++;
+    async function submitQuiz() {
+      if (!quizId) return;
+      const submitBtn = document.getElementById("submitBtn");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Đang nộp bài...";
+
+      try {
+        const res = await fetch(`/api/quizzes/${quizId}/submit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ answers: selectedAnswers })
+        });
+        if (res.ok) {
+          const result = await res.json();
+          window.location.href = `result.html?score=${result.correctAnswers}&total=${result.totalQuestions}&id=${docId}&quizId=${quizId}`;
+        } else {
+          const err = await res.json().catch(() => ({}));
+          alert(err.error || "Không thể nộp bài, vui lòng thử lại.");
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Nộp Bài Thi AI";
         }
-      });
-      window.location.href = `result.html?score=${score}&total=${questions.length}&id=${docId}`;
+      } catch (err) {
+        alert("Lỗi kết nối khi nộp bài.");
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Nộp Bài Thi AI";
+      }
     }
 
     loadQuiz();

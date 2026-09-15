@@ -107,34 +107,34 @@
     const docId = urlParams.get("id") || "1";
     document.getElementById("backLink").href = `detail.html?id=${docId}`;
 
-    let flashcards = [
-      { id: 1, front: "Perceptron", back: "Mô hình neuron nhân tạo đơn tầng dùng làm bộ phân loại nhị phân tính tổng có trọng số của đầu vào." },
-      { id: 2, front: "Hàm Kích Hoạt (Activation Function)", back: "Hàm toán học giúp mạng neuron học các mẫu hình phi tuyến tính phức tạp." },
-      { id: 3, front: "Lan Truyền Ngược (Backpropagation)", back: "Thuật toán huấn luyện mạng neuron bằng cách tính đạo hàm độ lỗi theo trọng số." },
-      { id: 4, front: "ReLU (Rectified Linear Unit)", back: "Hàm kích hoạt phổ biến f(x) = max(0, x), trả về giá trị dương nếu x > 0." }
-    ];
+    let flashcards = [];
 
     let currentIndex = 0;
     let isFlipped = false;
 
     async function loadFlashcards() {
       try {
-        const resTopics = await fetch(`/api/topics/document/${docId}`);
-        if (resTopics.ok) {
-          const topics = await resTopics.json();
-          if (topics.length > 0) {
-            const topicId = topics[0].children && topics[0].children.length > 0 ? topics[0].children[0].id : topics[0].id;
-            const resCards = await fetch(`/api/flashcards/topic/${topicId}`);
-            if (resCards.ok) {
-              const serverCards = await resCards.json();
-              if (serverCards.length > 0) {
-                flashcards = serverCards;
-              }
+        const res = await fetch(`/api/flashcards/document/${docId}`, { credentials: "same-origin" });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            flashcards = data;
+          } else if (data && Array.isArray(data.cards)) {
+            flashcards = data.cards;
+            if (flashcards.length === 0 && data.message) {
+              document.getElementById("cardFront").textContent = "Chưa có Flashcard";
+              document.getElementById("cardBack").textContent = data.message;
             }
           }
+        } else {
+          const err = await res.json().catch(() => ({}));
+          document.getElementById("cardFront").textContent = "Lỗi tạo Flashcard";
+          document.getElementById("cardBack").textContent = err.error || "Không thể tạo bộ thẻ cho tài liệu này.";
         }
       } catch (err) {
-        console.error("Dùng bộ dữ liệu mẫu flashcard", err);
+        console.error("Lỗi tải flashcard", err);
+        document.getElementById("cardFront").textContent = "Lỗi kết nối";
+        document.getElementById("cardBack").textContent = "Không thể kết nối máy chủ để tạo Flashcard.";
       }
       updateCardDisplay();
     }

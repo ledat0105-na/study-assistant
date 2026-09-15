@@ -3,91 +3,70 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Study AI - Đọc Tài Liệu PDF 3D Song Song</title>
+  <title>Study AI - Đọc Tài Liệu</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <link rel="stylesheet" href="css/style-3d.css">
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans relative overflow-hidden">
 
-  <!-- Header 3D -->
   <header class="glass-3d sticky top-0 z-30 border-b border-white/10 px-6 py-3 flex items-center justify-between">
     <div class="flex items-center gap-4">
       <a id="backLink" href="viewer.html" class="btn-3d btn-3d-secondary p-2 text-slate-300">
         <i data-lucide="arrow-left" class="h-4 w-4"></i>
       </a>
       <div>
-        <h1 id="docTitleLabel" class="font-extrabold text-sm text-slate-100">tai-lieu-hoc-tap.pdf</h1>
-        <p class="text-[10px] text-slate-400 mt-0.5">Chế độ đọc PDF 3D song song với Trợ lý AI</p>
+        <h1 id="docTitleLabel" class="font-extrabold text-sm text-slate-100">Đang tải...</h1>
+        <p class="text-[10px] text-slate-400 mt-0.5">Trợ lý AI đọc trực tiếp nội dung tài liệu</p>
       </div>
     </div>
 
-    <!-- Page navigation controls -->
-    <div class="flex items-center gap-3 bg-slate-900/80 border border-white/10 px-3 py-1.5 rounded-xl shadow-inner">
+    <div id="pageNav" class="flex items-center gap-3 bg-slate-900/80 border border-white/10 px-3 py-1.5 rounded-xl shadow-inner">
       <button onclick="prevPage()" id="prevBtn" class="p-1 text-slate-400 hover:text-white disabled:opacity-40"><i data-lucide="chevron-left" class="h-4 w-4"></i></button>
-      <span id="pageTracker" class="text-xs font-bold font-mono text-indigo-300">Trang 1 / 48</span>
+      <span id="pageTracker" class="text-xs font-bold font-mono text-indigo-300">-- / --</span>
       <button onclick="nextPage()" id="nextBtn" class="p-1 text-slate-400 hover:text-white disabled:opacity-40"><i data-lucide="chevron-right" class="h-4 w-4"></i></button>
-    </div>
-
-    <div class="flex items-center gap-2">
-      <span id="badgePage" class="badge-3d badge-3d-indigo text-[10px]">TRANG 1</span>
     </div>
   </header>
 
-  <!-- Side-by-Side Content Workspace -->
   <div class="flex-1 flex overflow-hidden relative z-10">
-    
-    <!-- Left Pane: PDF Document Text Renderer -->
-    <div class="flex-1 p-8 overflow-y-auto bg-slate-950/40 flex justify-center items-start">
-      <div class="w-full max-w-2xl bg-slate-100 text-slate-900 shadow-2xl rounded-3xl p-10 min-h-[750px] relative border border-slate-300 font-sans">
-        <div class="flex justify-between items-center border-b border-slate-300 pb-4 mb-6">
-          <span class="text-xs font-extrabold text-indigo-700 tracking-widest uppercase">Trình Đọc Văn Bản AI</span>
-          <span class="badge-3d badge-3d-indigo text-[10px]" id="docPageLabel">TRANG 1</span>
-        </div>
-        
-        <div id="documentContentText" class="space-y-5 text-sm text-slate-800 leading-relaxed font-medium">
-          <h2 class="text-2xl font-extrabold text-indigo-950">Giới thiệu về Lập trình Hướng đối tượng (OOP)</h2>
-          <p>
-            Lập trình hướng đối tượng (Object-Oriented Programming - OOP) là một phương pháp luận phát triển phần mềm xoay quanh việc định nghĩa các thực thể đối tượng. Phương pháp này giúp mô phỏng thế giới thực vào cấu trúc lập trình nhằm tăng tính tái sử dụng và mở rộng hệ thống.
-          </p>
-          <p>
-            Bốn tính chất cốt lõi của OOP bao gồm:
-          </p>
-          <ul class="list-disc pl-6 space-y-2 font-normal text-slate-700">
-            <li><strong>Tính đóng gói (Encapsulation):</strong> Che giấu thông tin nội bộ của đối tượng.</li>
-            <li><strong>Tính kế thừa (Inheritance):</strong> Thừa hưởng lại các thuộc tính và phương thức từ lớp cha.</li>
-            <li><strong>Tính đa hình (Polymorphism):</strong> Phản hồi linh hoạt các thông điệp giống nhau.</li>
-            <li><strong>Tính trừu tượng (Abstraction):</strong> Tập trung vào đặc tính cốt lõi và ẩn chi tiết triển khai.</li>
-          </ul>
-        </div>
 
-        <div class="absolute bottom-6 left-10 right-10 flex justify-between text-[10px] text-slate-400 border-t border-slate-300 pt-4 font-bold">
-          <span>Hệ Thống Trích Xuất AI 3D</span>
-          <span>Trang 1 / 48</span>
+    <div class="flex-1 p-8 overflow-y-auto bg-slate-950/40 flex justify-center items-start">
+
+      <div id="pdfWrap" class="hidden bg-white shadow-2xl rounded-2xl overflow-hidden border border-slate-300 relative">
+        <canvas id="pdfCanvas"></canvas>
+        <div id="textLayer" class="absolute top-0 left-0 origin-top-left pointer-events-none" style="line-height:1;"></div>
+      </div>
+
+      <div id="textWrap" class="hidden w-full max-w-3xl bg-slate-100 text-slate-900 shadow-2xl rounded-3xl p-10 min-h-[750px] border border-slate-300">
+        <div class="flex justify-between items-center border-b border-slate-300 pb-4 mb-6">
+          <span class="text-xs font-extrabold text-indigo-700 tracking-widest uppercase">Nội dung trích xuất</span>
         </div>
+        <pre id="documentContentText" class="whitespace-pre-wrap text-sm text-slate-800 leading-relaxed font-medium"></pre>
+      </div>
+
+      <div id="statusWrap" class="text-slate-400 text-sm font-semibold mt-10 text-center max-w-md">
+        Đang tải tài liệu...
       </div>
     </div>
 
-    <!-- Right Pane: AI Chat Console Sidebar -->
     <div class="w-[420px] glass-3d-card border-l border-white/10 flex flex-col h-full overflow-hidden rounded-none">
       <div class="p-4 border-b border-white/10 bg-slate-900/60 flex justify-between items-center">
         <h3 class="font-extrabold text-xs text-slate-100 flex items-center gap-2">
-          <i data-lucide="bot" class="h-4 w-4 text-indigo-400"></i> Trợ Lý AI Song Song
+          <i data-lucide="bot" class="h-4 w-4 text-indigo-400"></i> Trợ Lý AI
         </h3>
       </div>
 
-      <!-- Chat Stream -->
       <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
         <div class="flex justify-start">
           <div class="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-3.5 text-slate-200 leading-relaxed max-w-[88%] font-medium shadow-inner">
-            Xin chào! Bạn có thể hỏi tôi bất kỳ thắc mắc nào liên quan đến trang tài liệu đang đọc nhé.
+            Xin chào! Tôi đã đọc tài liệu này, bạn hỏi gì cũng được nhé.
           </div>
         </div>
       </div>
 
-      <!-- Chat input -->
       <form id="chatForm" class="p-4 border-t border-white/10 bg-slate-900/60 relative">
-        <input type="text" id="chatInput" placeholder="Hỏi câu hỏi về trang hiện tại..." class="input-3d w-full pl-4 pr-12 py-3 text-xs font-semibold" />
+        <input type="text" id="chatInput" placeholder="Hỏi câu hỏi về tài liệu..." class="input-3d w-full pl-4 pr-12 py-3 text-xs font-semibold" />
         <button type="submit" class="absolute right-6 top-1/2 -translate-y-1/2 btn-3d btn-3d-primary p-2 text-white shadow-md">
           <i data-lucide="arrow-up" class="h-3.5 w-3.5"></i>
         </button>
@@ -96,6 +75,8 @@
 
   </div>
 
+  <script src="auth-interceptor.js"></script>
+  <script src="citations.js"></script>
   <script src="i18n.js"></script>
   <script>
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -104,73 +85,301 @@
     }
 
     const urlParams = new URLSearchParams(window.location.search);
-    const docId = urlParams.get("id") || "1";
+    const docId = urlParams.get("id");
     document.getElementById("backLink").href = `viewer.html?id=${docId}`;
 
+    let pdfDoc = null;
     let currentPage = 1;
-    const totalPages = 48;
+    let totalPages = 0;
+    let docFormat = null;
+    let currentPageSpans = [];
 
-    async function loadDoc() {
-      try {
-        const res = await fetch(`/api/documents/${docId}`);
-        if (res.ok) {
-          const doc = await res.json();
-          document.getElementById("docTitleLabel").textContent = doc.title || "tài liệu.pdf";
-        }
-      } catch (e) {
-        console.error(e);
-      }
+    const pdfWrap = document.getElementById("pdfWrap");
+    const textWrap = document.getElementById("textWrap");
+    const statusWrap = document.getElementById("statusWrap");
+    const pageNav = document.getElementById("pageNav");
+
+    function showStatus(msg) {
+      statusWrap.textContent = msg;
+      statusWrap.classList.remove("hidden");
+      pdfWrap.classList.add("hidden");
+      textWrap.classList.add("hidden");
     }
 
     function updatePageDisplay() {
       document.getElementById("pageTracker").textContent = `Trang ${currentPage} / ${totalPages}`;
-      document.getElementById("badgePage").textContent = `TRANG ${currentPage}`;
-      document.getElementById("docPageLabel").textContent = `TRANG ${currentPage}`;
       document.getElementById("prevBtn").disabled = currentPage === 1;
       document.getElementById("nextBtn").disabled = currentPage === totalPages;
+    }
+
+    async function renderPdfPage(pageNum) {
+      const page = await pdfDoc.getPage(pageNum);
+      const canvas = document.getElementById("pdfCanvas");
+      const ctx = canvas.getContext("2d");
+      const viewport = page.getViewport({ scale: 1.4 });
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      await renderTextLayer(page, viewport);
+      updatePageDisplay();
+
+      const quote = urlParams.get("q");
+      if (quote) highlightQuoteInPdf(quote);
+    }
+
+    async function renderTextLayer(page, viewport) {
+      const textContent = await page.getTextContent();
+      const layer = document.getElementById("textLayer");
+      layer.innerHTML = "";
+      layer.style.width = viewport.width + "px";
+      layer.style.height = viewport.height + "px";
+      currentPageSpans = [];
+
+      textContent.items.forEach(item => {
+        const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
+        const fontHeight = Math.hypot(tx[2], tx[3]);
+        const span = document.createElement("span");
+        span.textContent = item.str;
+        span.style.position = "absolute";
+        span.style.left = tx[4] + "px";
+        span.style.top = (tx[5] - fontHeight) + "px";
+        span.style.fontSize = fontHeight + "px";
+        span.style.lineHeight = "1";
+        span.style.whiteSpace = "pre";
+        span.style.color = "transparent";
+        span.style.fontFamily = "sans-serif";
+        layer.appendChild(span);
+        currentPageSpans.push(span);
+      });
+    }
+
+    function normalizeForSearch(value) {
+      return value.toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
+    }
+
+    function highlightQuoteInPdf(quote) {
+      if (!currentPageSpans.length || !quote) return;
+      currentPageSpans.forEach(span => {
+        span.style.backgroundColor = "";
+        span.style.color = "transparent";
+      });
+
+      const normalizedQuote = normalizeForSearch(quote);
+      let fullText = "";
+      const ranges = [];
+      currentPageSpans.forEach((span, index) => {
+        const value = span.textContent + " ";
+        ranges.push({ index, start: fullText.length, end: fullText.length + value.length });
+        fullText += value;
+      });
+      const normalizedFullText = normalizeForSearch(fullText);
+      let matchStart = normalizedFullText.indexOf(normalizedQuote);
+      let matchLength = normalizedQuote.length;
+
+      if (matchStart === -1) {
+        const partial = normalizedQuote.slice(0, Math.max(10, Math.floor(normalizedQuote.length * 0.6)));
+        matchStart = normalizedFullText.indexOf(partial);
+        matchLength = partial.length;
+      }
+      if (matchStart === -1) return;
+
+      const matchEnd = matchStart + matchLength;
+      const matchedSpans = ranges
+        .filter(range => range.end > matchStart && range.start < matchEnd)
+        .map(range => currentPageSpans[range.index]);
+      matchedSpans.forEach(span => {
+        span.style.backgroundColor = "rgba(250, 204, 21, 0.55)";
+        span.style.color = "rgba(15, 23, 42, 0.95)";
+        span.style.borderRadius = "2px";
+      });
+      if (matchedSpans.length) matchedSpans[0].scrollIntoView({ behavior: "smooth", block: "center" });
     }
 
     function nextPage() {
       if (currentPage < totalPages) {
         currentPage++;
-        updatePageDisplay();
+        renderPdfPage(currentPage);
       }
     }
 
     function prevPage() {
       if (currentPage > 1) {
         currentPage--;
-        updatePageDisplay();
+        renderPdfPage(currentPage);
       }
+    }
+
+    async function loadDoc() {
+      if (!docId) {
+        showStatus("Thiếu id tài liệu.");
+        return;
+      }
+      try {
+        const res = await fetch(`/api/documents/${docId}`);
+        if (!res.ok) {
+          showStatus("Không tìm thấy tài liệu hoặc bạn không có quyền xem.");
+          return;
+        }
+        const doc = await res.json();
+        document.getElementById("docTitleLabel").textContent = doc.title || "Tài liệu";
+        docFormat = doc.format;
+
+        if (doc.status === "FAILED") {
+          showStatus("Tài liệu xử lý thất bại: " + (doc.errorMessage || "Lỗi không xác định") + ". Hãy thử lại ở trang danh sách tài liệu.");
+          return;
+        }
+
+        if (docFormat === "PDF") {
+          await loadPdf();
+        } else {
+          await loadTextContent();
+        }
+      } catch (e) {
+        console.error(e);
+        showStatus("Lỗi kết nối máy chủ khi tải tài liệu.");
+      }
+    }
+
+    async function loadPdf() {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      const url = `/api/documents/${docId}/view`;
+      const res = await fetch(url, { credentials: "same-origin" });
+      if (!res.ok) {
+        showStatus("Không thể tải file PDF từ máy chủ.");
+        return;
+      }
+      const buf = await res.arrayBuffer();
+      pdfDoc = await pdfjsLib.getDocument({ data: buf }).promise;
+      totalPages = pdfDoc.numPages;
+      const requestedPage = parseInt(urlParams.get("page"), 10);
+      currentPage = requestedPage >= 1 && requestedPage <= totalPages ? requestedPage : 1;
+
+      statusWrap.classList.add("hidden");
+      pdfWrap.classList.remove("hidden");
+      pageNav.classList.remove("hidden");
+      await renderPdfPage(currentPage);
+      autoSummarize();
+    }
+
+    async function loadTextContent() {
+      pageNav.classList.add("hidden");
+      const res = await fetch(`/api/documents/${docId}/content`, { credentials: "same-origin" });
+      if (!res.ok) {
+        showStatus("Không thể tải nội dung tài liệu.");
+        return;
+      }
+      const data = await res.json();
+      if (!data.text || !data.text.trim()) {
+        showStatus("Chưa trích xuất được nội dung cho tài liệu này. Hãy thử upload lại.");
+        return;
+      }
+      const rawText = data.text;
+      const quote = urlParams.get("q");
+      const contentEl = document.getElementById("documentContentText");
+      if (quote) {
+        const index = rawText.toLowerCase().indexOf(quote.toLowerCase());
+        if (index !== -1) {
+          const escapeHtml = value => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+          contentEl.innerHTML = `${escapeHtml(rawText.slice(0, index))}<mark id="quoteHighlight" style="background:rgba(250,204,21,0.6);border-radius:2px;">${escapeHtml(rawText.slice(index, index + quote.length))}</mark>${escapeHtml(rawText.slice(index + quote.length))}`;
+          setTimeout(() => document.getElementById("quoteHighlight")?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
+        } else {
+          contentEl.textContent = rawText;
+        }
+      } else {
+        contentEl.textContent = rawText;
+      }
+      statusWrap.classList.add("hidden");
+      textWrap.classList.remove("hidden");
+      autoSummarize();
+    }
+
+    let summarized = false;
+
+    async function autoSummarize() {
+      if (summarized) return;
+      summarized = true;
+
+      const typing = document.createElement("div");
+      typing.className = "flex justify-start";
+      typing.innerHTML = `<div class="bg-slate-900 border border-white/10 text-indigo-300 rounded-2xl p-3 max-w-[85%] font-medium">Đang đọc và tóm tắt tài liệu...</div>`;
+      document.getElementById("chatMessages").appendChild(typing);
+      document.getElementById("chatMessages").scrollTop = document.getElementById("chatMessages").scrollHeight;
+
+      try {
+        const res = await fetch(`/api/ai/summary/${docId}`, {
+          method: "GET",
+          credentials: "same-origin"
+        });
+        typing.remove();
+        if (res.ok) {
+          const data = await res.json();
+          appendMessage("ai", data.summary, data.docId || docId);
+        } else {
+          const err = await res.json().catch(() => ({}));
+          appendMessage("ai", "Không thể tự động tóm tắt: " + (err.error || "lỗi không xác định. Bạn có thể tự đặt câu hỏi bên dưới."), docId);
+        }
+      } catch (err) {
+        typing.remove();
+        appendMessage("ai", "Lỗi kết nối khi tóm tắt tài liệu. Bạn có thể tự đặt câu hỏi bên dưới.", docId);
+      }
+    }
+
+    function appendMessage(role, text, docIdForCitations) {
+      const div = document.createElement("div");
+      div.className = role === "user" ? "flex justify-end" : "flex justify-start";
+      const bubbleClass = role === "user"
+        ? "bg-indigo-600 text-white rounded-2xl p-3 max-w-[85%] font-medium"
+        : "bg-slate-900 border border-white/10 text-slate-200 rounded-2xl p-3 max-w-[85%] font-medium whitespace-pre-wrap";
+      div.innerHTML = `<div class="${bubbleClass}"></div>`;
+      const bubble = div.firstElementChild;
+      if (role === "ai") {
+        renderAiMessageWithCitations(bubble, text, docIdForCitations || docId);
+      } else {
+        bubble.textContent = text;
+      }
+      document.getElementById("chatMessages").appendChild(div);
+      document.getElementById("chatMessages").scrollTop = document.getElementById("chatMessages").scrollHeight;
     }
 
     const chatForm = document.getElementById("chatForm");
     const chatInput = document.getElementById("chatInput");
-    const chatMessages = document.getElementById("chatMessages");
 
-    chatForm.addEventListener("submit", (e) => {
+    chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const txt = chatInput.value.trim();
       if (!txt) return;
 
       chatInput.value = "";
-      const divUser = document.createElement("div");
-      divUser.className = "flex justify-end";
-      divUser.innerHTML = `<div class="bg-indigo-600 text-white rounded-2xl p-3 max-w-[85%] font-medium">${txt}</div>`;
-      chatMessages.appendChild(divUser);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
+      appendMessage("user", txt);
 
-      setTimeout(() => {
-        const divAi = document.createElement("div");
-        divAi.className = "flex justify-start";
-        divAi.innerHTML = `<div class="bg-slate-900 border border-white/10 text-slate-200 rounded-2xl p-3 max-w-[85%] font-medium">Trợ lý AI đang phản hồi theo ngữ cảnh Trang ${currentPage}...</div>`;
-        chatMessages.appendChild(divAi);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      }, 500);
+      const typing = document.createElement("div");
+      typing.className = "flex justify-start";
+      typing.innerHTML = `<div class="bg-slate-900 border border-white/10 text-indigo-300 rounded-2xl p-3 max-w-[85%] font-medium">Đang suy nghĩ...</div>`;
+      document.getElementById("chatMessages").appendChild(typing);
+      document.getElementById("chatMessages").scrollTop = document.getElementById("chatMessages").scrollHeight;
+
+      try {
+        const res = await fetch("/api/ai/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ message: txt, docIds: [docId] })
+        });
+        typing.remove();
+        if (res.ok) {
+          const data = await res.json();
+          appendMessage("ai", data.response, data.docId || docId);
+        } else {
+          const err = await res.json().catch(() => ({}));
+          appendMessage("ai", "Lỗi: " + (err.error || "Không thể lấy phản hồi từ AI."));
+        }
+      } catch (err) {
+        typing.remove();
+        appendMessage("ai", "Lỗi kết nối máy chủ.");
+      }
     });
 
     loadDoc();
-    updatePageDisplay();
     lucide.createIcons();
   </script>
 </body>

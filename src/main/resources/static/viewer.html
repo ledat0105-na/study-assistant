@@ -159,6 +159,7 @@
 
   </div>
 
+  <script src="citations.js"></script>
   <script src="i18n.js"></script>
   <script>
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -178,6 +179,7 @@
 
           if (documents.length > 0) {
             selectedDocIds = [documents[0].id];
+            autoSummarizeActiveDoc();
           }
 
           renderSources();
@@ -185,6 +187,36 @@
         }
       } catch (err) {
         console.error("Lỗi nạp danh sách tài liệu", err);
+      }
+    }
+
+    let summarizedDocIds = new Set();
+
+    async function autoSummarizeActiveDoc() {
+      if (selectedDocIds.length !== 1) return;
+      const docId = selectedDocIds[0];
+      if (summarizedDocIds.has(docId)) return;
+      summarizedDocIds.add(docId);
+
+      const typingDiv = document.createElement("div");
+      typingDiv.className = "flex justify-start mb-4";
+      typingDiv.innerHTML = `<div class="bg-white border border-indigo-100 rounded-2xl p-3.5 text-slate-500 font-semibold max-w-[85%] shadow-sm">Đang đọc và tóm tắt tài liệu...</div>`;
+      chatMessages.appendChild(typingDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      try {
+        const response = await fetch(`/api/ai/summary/${docId}`, { credentials: "same-origin" });
+        if (chatMessages.contains(typingDiv)) chatMessages.removeChild(typingDiv);
+        if (response.ok) {
+          const data = await response.json();
+          appendMessage("ai", data.summary, data.docId || docId);
+        } else {
+          const error = await response.json().catch(() => ({}));
+          appendMessage("ai", "Không thể tự động tóm tắt: " + (error.error || "lỗi không xác định."), docId);
+        }
+      } catch (error) {
+        if (chatMessages.contains(typingDiv)) chatMessages.removeChild(typingDiv);
+        appendMessage("ai", "Lỗi kết nối khi tóm tắt tài liệu.", docId);
       }
     }
 
@@ -206,10 +238,10 @@
             : "border-slate-200 bg-white/90 hover:bg-slate-50 text-slate-700"
         }`;
         div.innerHTML = `
-          <div onclick="toggleDocument(${doc.id})" class="p-2 bg-indigo-50 border border-indigo-200 rounded-xl text-indigo-600 flex items-center justify-center cursor-pointer">
+          <div onclick="openDocument(${doc.id})" class="p-2 bg-indigo-50 border border-indigo-200 rounded-xl text-indigo-600 flex items-center justify-center cursor-pointer" title="Mở tài liệu">
             <i data-lucide="file-text" class="h-4 w-4"></i>
           </div>
-          <div onclick="toggleDocument(${doc.id})" class="flex-1 min-w-0 cursor-pointer">
+          <div onclick="openDocument(${doc.id})" class="flex-1 min-w-0 cursor-pointer" title="Nhấn để mở tài liệu">
             <p class="text-xs font-extrabold truncate">${doc.title || doc.fileName}</p>
             <p class="text-[10px] text-slate-500 mt-0.5 uppercase font-mono font-bold">${doc.format || doc.fileType}</p>
           </div>
@@ -219,7 +251,7 @@
             </button>
             <div onclick="toggleDocument(${doc.id})" class="w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 cursor-pointer transition-all ${
               isChecked ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-slate-300 bg-white'
-            }">
+            }" title="Chọn để hỏi AI">
               ${isChecked ? '<i data-lucide="check" class="h-3 w-3"></i>' : ''}
             </div>
           </div>
@@ -227,6 +259,15 @@
         container.appendChild(div);
       });
       lucide.createIcons();
+    }
+
+    function openDocument(id) {
+      if (!selectedDocIds.includes(id)) {
+        selectedDocIds = [id];
+        renderSources();
+        updateActiveDocumentDetails();
+      }
+      window.location.href = `reader.html?id=${id}`;
     }
 
     async function deleteDocument(id) {
@@ -336,7 +377,7 @@
 
         if (response.ok) {
           const data = await response.json();
-          appendMessage("ai", data.response);
+          appendMessage("ai", data.response, data.docId || selectedDocIds[0]);
         } else {
           appendMessage("ai", "Lỗi: Phản hồi từ API AI không thành công.");
         }
@@ -348,7 +389,7 @@
       }
     });
 
-    function appendMessage(sender, text) {
+    function appendMessage(sender, text, docIdForCitations) {
       const isUser = sender === "user";
       const div = document.createElement("div");
       div.className = `flex ${isUser ? "justify-end" : "justify-start"} mb-4`;
@@ -358,10 +399,15 @@
           isUser
             ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl shadow-md"
             : "bg-white border border-slate-200 text-slate-800 rounded-2xl shadow-sm font-semibold"
-        } p-3.5 leading-relaxed max-w-[88%] font-medium">
-          ${text.replace(/\n/g, "<br>")}
-        </div>
+        } p-3.5 leading-relaxed max-w-[88%] font-medium"></div>
       `;
+      const bubble = div.firstElementChild;
+      if (isUser) {
+        bubble.textContent = text;
+      } else {
+        renderAiMessageWithCitations(bubble, text, docIdForCitations);
+        bubble.innerHTML = bubble.innerHTML.replace(/\n/g, "<br>");
+      }
       chatMessages.appendChild(div);
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }

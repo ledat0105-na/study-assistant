@@ -158,9 +158,15 @@ public class ChatService {
                 promptContext.append("Dựa vào thông tin tài liệu môn học dưới đây để giải đáp câu hỏi:\n\n");
                 for (Document doc : docs) {
                     promptContext.append("--- TÀI LIỆU: ").append(doc.getFileName()).append(" ---\n");
-                    List<Topic> topics = topicRepository.findByDocumentId(doc.getId());
-                    for (Topic topic : topics) {
-                        promptContext.append("- Topic: ").append(topic.getName()).append(": ").append(topic.getDescription() != null ? topic.getDescription() : "").append("\n");
+                    String realText = doc.getExtractedText();
+                    if (realText != null && !realText.isBlank()) {
+                        String snippet = realText.length() > 12000 ? realText.substring(0, 12000) : realText;
+                        promptContext.append(snippet).append("\n");
+                    } else {
+                        List<Topic> topics = topicRepository.findByDocumentId(doc.getId());
+                        for (Topic topic : topics) {
+                            promptContext.append("- Topic: ").append(topic.getName()).append(": ").append(topic.getDescription() != null ? topic.getDescription() : "").append("\n");
+                        }
                     }
 
                     // Ghi nhận nguồn citation
