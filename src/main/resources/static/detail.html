@@ -16,8 +16,8 @@
   <!-- Main Content -->
   <main class="flex-1 p-6 md:p-10 overflow-y-auto relative z-10">
     <div class="max-w-4xl mx-auto">
-      <a href="documents.html" class="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-slate-900 mb-6 transition-all">
-        <i data-lucide="arrow-left" class="h-4 w-4"></i> Trở Về Kho Tài Liệu
+      <a id="backBtn" href="viewer.html" class="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-slate-900 mb-6 transition-all">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i> Trở Về Trợ Lý Chat AI &amp; Studio
       </a>
 
       <!-- Details Header -->
@@ -58,46 +58,15 @@
 
         <!-- Toolkit -->
         <div class="space-y-4">
-          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Bộ Công Cụ Học Tập 3D</h3>
+          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Bộ Công Cụ Học Tập 3D AI</h3>
 
-          <a id="toolRead" href="#" class="glass-3d-card flex items-center gap-3.5 p-4 hover:border-indigo-500 transition-all group">
-            <div class="p-3 bg-indigo-50 text-indigo-600 rounded-2xl border border-indigo-200 shrink-0 shadow-sm">
-              <i data-lucide="book-open" class="h-5 w-5"></i>
+          <a id="toolAIStudio" href="#" class="glass-3d-card flex flex-col items-center justify-center p-6 text-center hover:border-indigo-500 transition-all group border-2 border-indigo-200 bg-indigo-50/40">
+            <div class="p-4 bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-500 text-white rounded-3xl shrink-0 shadow-lg shadow-indigo-500/30 mb-3 group-hover:scale-105 transition-transform">
+              <i data-lucide="sparkles" class="h-8 w-8"></i>
             </div>
-            <div>
-              <h4 class="font-extrabold text-sm text-slate-900">Đọc PDF Song Song</h4>
-              <p class="text-[10px] text-slate-500 font-semibold mt-0.5">Trải nghiệm vừa đọc vừa tương tác AI</p>
-            </div>
-          </a>
-
-          <a id="toolMap" href="#" class="glass-3d-card flex items-center gap-3.5 p-4 hover:border-purple-500 transition-all group">
-            <div class="p-3 bg-purple-50 text-purple-600 rounded-2xl border border-purple-200 shrink-0 shadow-sm">
-              <i data-lucide="network" class="h-5 w-5"></i>
-            </div>
-            <div>
-              <h4 class="font-extrabold text-sm text-slate-900">Sơ Đồ Tư Duy 3D</h4>
-              <p class="text-[10px] text-slate-500 font-semibold mt-0.5">Khám phá sơ đồ chủ đề liên kết</p>
-            </div>
-          </a>
-
-          <a id="toolFlash" href="#" class="glass-3d-card flex items-center gap-3.5 p-4 hover:border-amber-500 transition-all group">
-            <div class="p-3 bg-amber-50 text-amber-600 rounded-2xl border border-amber-200 shrink-0 shadow-sm">
-              <i data-lucide="layers" class="h-5 w-5"></i>
-            </div>
-            <div>
-              <h4 class="font-extrabold text-sm text-slate-900">Thẻ Flashcard 3D</h4>
-              <p class="text-[10px] text-slate-500 font-semibold mt-0.5">Ôn luyện ghi nhớ Active Recall</p>
-            </div>
-          </a>
-
-          <a id="toolQuiz" href="#" class="glass-3d-card flex items-center gap-3.5 p-4 hover:border-emerald-500 transition-all group">
-            <div class="p-3 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-200 shrink-0 shadow-sm">
-              <i data-lucide="help-circle" class="h-5 w-5"></i>
-            </div>
-            <div>
-              <h4 class="font-extrabold text-sm text-slate-900">Trắc Nghiệm AI</h4>
-              <p class="text-[10px] text-slate-500 font-semibold mt-0.5">Bài thi trắc nghiệm chấm điểm tự động</p>
-            </div>
+            <h4 class="font-extrabold text-base text-slate-900">Mở Trợ Lý AI &amp; Studio 3D Full</h4>
+            <p class="text-xs text-slate-600 font-semibold mt-1.5">Truy cập đầy đủ Đọc PDF, Sơ đồ 3D, Flashcard 3D &amp; Trắc nghiệm AI ngay trong 1 trang duy nhất!</p>
+            <span class="mt-4 btn-3d btn-3d-primary w-full py-2.5 text-xs font-bold shadow-md">TRUY CẬP NGAY ↗</span>
           </a>
         </div>
       </div>
@@ -112,10 +81,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const docId = urlParams.get("id") || "1";
 
-    document.getElementById("toolRead").href = `viewer.html?id=${docId}`;
-    document.getElementById("toolMap").href = `map.html?id=${docId}`;
-    document.getElementById("toolFlash").href = `flashcards.html?id=${docId}`;
-    document.getElementById("toolQuiz").href = `quiz.html?id=${docId}`;
+    document.getElementById("toolAIStudio").href = `viewer.html?id=${docId}`;
 
     lucide.createIcons();
 

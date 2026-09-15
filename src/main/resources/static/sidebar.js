@@ -46,14 +46,11 @@ function renderUnifiedSidebar(activeNavKey) {
       { key: "profile", label: "Hồ sơ Quản trị viên", icon: "user", href: "profile.html" }
     ];
   } else {
-    // Menu dành riêng cho HỌC VIÊN / NGƯỜI DÙNG
+    // Menu dành riêng cho HỌC VIÊN / NGƯỜI DÙNG - Tất cả công cụ đã hợp nhất vào Trợ lý Chat AI
     navItems = [
       { key: "dashboard", label: "Bảng điều khiển", icon: "layout-dashboard", href: "dashboard.html" },
-      { key: "documents", label: "Tài liệu học tập", icon: "file-text", href: "documents.html" },
-      { key: "map", label: "Sơ đồ kiến thức 3D", icon: "network", href: "map.html" },
-      { key: "chat", label: "Trợ lý Chat AI", icon: "sparkles", href: "viewer.html" },
-      { key: "flashcards", label: "Thẻ ghi nhớ 3D", icon: "layers", href: "flashcards.html" },
-      { key: "quiz", label: "Trắc nghiệm AI", icon: "help-circle", href: "quiz.html" },
+      { key: "documents", label: "Kho tài liệu học tập", icon: "file-text", href: "documents.html" },
+      { key: "chat", label: "Trợ lý Chat AI & 3D Studio", icon: "sparkles", href: "viewer.html" },
       { key: "progress", label: "Tiến độ & Thống kê", icon: "bar-chart-3", href: "progress.html" },
       { key: "profile", label: "Hồ sơ cá nhân", icon: "user", href: "profile.html" }
     ];

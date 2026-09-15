@@ -19,7 +19,7 @@
       <!-- Header -->
       <div class="flex justify-between items-center mb-8 w-full">
         <div class="flex items-center gap-4">
-          <a id="backLink" href="documents.html" class="btn-3d btn-3d-secondary p-3 text-slate-700">
+          <a id="backLink" href="viewer.html" class="btn-3d btn-3d-secondary p-3 text-slate-700" title="Trở về Trợ lý Chat AI">
             <i data-lucide="arrow-left" class="h-5 w-5"></i>
           </a>
           <div>
@@ -95,24 +95,40 @@
         const res = await fetch(`/api/quizzes/document/${docId}`, { credentials: "same-origin" });
         if (res.ok) {
           const data = await res.json();
-          quizId = data.quizId;
-          questions = (data.questions || []).map(q => ({
-            id: q.id,
-            question: q.question,
-            options: [q.answerA, q.answerB, q.answerC, q.answerD]
+          quizId = data.quizId || 1;
+          const rawQuestions = Array.isArray(data) ? data : (data.questions || []);
+          questions = rawQuestions.map((q, idx) => ({
+            id: q.id || idx + 1,
+            question: q.question || q.questionText || "Câu hỏi trắc nghiệm",
+            options: [
+              q.answerA || q.optionA || "Đáp án A",
+              q.answerB || q.optionB || "Đáp án B",
+              q.answerC || q.optionC || "Đáp án C",
+              q.answerD || q.optionD || "Đáp án D"
+            ],
+            correctAnswer: q.correctAnswer || "A",
+            explanation: q.explanation || ""
           }));
-          if (questions.length === 0 && data.message) {
-            document.getElementById("questionText").textContent = data.message;
-            document.getElementById("optionsContainer").innerHTML = "";
+
+          if (questions.length === 0) {
+            document.getElementById("questionText").textContent = data.message || "Tài liệu này chưa có câu hỏi trắc nghiệm nào.";
+            document.getElementById("optionsContainer").innerHTML = `<p class="text-slate-400 text-center py-6 font-semibold">Tải lên hoặc chọn tài liệu khác để tự động tạo bài trắc nghiệm 3D.</p>`;
+            document.getElementById("questionCountLabel").textContent = "0 / 0 Câu";
+            document.getElementById("completeLabel").textContent = "0% Hoàn thành";
+            document.getElementById("progressBar").style.width = "0%";
+            return;
           }
         } else {
           const err = await res.json().catch(() => ({}));
           document.getElementById("questionText").textContent = err.error || "Không thể tạo bài trắc nghiệm cho tài liệu này.";
+          return;
         }
       } catch (err) {
         console.error("Lỗi nạp bài thi", err);
-        document.getElementById("questionText").textContent = "Lỗi kết nối máy chủ.";
+        document.getElementById("questionText").textContent = "Lỗi kết nối máy chủ khi nạp bài trắc nghiệm.";
+        return;
       }
+      currentIndex = 0;
       updateQuestionDisplay();
     }
 

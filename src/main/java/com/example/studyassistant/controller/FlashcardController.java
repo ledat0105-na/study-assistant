@@ -77,14 +77,11 @@ public class FlashcardController {
             return ResponseEntity.ok(Map.of("cards", List.of(), "message", "OpenAI API Key chưa được cấu hình nên chưa thể tự động tạo Flashcard."));
         }
 
-        String snippet = text.length() > 30000 ? text.substring(0, 30000) : text;
-        String prompt = "Đọc kỹ nội dung tài liệu học tập dưới đây và tạo bộ Flashcard ôn tập (câu hỏi - câu trả lời ngắn gọn) " +
-                "bằng tiếng Việt. Trả về CHỈ MỘT đối tượng JSON (không thêm chữ nào khác), dạng:\n" +
-                "{\"cards\": [{\"front\": \"Câu hỏi hoặc thuật ngữ\", \"back\": \"Câu trả lời/định nghĩa ngắn gọn\"}]}\n\n" +
-                "YÊU CẦU:\n" +
-                "- Số lượng thẻ PHẢI DỰA THEO ĐỘ PHONG PHÚ THỰC TẾ của tài liệu (bao nhiêu khái niệm/định nghĩa/thuật ngữ quan trọng thì tạo bấy nhiêu thẻ), không ép cứng theo 1 con số cố định; với tài liệu đủ dài, phong phú thì có thể ra khoảng 30-60 thẻ, nhưng KHÔNG bịa thêm thẻ trùng lặp/vô nghĩa chỉ để cho đủ số lượng, và không vượt quá 60 thẻ.\n" +
-                "- Mỗi thẻ tập trung 1 khái niệm/thuật ngữ/ý cụ thể có thật trong tài liệu, không tự bịa nội dung không có trong tài liệu.\n" +
-                "- Câu hỏi (front) ngắn gọn, câu trả lời (back) súc tích (1-3 câu).\n\n" +
+        String snippet = text.length() > 5000 ? text.substring(0, 5000) : text;
+        String prompt = "Đọc kỹ nội dung tài liệu học tập dưới đây và tạo 8-10 thẻ Flashcard cốt lõi nhất (thuật ngữ - định nghĩa ngắn gọn) bằng tiếng Việt. " +
+                "Trả về CHỈ MỘT đối tượng JSON (không thêm chữ nào khác), dạng:\n" +
+                "{\"cards\": [{\"front\": \"Thuật ngữ hoặc câu hỏi ngắn\", \"back\": \"Định nghĩa/câu trả lời ngắn 1-2 câu\"}]}\n\n" +
+                "YÊU CẦU: Tạo siêu nhanh, ngắn gọn, súc tích, tập trung ý chính nhất, không dài dòng.\n\n" +
                 "TÀI LIỆU:\n" + snippet;
 
         try {
