@@ -21,17 +21,11 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
-    // Helper lấy userId từ session/header (hoặc mock logged-in user)
+    // userId chỉ lấy từ session đã đăng nhập, KHÔNG tin header X-User-Id từ client
     private Long getCurrentUserId(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute("userId") != null) {
             return (Long) session.getAttribute("userId");
-        }
-        String headerUserId = request.getHeader("X-User-Id");
-        if (headerUserId != null && !headerUserId.isEmpty()) {
-            try {
-                return Long.parseLong(headerUserId);
-            } catch (NumberFormatException ignored) {}
         }
         return null;
     }
@@ -91,12 +85,13 @@ public class AuthController {
         String email = body.get("email");
         String resetToken = userService.generatePasswordResetToken(email);
         if (resetToken != null) {
-            return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Nếu email tồn tại trong hệ thống, hướng dẫn đặt lại mật khẩu đã được gửi.",
-                "resetToken", resetToken
-            ));
+            // TODO: gửi email thật chứa link kèm resetToken. Không bao giờ trả token qua API.
+            org.slf4j.LoggerFactory.getLogger(AuthController.class)
+                    .info("Password reset requested for {} (dev-mode log only)", email);
         }
-        return ResponseEntity.ok(Map.of("success", true, "message", "Nếu email tồn tại trong hệ thống, hướng dẫn đặt lại mật khẩu đã được gửi."));
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "message", "Nếu email tồn tại trong hệ thống, hướng dẫn đặt lại mật khẩu đã được gửi."
+        ));
     }
 }

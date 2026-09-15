@@ -41,18 +41,28 @@ public class PaymentController {
     @Autowired
     private AuditLogRepository auditLogRepository;
 
+    @org.springframework.beans.factory.annotation.Value("${payment.webhook.secret}")
+    private String webhookSecret;
+
     private Long getCurrentUserId(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute("userId") != null) {
             return (Long) session.getAttribute("userId");
         }
-        String headerUserId = request.getHeader("X-User-Id");
-        if (headerUserId != null && !headerUserId.isEmpty()) {
-            try {
-                return Long.parseLong(headerUserId);
-            } catch (NumberFormatException ignored) {}
-        }
         return null;
+    }
+
+    // Bắt buộc phải là ADMIN mới được sửa/xóa bảng giá
+    private void requireAdmin(HttpServletRequest request) {
+        Long userId = getCurrentUserId(request);
+        if (userId == null) {
+            throw new IllegalStateException("Chưa đăng nhập");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalStateException("Chưa đăng nhập"));
+        if (!"ADMIN".equalsIgnoreCase(user.getRole())) {
+            throw new SecurityException("Quyền truy cập bị từ chối. API này chỉ dành cho Admin!");
+        }
     }
 
     // Tự động khởi tạo bảng giá mẫu nếu CSDL chưa có
@@ -79,14 +89,28 @@ public class PaymentController {
 
     // PLAN-ADMIN-01: Xem tất cả các gói dịch vụ (dành cho Admin)
     @GetMapping("/plans/admin")
-    public ResponseEntity<?> getAllPlansAdmin() {
+    public ResponseEntity<?> getAllPlansAdmin(HttpServletRequest request) {
+        try {
+            requireAdmin(request);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
+        }
         ensureSeedPricingPlans();
         return ResponseEntity.ok(pricingPlanRepository.findAll());
     }
 
     // PLAN-ADMIN-02: Thêm mới hoặc Cập nhật bảng giá (bao gồm Sale, Khuyến mãi)
     @PostMapping("/plans")
-    public ResponseEntity<?> saveOrUpdatePlan(@RequestBody PricingPlan plan) {
+    public ResponseEntity<?> saveOrUpdatePlan(@RequestBody PricingPlan plan, HttpServletRequest request) {
+        try {
+            requireAdmin(request);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
+        }
         if (plan.getPlanCode() == null || plan.getPlanCode().trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Mã gói planCode không được để trống!"));
         }
@@ -119,7 +143,14 @@ public class PaymentController {
 
     // PLAN-ADMIN-03: Xóa gói dịch vụ
     @DeleteMapping("/plans/{id}")
-    public ResponseEntity<?> deletePlan(@PathVariable Long id) {
+    public ResponseEntity<?> deletePlan(@PathVariable Long id, HttpServletRequest request) {
+        try {
+            requireAdmin(request);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
+        }
         if (!pricingPlanRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
@@ -209,6 +240,13 @@ public class PaymentController {
             @RequestBody Map<String, Object> webhookData,
             @RequestHeader(value = "X-Webhook-Signature", required = false) String signature,
             HttpServletRequest request) {
+
+        if (signature == null || webhookSecret == null || webhookSecret.isBlank()
+                || !java.security.MessageDigest.isEqual(
+                        signature.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                        webhookSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8))) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chữ ký webhook không hợp lệ"));
+        }
 
         Long transactionId = Long.valueOf(webhookData.get("transactionId").toString());
         String status = webhookData.get("status").toString(); // "SUCCESS", "FAILED"

@@ -63,6 +63,17 @@ public class Document {
     @JsonProperty("uploadDate")
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    // Nội dung text thật trích xuất từ file, dùng để gửi cho AI
+    @Lob
+    @Column(name = "extracted_text", columnDefinition = "LONGTEXT")
+    @JsonIgnore
+    private String extractedText;
+
+    @Lob
+    @Column(name = "ai_summary", columnDefinition = "LONGTEXT")
+    @JsonIgnore
+    private String aiSummary;
+
     @JsonProperty("size")
     public String getSize() {
         if (fileSize == null) return "0 MB";

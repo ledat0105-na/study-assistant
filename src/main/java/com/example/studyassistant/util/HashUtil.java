@@ -10,15 +10,13 @@ public class HashUtil {
     }
 
     public static boolean verify(String rawPassword, String hashedPassword) {
-        // Try BCrypt match first
-        try {
-            if (encoder.matches(rawPassword, hashedPassword)) {
-                return true;
-            }
-        } catch (Exception e) {
-            // Not a valid BCrypt hash
+        if (rawPassword == null || hashedPassword == null) {
+            return false;
         }
-        // Fallback to raw string comparison for legacy/mock data
-        return rawPassword.equals(hashedPassword);
+        try {
+            return encoder.matches(rawPassword, hashedPassword);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

@@ -2,6 +2,9 @@ package com.example.studyassistant.controller;
 
 import com.example.studyassistant.entity.*;
 import com.example.studyassistant.repository.*;
+import com.example.studyassistant.service.AiService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,18 +39,144 @@ public class QuizController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private DocumentRepository documentRepository;
+
+    @Autowired
+    private AiService aiService;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    // userId chỉ lấy từ session đã đăng nhập, KHÔNG tin header X-User-Id từ client
     private Long getCurrentUserId(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute("userId") != null) {
             return (Long) session.getAttribute("userId");
         }
-        String headerUserId = request.getHeader("X-User-Id");
-        if (headerUserId != null && !headerUserId.isEmpty()) {
-            try {
-                return Long.parseLong(headerUserId);
-            } catch (NumberFormatException ignored) {}
-        }
         return null;
+    }
+
+    private boolean isOwner(Quiz quiz, Long userId) {
+        if (quiz.getDocument() != null) {
+            return quiz.getDocument().getUser() != null && quiz.getDocument().getUser().getId().equals(userId);
+        }
+        if (quiz.getTopic() != null && quiz.getTopic().getDocument() != null) {
+            return quiz.getTopic().getDocument().getUser().getId().equals(userId);
+        }
+        return false;
+    }
+
+    @GetMapping("/document/{docId}")
+    public ResponseEntity<?> getOrGenerateQuizForDocument(@PathVariable Long docId, HttpServletRequest request) {
+        Long userId = getCurrentUserId(request);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
+        }
+
+        Document doc = documentRepository.findByIdAndUserId(docId, userId).orElse(null);
+        if (doc == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Tài liệu không tồn tại hoặc bạn không có quyền truy cập"));
+        }
+
+        List<Quiz> existingQuizzes = quizRepository.findByDocumentId(docId);
+        if (!existingQuizzes.isEmpty()) {
+            Quiz quiz = existingQuizzes.get(0);
+            return ResponseEntity.ok(Map.of("quizId", quiz.getId(), "questions", sanitize(quizQuestionRepository.findByQuizId(quiz.getId()))));
+        }
+
+        String text = doc.getExtractedText();
+        if (text == null || text.isBlank()) {
+            return ResponseEntity.ok(Map.of("quizId", 0, "questions", List.of(), "message", "Tài liệu chưa có nội dung trích xuất để tạo bài trắc nghiệm."));
+        }
+        if (!aiService.hasApiKey()) {
+            return ResponseEntity.ok(Map.of("quizId", 0, "questions", List.of(), "message", "OpenAI API Key chưa được cấu hình nên chưa thể tự động tạo bài trắc nghiệm."));
+        }
+
+        String snippet = text.length() > 30000 ? text.substring(0, 30000) : text;
+        String prompt = "Đọc kỹ nội dung tài liệu học tập dưới đây và tạo bài trắc nghiệm 4 đáp án bằng tiếng Việt để kiểm tra mức độ hiểu bài. " +
+                "Trả về CHỈ MỘT đối tượng JSON (không thêm chữ nào khác), dạng:\n" +
+                "{\"questions\": [{\"question\": \"Nội dung câu hỏi\", \"answerA\": \"...\", \"answerB\": \"...\", \"answerC\": \"...\", \"answerD\": \"...\", \"correctAnswer\": \"A\", \"explanation\": \"Giải thích ngắn vì sao đáp án đúng\"}]}\n\n" +
+                "YÊU CẦU:\n" +
+                "- Số lượng câu hỏi PHẢI DỰA THEO ĐỘ PHONG PHÚ THỰC TẾ của tài liệu, không ép cứng 1 con số; tài liệu càng nhiều khái niệm quan trọng thì càng nhiều câu (thường 10-30 câu), KHÔNG bịa thêm câu trùng lặp/vô nghĩa chỉ để đủ số lượng, tối đa 30 câu.\n" +
+                "- Mỗi câu hỏi kiểm tra 1 khái niệm/kiến thức có thật trong tài liệu, không tự bịa nội dung không có trong tài liệu.\n" +
+                "- 4 đáp án phải hợp lý, chỉ có đúng 1 đáp án đúng, correctAnswer là 1 trong 4 ký tự A/B/C/D viết hoa.\n\n" +
+                "TÀI LIỆU:\n" + snippet;
+
+        try {
+            String raw = aiService.callOpenAI(prompt, true);
+            String json = extractJsonObject(raw);
+            JsonNode root = objectMapper.readTree(json);
+            JsonNode questionsNode = root.get("questions");
+            if (questionsNode == null || !questionsNode.isArray() || questionsNode.isEmpty()) {
+                return ResponseEntity.ok(Map.of("quizId", 0, "questions", List.of(), "message", "AI không tạo được câu hỏi nào từ tài liệu này."));
+            }
+
+            Quiz quiz = new Quiz();
+            quiz.setTitle("Trắc nghiệm: " + doc.getFileName());
+            quiz.setDocument(doc);
+            Quiz savedQuiz = quizRepository.save(quiz);
+
+            for (JsonNode node : questionsNode) {
+                String correct = node.hasNonNull("correctAnswer") ? node.get("correctAnswer").asText().trim().toUpperCase() : "";
+                if (!node.hasNonNull("question") || !List.of("A", "B", "C", "D").contains(correct)) continue;
+
+                QuizQuestion q = new QuizQuestion();
+                q.setQuiz(savedQuiz);
+                q.setQuestion(node.get("question").asText());
+                q.setAnswerA(node.hasNonNull("answerA") ? node.get("answerA").asText() : "");
+                q.setAnswerB(node.hasNonNull("answerB") ? node.get("answerB").asText() : "");
+                q.setAnswerC(node.hasNonNull("answerC") ? node.get("answerC").asText() : "");
+                q.setAnswerD(node.hasNonNull("answerD") ? node.get("answerD").asText() : "");
+                q.setCorrectAnswer(correct);
+                q.setExplanation(node.hasNonNull("explanation") ? node.get("explanation").asText() : null);
+                quizQuestionRepository.save(q);
+            }
+
+            return ResponseEntity.ok(Map.of("quizId", savedQuiz.getId(), "questions", sanitize(quizQuestionRepository.findByQuizId(savedQuiz.getId()))));
+        } catch (AiService.NoApiKeyException e) {
+            return ResponseEntity.ok(Map.of("quizId", 0, "questions", List.of(), "message", "OpenAI API Key chưa được cấu hình."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Không thể tạo bài trắc nghiệm: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/document/{docId}")
+    public ResponseEntity<?> regenerateQuizForDocument(@PathVariable Long docId, HttpServletRequest request) {
+        Long userId = getCurrentUserId(request);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
+        }
+        Document doc = documentRepository.findByIdAndUserId(docId, userId).orElse(null);
+        if (doc == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Tài liệu không tồn tại hoặc bạn không có quyền truy cập"));
+        }
+        for (Quiz quiz : quizRepository.findByDocumentId(docId)) {
+            quizQuestionRepository.deleteAll(quizQuestionRepository.findByQuizId(quiz.getId()));
+            quizRepository.delete(quiz);
+        }
+        return ResponseEntity.ok(Map.of("message", "Đã xoá bài trắc nghiệm cũ, lần sau mở lại sẽ tạo bộ câu hỏi mới."));
+    }
+
+    private List<Map<String, Object>> sanitize(List<QuizQuestion> rawQuestions) {
+        return rawQuestions.stream().map(q -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", q.getId());
+            map.put("question", q.getQuestion());
+            map.put("answerA", q.getAnswerA());
+            map.put("answerB", q.getAnswerB());
+            map.put("answerC", q.getAnswerC());
+            map.put("answerD", q.getAnswerD());
+            return map;
+        }).collect(Collectors.toList());
+    }
+
+    private String extractJsonObject(String raw) {
+        int start = raw.indexOf('{');
+        int end = raw.lastIndexOf('}');
+        if (start == -1 || end == -1 || end < start) {
+            throw new IllegalStateException("Phản hồi của AI không chứa JSON hợp lệ");
+        }
+        return raw.substring(start, end + 1);
     }
 
     // QUIZ-01: Tạo Quiz từ Topic (Kiểm tra quota và max câu theo Plan; Topic thuộc user)
@@ -117,27 +246,13 @@ public class QuizController {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new IllegalArgumentException("Quiz không tồn tại"));
 
-        if (quiz.getTopic() == null || quiz.getTopic().getDocument() == null || !quiz.getTopic().getDocument().getUser().getId().equals(userId)) {
+        if (!isOwner(quiz, userId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Bạn không có quyền truy cập Quiz này"));
         }
 
         List<QuizQuestion> rawQuestions = quizQuestionRepository.findByQuizId(quizId);
-
-        // Chỉ trả về câu hỏi và các lựa chọn A, B, C, D (ẨN correctAnswer và explanation)
-        List<Map<String, Object>> sanitizedQuestions = rawQuestions.stream().map(q -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", q.getId());
-            map.put("question", q.getQuestion());
-            map.put("answerA", q.getAnswerA());
-            map.put("answerB", q.getAnswerB());
-            map.put("answerC", q.getAnswerC());
-            map.put("answerD", q.getAnswerD());
-            // KHÔNG trả correctAnswer và explanation
-            return map;
-        }).collect(Collectors.toList());
-
-        return ResponseEntity.ok(sanitizedQuestions);
+        return ResponseEntity.ok(sanitize(rawQuestions));
     }
 
     // QUIZ-05: Làm lại Quiz (Tạo attempt mới, không ghi đè lịch sử cũ)
@@ -151,7 +266,7 @@ public class QuizController {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new IllegalArgumentException("Quiz không tồn tại"));
 
-        if (quiz.getTopic() == null || quiz.getTopic().getDocument() == null || !quiz.getTopic().getDocument().getUser().getId().equals(userId)) {
+        if (!isOwner(quiz, userId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Bạn không có quyền làm Quiz này"));
         }
@@ -181,7 +296,7 @@ public class QuizController {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new IllegalArgumentException("Quiz không tồn tại"));
 
-        if (quiz.getTopic() == null || quiz.getTopic().getDocument() == null || !quiz.getTopic().getDocument().getUser().getId().equals(userId)) {
+        if (!isOwner(quiz, userId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Bạn không có quyền nộp bài Quiz này"));
         }

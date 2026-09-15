@@ -28,16 +28,11 @@ public class DocumentController {
     @Autowired
     private DocumentService documentService;
 
+    // userId chỉ lấy từ session đã đăng nhập, KHÔNG tin header X-User-Id từ client
     private Long getCurrentUserId(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute("userId") != null) {
             return (Long) session.getAttribute("userId");
-        }
-        String headerUserId = request.getHeader("X-User-Id");
-        if (headerUserId != null && !headerUserId.isEmpty()) {
-            try {
-                return Long.parseLong(headerUserId);
-            } catch (NumberFormatException ignored) {}
         }
         return null;
     }
@@ -79,6 +74,20 @@ public class DocumentController {
 
         List<Document> docs = documentService.getDocumentsByUserAndNotebook(userId, notebookId);
         return ResponseEntity.ok(docs);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getDocumentById(@PathVariable Long id, HttpServletRequest request) {
+        Long userId = getCurrentUserId(request);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
+        }
+        try {
+            Document doc = documentService.getDocumentById(userId, id);
+            return ResponseEntity.ok(doc);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
     }
 
     // DOC-03: Xem trạng thái xử lý tài liệu (UPLOADING/PROCESSING/READY/FAILED)
@@ -156,6 +165,26 @@ public class DocumentController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Không thể đọc file"));
+        }
+    }
+
+    // DOC-07: Lấy nội dung text đã trích xuất (dùng cho DOCX/PPTX ở trang đọc,
+    // vì các định dạng này không thể render trực tiếp bằng PDF.js như PDF)
+    @GetMapping("/{id}/content")
+    public ResponseEntity<?> getDocumentContent(@PathVariable Long id, HttpServletRequest request) {
+        Long userId = getCurrentUserId(request);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
+        }
+        try {
+            Document doc = documentService.getDocumentContent(userId, id);
+            return ResponseEntity.ok(Map.of(
+                    "format", doc.getFileType(),
+                    "status", doc.getStatus(),
+                    "text", doc.getExtractedText() != null ? doc.getExtractedText() : ""
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
         }
     }
 }

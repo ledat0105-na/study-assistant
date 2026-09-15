@@ -25,6 +25,10 @@ public class Flashcard {
     private String answer;
 
     @ManyToOne
-    @JoinColumn(name = "topic_id", nullable = false)
+    @JoinColumn(name = "topic_id", nullable = true)
     private Topic topic;
+
+    @ManyToOne
+    @JoinColumn(name = "document_id", nullable = true)
+    private Document document;
 }
