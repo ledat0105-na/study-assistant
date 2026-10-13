@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="css/style-3d.css">
+  <link rel="stylesheet" href="css/feature-ui.css">
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
 
@@ -77,6 +78,9 @@
   </main>
 
   <script src="auth-interceptor.js"></script>
+  <script src="js/api-client.js"></script>
+  <script src="js/document-ui.js"></script>
+  <script src="js/document-features.js"></script>
   <script src="sidebar.js"></script>
   <script>
     renderUnifiedSidebar("quiz");
@@ -90,46 +94,21 @@
     let currentIndex = 0;
     let selectedAnswers = {};
 
+    let quizAttempt, submissionToken, quizLoading = false;
     async function loadQuiz() {
+      if (quizLoading) return; quizLoading = true;
+      document.getElementById('questionText').textContent = 'Đang chuẩn bị bài trắc nghiệm...';
       try {
-        const res = await fetch(`/api/quizzes/document/${docId}`, { credentials: "same-origin" });
-        if (res.ok) {
-          const data = await res.json();
-          quizId = data.quizId || 1;
-          const rawQuestions = Array.isArray(data) ? data : (data.questions || []);
-          questions = rawQuestions.map((q, idx) => ({
-            id: q.id || idx + 1,
-            question: q.question || q.questionText || "Câu hỏi trắc nghiệm",
-            options: [
-              q.answerA || q.optionA || "Đáp án A",
-              q.answerB || q.optionB || "Đáp án B",
-              q.answerC || q.optionC || "Đáp án C",
-              q.answerD || q.optionD || "Đáp án D"
-            ],
-            correctAnswer: q.correctAnswer || "A",
-            explanation: q.explanation || ""
-          }));
-
-          if (questions.length === 0) {
-            document.getElementById("questionText").textContent = data.message || "Tài liệu này chưa có câu hỏi trắc nghiệm nào.";
-            document.getElementById("optionsContainer").innerHTML = `<p class="text-slate-400 text-center py-6 font-semibold">Tải lên hoặc chọn tài liệu khác để tự động tạo bài trắc nghiệm 3D.</p>`;
-            document.getElementById("questionCountLabel").textContent = "0 / 0 Câu";
-            document.getElementById("completeLabel").textContent = "0% Hoàn thành";
-            document.getElementById("progressBar").style.width = "0%";
-            return;
-          }
-        } else {
-          const err = await res.json().catch(() => ({}));
-          document.getElementById("questionText").textContent = err.error || "Không thể tạo bài trắc nghiệm cho tài liệu này.";
-          return;
-        }
-      } catch (err) {
-        console.error("Lỗi nạp bài thi", err);
-        document.getElementById("questionText").textContent = "Lỗi kết nối máy chủ khi nạp bài trắc nghiệm.";
-        return;
-      }
-      currentIndex = 0;
-      updateQuestionDisplay();
+        const doc = await ApiClient.get(`/api/documents/${encodeURIComponent(docId)}`);
+        const data = await DocumentFeatures.quiz(doc); quizId = data.quizId;
+        if (!quizId || !data.questions.length) { document.getElementById('questionText').textContent = 'Chưa có câu hỏi có bằng chứng.'; return; }
+        quizAttempt = await DocumentFeatures.startAttempt(quizId); submissionToken = crypto.randomUUID(); selectedAnswers = {};
+        questions = quizAttempt.questions.map(q => ({ ...q, id: q.questionId, question: q.questionText }));
+        currentIndex = 0; updateQuestionDisplay();
+      } catch (error) {
+        DocumentUI.notice(document.getElementById('optionsContainer'), DocumentUI.errorMessage(error), loadQuiz);
+        document.getElementById('questionText').textContent = 'Chưa thể nạp bài trắc nghiệm.';
+      } finally { quizLoading = false; }
     }
 
     function updateQuestionDisplay() {
@@ -148,9 +127,9 @@
       const optionLetters = ["A", "B", "C", "D"];
       q.options.forEach((opt, idx) => {
         const letter = optionLetters[idx];
-        const isSelected = selectedAnswers[q.id] === letter;
+        const isSelected = selectedAnswers[q.id] === opt.optionOrder;
         const btn = document.createElement("button");
-        btn.onclick = () => selectOption(letter);
+        btn.onclick = () => selectOption(opt.optionOrder);
         btn.className = `w-full flex items-center justify-between p-4 rounded-2xl text-sm font-semibold border transition-all text-left ${
           isSelected
             ? "border-indigo-500 bg-indigo-50 text-indigo-900 shadow-md ring-2 ring-indigo-400"
@@ -161,7 +140,7 @@
             <span class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-extrabold ${
               isSelected ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 border border-slate-300'
             }">${letter}</span>
-            <span class="text-sm font-bold">${opt}</span>
+            <span class="text-sm font-bold">${DocumentUI.escape(opt.optionText)}</span>
           </div>
           ${isSelected ? '<i data-lucide="check-circle-2" class="h-5 w-5 text-indigo-600"></i>' : ''}
         `;
@@ -207,23 +186,10 @@
       submitBtn.textContent = "Đang nộp bài...";
 
       try {
-        const res = await fetch(`/api/quizzes/${quizId}/submit`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "same-origin",
-          body: JSON.stringify({ answers: selectedAnswers })
-        });
-        if (res.ok) {
-          const result = await res.json();
-          window.location.href = `result.html?score=${result.correctAnswers}&total=${result.totalQuestions}&id=${docId}&quizId=${quizId}`;
-        } else {
-          const err = await res.json().catch(() => ({}));
-          alert(err.error || "Không thể nộp bài, vui lòng thử lại.");
-          submitBtn.disabled = false;
-          submitBtn.textContent = "Nộp Bài Thi AI";
-        }
+        const result = await DocumentFeatures.submitAttempt(quizAttempt, selectedAnswers, submissionToken);
+        window.location.href = `result.html?score=${result.correctAnswers}&total=${result.totalQuestions}&id=${encodeURIComponent(docId)}&quizId=${quizId}`;
       } catch (err) {
-        alert("Lỗi kết nối khi nộp bài.");
+        alert(DocumentUI.errorMessage(err));
         submitBtn.disabled = false;
         submitBtn.textContent = "Nộp Bài Thi AI";
       }

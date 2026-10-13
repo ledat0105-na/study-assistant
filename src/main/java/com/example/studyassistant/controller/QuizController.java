@@ -11,6 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.example.studyassistant.domain.quiz.generation.*;
+import com.example.studyassistant.domain.quiz.attempt.*;
+import com.example.studyassistant.domain.quiz.submission.*;
+
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -20,6 +24,41 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/quizzes")
 @CrossOrigin(origins = "*")
 public class QuizController {
+    @PostMapping("/generate")
+    public ResponseEntity<?> generateQuiz(@RequestBody GroundedQuizGenerationCommand cmd, HttpServletRequest request) {
+        Long userId = getCurrentUserId(request);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
+        }
+        
+        if (groundedQuizGenerationService == null) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Generation service not available"));
+        }
+
+        try {
+            GroundedQuizGenerationCommand command = new GroundedQuizGenerationCommand(
+                    userId,
+                    cmd.scopeType(),
+                    cmd.notebookId(),
+                    cmd.documentId(),
+                    cmd.topicId(),
+                    cmd.scopeConceptId(),
+                    cmd.mode(),
+                    cmd.questionCount(),
+                    cmd.allowedQuestionTypes(),
+                    cmd.title(),
+                    cmd.timeLimitSeconds(),
+                    cmd.passThreshold()
+            );
+            GroundedQuizGenerationResult result = groundedQuizGenerationService.generate(command);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        }
+    }
+
 
     @Autowired
     private QuizRepository quizRepository;
@@ -28,10 +67,19 @@ public class QuizController {
     private QuizQuestionRepository quizQuestionRepository;
 
     @Autowired
+    private QuizQuestionOptionRepository quizQuestionOptionRepository;
+
+    @Autowired
     private QuizResultRepository quizResultRepository;
 
     @Autowired
     private QuizAttemptRepository quizAttemptRepository;
+
+    @Autowired(required=false)
+    private GroundedQuizGenerationService groundedQuizGenerationService;
+
+    @Autowired(required=false)
+    private QuizAttemptStartService quizAttemptStartService;
 
     @Autowired
     private TopicRepository topicRepository;
@@ -80,78 +128,19 @@ public class QuizController {
 
         List<Quiz> existingQuizzes = quizRepository.findByDocumentId(docId);
         if (!existingQuizzes.isEmpty()) {
-            Quiz quiz = existingQuizzes.get(0);
+            Quiz quiz = existingQuizzes.stream().max(Comparator.comparing(Quiz::getId)).orElseThrow();
             return ResponseEntity.ok(Map.of("quizId", quiz.getId(), "questions", sanitize(quizQuestionRepository.findByQuizId(quiz.getId()))));
         }
 
-        String text = doc.getExtractedText();
-        if (text == null || text.isBlank()) {
-            return ResponseEntity.ok(Map.of("quizId", 0, "questions", List.of(), "message", "Tài liệu chưa có nội dung trích xuất để tạo bài trắc nghiệm."));
-        }
-        if (!aiService.hasApiKey()) {
-            return ResponseEntity.ok(Map.of("quizId", 0, "questions", List.of(), "message", "OpenAI API Key chưa được cấu hình nên chưa thể tự động tạo bài trắc nghiệm."));
-        }
-
-        String snippet = text.length() > 5000 ? text.substring(0, 5000) : text;
-        String prompt = "Đọc kỹ nội dung tài liệu học tập dưới đây và tạo bài trắc nghiệm 5-8 câu hỏi cốt lõi (4 đáp án A, B, C, D) bằng tiếng Việt. " +
-                "Trả về CHỈ MỘT đối tượng JSON (không thêm chữ nào khác), dạng:\n" +
-                "{\"questions\": [{\"question\": \"Nội dung câu hỏi ngắn\", \"answerA\": \"...\", \"answerB\": \"...\", \"answerC\": \"...\", \"answerD\": \"...\", \"correctAnswer\": \"A\", \"explanation\": \"Lời giải 1 câu ngắn gọn\"}]}\n\n" +
-                "YÊU CẦU: Tạo siêu nhanh, ngắn gọn, chính xác, không lan man dài dòng.\n\n" +
-                "TÀI LIỆU:\n" + snippet;
-
-        try {
-            String raw = aiService.callOpenAI(prompt, true);
-            String json = extractJsonObject(raw);
-            JsonNode root = objectMapper.readTree(json);
-            JsonNode questionsNode = root.get("questions");
-            if (questionsNode == null || !questionsNode.isArray() || questionsNode.isEmpty()) {
-                return ResponseEntity.ok(Map.of("quizId", 0, "questions", List.of(), "message", "AI không tạo được câu hỏi nào từ tài liệu này."));
-            }
-
-            Quiz quiz = new Quiz();
-            quiz.setTitle("Trắc nghiệm: " + doc.getFileName());
-            quiz.setDocument(doc);
-            Quiz savedQuiz = quizRepository.save(quiz);
-
-            for (JsonNode node : questionsNode) {
-                String correct = node.hasNonNull("correctAnswer") ? node.get("correctAnswer").asText().trim().toUpperCase() : "";
-                if (!node.hasNonNull("question") || !List.of("A", "B", "C", "D").contains(correct)) continue;
-
-                QuizQuestion q = new QuizQuestion();
-                q.setQuiz(savedQuiz);
-                q.setQuestion(node.get("question").asText());
-                q.setAnswerA(node.hasNonNull("answerA") ? node.get("answerA").asText() : "");
-                q.setAnswerB(node.hasNonNull("answerB") ? node.get("answerB").asText() : "");
-                q.setAnswerC(node.hasNonNull("answerC") ? node.get("answerC").asText() : "");
-                q.setAnswerD(node.hasNonNull("answerD") ? node.get("answerD").asText() : "");
-                q.setCorrectAnswer(correct);
-                q.setExplanation(node.hasNonNull("explanation") ? node.get("explanation").asText() : null);
-                quizQuestionRepository.save(q);
-            }
-
-            return ResponseEntity.ok(Map.of("quizId", savedQuiz.getId(), "questions", sanitize(quizQuestionRepository.findByQuizId(savedQuiz.getId()))));
-        } catch (AiService.NoApiKeyException e) {
-            return ResponseEntity.ok(Map.of("quizId", 0, "questions", List.of(), "message", "OpenAI API Key chưa được cấu hình."));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Không thể tạo bài trắc nghiệm: " + e.getMessage()));
-        }
+        // EI1.4: Legacy substring generation is forbidden. AI generation on GET is forbidden.
+        return ResponseEntity.ok(Map.of("quizId", 0, "questions", List.of(), "message", "Tài liệu chưa có bài trắc nghiệm."));
     }
 
     @DeleteMapping("/document/{docId}")
     public ResponseEntity<?> regenerateQuizForDocument(@PathVariable Long docId, HttpServletRequest request) {
-        Long userId = getCurrentUserId(request);
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
-        }
-        Document doc = documentRepository.findByIdAndUserId(docId, userId).orElse(null);
-        if (doc == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Tài liệu không tồn tại hoặc bạn không có quyền truy cập"));
-        }
-        for (Quiz quiz : quizRepository.findByDocumentId(docId)) {
-            quizQuestionRepository.deleteAll(quizQuestionRepository.findByQuizId(quiz.getId()));
-            quizRepository.delete(quiz);
-        }
-        return ResponseEntity.ok(Map.of("message", "Đã xoá bài trắc nghiệm cũ, lần sau mở lại sẽ tạo bộ câu hỏi mới."));
+        // EI1.4: Legacy destructive regeneration is forbidden in V2.
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(Map.of("error", "Destructive legacy regeneration is forbidden. Please use V2 POST /api/quizzes/generate endpoint."));
     }
 
     private List<Map<String, Object>> sanitize(List<QuizQuestion> rawQuestions) {
@@ -163,6 +152,10 @@ public class QuizController {
             map.put("answerB", q.getAnswerB());
             map.put("answerC", q.getAnswerC());
             map.put("answerD", q.getAnswerD());
+            if (q.getQuestionType() != null) {
+                map.put("options", quizQuestionOptionRepository.findByQuestionIdOrderByOptionOrderAsc(q.getId())
+                        .stream().map(QuizQuestionOption::getOptionText).toList());
+            }
             return map;
         }).collect(Collectors.toList());
     }
@@ -257,87 +250,38 @@ public class QuizController {
     public ResponseEntity<?> startNewAttempt(@PathVariable Long quizId, HttpServletRequest request) {
         Long userId = getCurrentUserId(request);
         if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
         }
 
-        Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new IllegalArgumentException("Quiz không tồn tại"));
-
-        if (!isOwner(quiz, userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Bạn không có quyền làm Quiz này"));
+        if (quizAttemptStartService == null) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Service not available"));
         }
 
-        QuizAttempt attempt = new QuizAttempt();
-        attempt.setUser(userRepository.findById(userId).orElseThrow());
-        attempt.setQuiz(quiz);
-        attempt.setStatus("IN_PROGRESS");
-        attempt.setStartedAt(LocalDateTime.now());
-
-        QuizAttempt savedAttempt = quizAttemptRepository.save(attempt);
-        return ResponseEntity.ok(savedAttempt);
+        try {
+            QuizAttemptStartCommand cmd = new QuizAttemptStartCommand(userId, quizId);
+            QuizAttemptResponse response = quizAttemptStartService.startAttempt(cmd);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
     }
+    
+    @PostMapping("/{quizId}/attempts")
+    public ResponseEntity<?> startNewAttemptV2(@PathVariable Long quizId, HttpServletRequest request) {
+        return startNewAttempt(quizId, request);
+    }
+
+    @Autowired
+    private com.example.studyassistant.service.QuizSubmissionService quizSubmissionService;
 
     // QUIZ-03: Nộp bài và nhận điểm (Backend TỰ CHẤM ĐIỂM và lưu score)
     @PostMapping("/{quizId}/submit")
-    public ResponseEntity<?> submitQuizAnswers(
-            @PathVariable Long quizId,
-            @RequestBody Map<String, Object> payload,
-            HttpServletRequest request) {
-
-        Long userId = getCurrentUserId(request);
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
-        }
-
-        Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new IllegalArgumentException("Quiz không tồn tại"));
-
-        if (!isOwner(quiz, userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Bạn không có quyền nộp bài Quiz này"));
-        }
-
-        Map<String, Object> answers = (Map<String, Object>) payload.get("answers");
-        if (answers == null) answers = Collections.emptyMap();
-
-        List<QuizQuestion> questions = quizQuestionRepository.findByQuizId(quizId);
-        int correctAnswers = 0;
-        for (QuizQuestion q : questions) {
-            Object submittedAnswerObj = answers.get(q.getId().toString());
-            if (submittedAnswerObj != null) {
-                String subAnswerStr = submittedAnswerObj.toString().trim().toUpperCase();
-                if (subAnswerStr.equals(q.getCorrectAnswer().trim())) {
-                    correctAnswers++;
-                }
-            }
-        }
-
-        double score = questions.isEmpty() ? 0.0 : Math.round((((double) correctAnswers / questions.size()) * 100.0) * 100.0) / 100.0;
-
-        // Lưu bản ghi kết quả QuizResult
-        QuizResult result = new QuizResult();
-        result.setUser(userRepository.findById(userId).orElseThrow());
-        result.setQuiz(quiz);
-        result.setCorrectAnswers(correctAnswers);
-        result.setTotalQuestions(questions.size());
-        result.setScore(score);
-        QuizResult savedResult = quizResultRepository.save(result);
-
-        // Lưu hoặc cập nhật QuizAttempt cho lượt làm bài mới
-        QuizAttempt attempt = new QuizAttempt();
-        attempt.setUser(userRepository.findById(userId).orElseThrow());
-        attempt.setQuiz(quiz);
-        attempt.setTotalQuestions(questions.size());
-        attempt.setCorrectAnswers(correctAnswers);
-        attempt.setScore(score);
-        attempt.setStatus("COMPLETED");
-        attempt.setCompletedAt(LocalDateTime.now());
-        quizAttemptRepository.save(attempt);
-
-        return ResponseEntity.ok(savedResult);
+    public ResponseEntity<?> submitQuizLegacy(@PathVariable Long quizId, HttpServletRequest request) {
+        // EI1.6: Legacy endpoint disabled to prevent QuizResult bypass.
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(Map.of("error", "Legacy submission is disabled. Use V2 POST /api/quiz-attempts/{attemptId}/submit"));
     }
-
+    
     // QUIZ-04: Xem đáp án sau khi nộp (Chỉ trả correctAnswer và explanation sau khi đã hoàn tất nộp bài)
     @GetMapping("/{quizId}/answers")
     public ResponseEntity<?> getQuizAnswersAndExplanations(@PathVariable Long quizId, HttpServletRequest request) {

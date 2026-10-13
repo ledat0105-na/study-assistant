@@ -24,6 +24,7 @@ public class QuizResult {
 
     private Double score; // Quiz score double representation
 
+    @org.hibernate.annotations.Generated(event = org.hibernate.generator.EventType.INSERT)
     @Column(name = "completed_at", insertable = false, updatable = false)
     private LocalDateTime completedAt;
 
@@ -34,4 +35,10 @@ public class QuizResult {
     @ManyToOne
     @JoinColumn(name = "quiz_id", nullable = false)
     private Quiz quiz;
+
+    @Column(name = "submission_token", length = 36)
+    private String submissionToken;
+
+    @Column(name = "submission_hash", columnDefinition = "char(64)")
+    private String submissionHash;
 }

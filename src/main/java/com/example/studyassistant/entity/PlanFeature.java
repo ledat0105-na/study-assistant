@@ -38,4 +38,16 @@ public class PlanFeature {
 
     @Column(nullable = false)
     private Integer chatRetentionDays; // 7 ngày, 180 ngày (6 tháng), 3650 ngày (không giới hạn)
+
+    @Column(name = "max_active_presentation_decks")
+    private Integer maxActivePresentationDecks;
+
+    @Column(name = "daily_presentation_outline_limit")
+    private Integer dailyPresentationOutlineLimit;
+
+    @Column(name = "daily_presentation_slide_limit")
+    private Integer dailyPresentationSlideLimit;
+
+    @Column(name = "max_presentation_media_storage_bytes")
+    private Long maxPresentationMediaStorageBytes;
 }

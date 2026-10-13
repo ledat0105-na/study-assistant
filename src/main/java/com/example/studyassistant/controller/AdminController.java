@@ -164,7 +164,11 @@ public class AdminController {
             user.setEmail(reqUser.getEmail().trim());
             String rawPassword = reqUser.getPassword() != null && !reqUser.getPassword().isEmpty() ? reqUser.getPassword() : "123456";
             user.setPassword(HashUtil.hash(rawPassword));
-            user.setRole(reqUser.getRole() != null ? reqUser.getRole().toUpperCase() : "STUDENT");
+                        String role = reqUser.getRole() != null ? reqUser.getRole().toUpperCase() : "STUDENT";
+            if (!role.equals("STUDENT") && !role.equals("TEACHER") && !role.equals("ADMIN")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Invalid role"));
+            }
+            user.setRole(role);
             user.setPlan(reqUser.getPlan() != null ? reqUser.getPlan().toUpperCase() : "FREE");
             user.setStatus("ACTIVE");
 
@@ -197,7 +201,13 @@ public class AdminController {
 
             if (body.containsKey("fullName")) target.setFullName(body.get("fullName"));
             if (body.containsKey("email")) target.setEmail(body.get("email"));
-            if (body.containsKey("role")) target.setRole(body.get("role").toUpperCase());
+                        if (body.containsKey("role")) {
+                String role = body.get("role").toUpperCase();
+                if (!role.equals("STUDENT") && !role.equals("TEACHER") && !role.equals("ADMIN")) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Invalid role"));
+                }
+                target.setRole(role);
+            }
             if (body.containsKey("plan")) target.setPlan(body.get("plan").toUpperCase());
             if (body.containsKey("status")) target.setStatus(body.get("status").toUpperCase());
 
@@ -304,7 +314,7 @@ public class AdminController {
         try {
             User admin = verifyAdminRole(request);
             Document doc = documentRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài liệu!"));
-            documentRepository.deleteById(id);
+            documentService.deleteDocument(doc.getUser().getId(), id);
 
             // Audit Log
             AuditLog audit = new AuditLog();

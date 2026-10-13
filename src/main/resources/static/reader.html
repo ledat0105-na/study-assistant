@@ -8,8 +8,9 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <link rel="stylesheet" href="css/style-3d.css">
+  <link rel="stylesheet" href="css/feature-ui.css">
 </head>
-<body class="bg-slate-50 text-slate-800 h-screen max-h-screen flex flex-col font-sans relative overflow-hidden">
+<body class="reader-page bg-slate-50 text-slate-800 h-screen max-h-screen flex flex-col font-sans relative overflow-hidden">
 
   <!-- 3D Background Floating Orbs -->
   <div class="orb-container">
@@ -77,7 +78,7 @@
       <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
         <div class="flex justify-start">
           <div class="bg-indigo-50/90 border border-indigo-200 rounded-2xl p-3.5 text-slate-800 leading-relaxed max-w-[88%] font-semibold shadow-sm">
-            Xin chào! Tôi đã đọc tài liệu này, bạn có thể đặt bất kỳ câu hỏi nào về nội dung.
+            Chọn câu hỏi về tài liệu. Trợ lý sẽ tìm bằng chứng trong notebook của tài liệu này.
           </div>
         </div>
       </div>
@@ -93,7 +94,12 @@
   </div>
 
   <script src="auth-interceptor.js"></script>
+  <script src="js/api-client.js"></script>
+  <script src="js/document-ui.js"></script>
+  <script src="js/document-features.js"></script>
   <script src="citations.js"></script>
+  <script src="js/summary-view.js"></script>
+  <script src="js/document-summary.js"></script>
   <script src="i18n.js"></script>
   <script>
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -109,6 +115,7 @@
     let currentPage = 1;
     let totalPages = 0;
     let docFormat = null;
+    let summaryDocument = null;
     let currentPageSpans = [];
 
     const pdfWrap = document.getElementById("pdfWrap");
@@ -133,7 +140,10 @@
       const page = await pdfDoc.getPage(pageNum);
       const canvas = document.getElementById("pdfCanvas");
       const ctx = canvas.getContext("2d");
-      const viewport = page.getViewport({ scale: 1.4 });
+      const naturalViewport = page.getViewport({ scale: 1 });
+      const availableWidth = canvas.parentElement.clientWidth;
+      const scale = availableWidth > 0 ? Math.min(1.4, availableWidth / naturalViewport.width) : 1.4;
+      const viewport = page.getViewport({ scale });
       canvas.width = viewport.width;
       canvas.height = viewport.height;
       await page.render({ canvasContext: ctx, viewport }).promise;
@@ -226,23 +236,24 @@
       }
     }
 
+    let readerPoll;
+    window.addEventListener("pagehide", () => clearTimeout(readerPoll));
     async function loadDoc() {
       if (!docId) {
         showStatus("Thiếu id tài liệu.");
         return;
       }
       try {
-        const res = await fetch(`/api/documents/${docId}`);
-        if (!res.ok) {
-          showStatus("Không tìm thấy tài liệu hoặc bạn không có quyền xem.");
-          return;
-        }
-        const doc = await res.json();
+        const doc = await ApiClient.get(`/api/documents/${encodeURIComponent(docId)}`);
+        summaryDocument = doc;
         document.getElementById("docTitleLabel").textContent = doc.title || "Tài liệu";
-        docFormat = doc.format;
+        docFormat = doc.format || doc.fileType;
 
-        if (doc.status === "FAILED") {
-          showStatus("Tài liệu xử lý thất bại: " + (doc.errorMessage || "Lỗi không xác định") + ". Hãy thử lại ở trang danh sách tài liệu.");
+        const submit = document.querySelector('#chatForm button[type=submit]');
+        if (submit) submit.disabled = !DocumentUI.ready(doc);
+        if (!DocumentUI.ready(doc)) {
+          showStatus(DocumentUI.message(doc));
+          if (DocumentUI.state(doc) === 'PROCESSING') readerPoll = setTimeout(loadDoc, 3000);
           return;
         }
 
@@ -253,7 +264,7 @@
         }
       } catch (e) {
         console.error(e);
-        showStatus("Lỗi kết nối máy chủ khi tải tài liệu.");
+        showStatus(DocumentUI.errorMessage(e));
       }
     }
 
@@ -313,7 +324,7 @@
     let summarized = false;
 
     async function autoSummarize() {
-      if (summarized) return;
+      if (summarized || !DocumentUI.ready(summaryDocument) || urlParams.get("embedded") === "1") return;
       summarized = true;
 
       const typing = document.createElement("div");
@@ -324,25 +335,24 @@
       lucide.createIcons();
 
       try {
-        const res = await fetch(`/api/ai/summary/${docId}`, {
-          method: "GET",
-          credentials: "same-origin"
-        });
+        const data = await DocumentSummaryLoader.load(docId, summaryDocument);
         typing.remove();
-        if (res.ok) {
-          const data = await res.json();
-          appendMessage("ai", data.summary, data.docId || docId);
-        } else {
-          const err = await res.json().catch(() => ({}));
-          appendMessage("ai", "Không thể tự động tóm tắt: " + (err.error || "lỗi không xác định. Bạn có thể tự đặt câu hỏi bên dưới."), docId);
-        }
+        const summary = document.createElement("div"); summary.className = "ai-message";
+        SummaryView.render(summary, data); document.getElementById("chatMessages").appendChild(summary);
       } catch (err) {
         typing.remove();
-        appendMessage("ai", "Lỗi kết nối khi tóm tắt tài liệu. Bạn có thể tự đặt câu hỏi bên dưới.", docId);
+        summarized = false;
+        appendMessage("ai", err.status ? err.message : "Lỗi kết nối khi tóm tắt tài liệu. Vui lòng thử lại.", docId);
+        const retry = document.createElement("button");
+        retry.type = "button";
+        retry.className = "rounded-xl border border-indigo-300 px-3 py-2 text-xs font-bold text-indigo-600";
+        retry.textContent = "Thử tóm tắt lại";
+        retry.addEventListener("click", () => { retry.remove(); autoSummarize(); });
+        document.getElementById("chatMessages").appendChild(retry);
       }
     }
 
-    function appendMessage(role, text, docIdForCitations) {
+    function appendMessage(role, text, docIdForCitations, sources = []) {
       const div = document.createElement("div");
       div.className = role === "user" ? "flex justify-end" : "flex justify-start";
       const bubbleClass = role === "user"
@@ -351,7 +361,8 @@
       div.innerHTML = `<div class="${bubbleClass}"></div>`;
       const bubble = div.firstElementChild;
       if (role === "ai") {
-        renderAiMessageWithCitations(bubble, text, docIdForCitations || docId);
+        renderAiMessageWithCitations(bubble, text, docIdForCitations || docId, sources);
+        if (sources.length) renderCitationSources(bubble, sources, docId);
       } else {
         bubble.textContent = text;
       }
@@ -362,40 +373,26 @@
     const chatForm = document.getElementById("chatForm");
     const chatInput = document.getElementById("chatInput");
 
-    chatForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const txt = chatInput.value.trim();
-      if (!txt) return;
-
-      chatInput.value = "";
-      appendMessage("user", txt);
-
-      const typing = document.createElement("div");
-      typing.className = "flex justify-start";
-      typing.innerHTML = `<div class="bg-white border border-slate-200 text-indigo-600 rounded-2xl p-3 max-w-[85%] font-extrabold shadow-sm flex items-center gap-2"><i data-lucide="loader-2" class="h-4 w-4 animate-spin"></i> Đang suy nghĩ...</div>`;
-      document.getElementById("chatMessages").appendChild(typing);
-      document.getElementById("chatMessages").scrollTop = document.getElementById("chatMessages").scrollHeight;
-      lucide.createIcons();
-
+    let readerChatBusy = false;
+    async function askReader(txt) {
+      if (readerChatBusy) return;
+      if (!DocumentUI.ready(summaryDocument)) { appendMessage("ai", DocumentUI.message(summaryDocument)); return; }
+      readerChatBusy = true; const button = chatForm.querySelector('button[type=submit]'); button.disabled = true;
+      const typing = document.createElement('p'); typing.textContent = 'Đang tìm bằng chứng trong tài liệu...'; typing.setAttribute('role', 'status');
+      document.getElementById('chatMessages').appendChild(typing);
       try {
-        const res = await fetch("/api/ai/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "same-origin",
-          body: JSON.stringify({ message: txt, docIds: [docId] })
-        });
-        typing.remove();
-        if (res.ok) {
-          const data = await res.json();
-          appendMessage("ai", data.response, data.docId || docId);
-        } else {
-          const err = await res.json().catch(() => ({}));
-          appendMessage("ai", "Lỗi: " + (err.error || "Không thể lấy phản hồi từ AI."));
-        }
-      } catch (err) {
-        typing.remove();
-        appendMessage("ai", "Lỗi kết nối máy chủ.");
-      }
+        const data = await DocumentFeatures.chat([summaryDocument], txt);
+        appendMessage('ai', data.text, data.docId, data.citations);
+      } catch (error) {
+        appendMessage('ai', DocumentUI.errorMessage(error));
+        const retry = document.createElement('button'); retry.textContent = 'Thử gửi lại'; retry.className = 'feature-retry btn-3d btn-3d-primary';
+        retry.onclick = () => { retry.remove(); askReader(txt); }; document.getElementById('chatMessages').appendChild(retry);
+      } finally { typing.remove(); readerChatBusy = false; button.disabled = !DocumentUI.ready(summaryDocument); }
+    }
+    chatForm.addEventListener('submit', async e => {
+      e.preventDefault(); const txt = chatInput.value.trim(); if (!txt || readerChatBusy) return;
+      if (!DocumentUI.ready(summaryDocument)) { appendMessage('ai', DocumentUI.message(summaryDocument)); return; }
+      chatInput.value = ''; appendMessage('user', txt); await askReader(txt);
     });
 
     loadDoc();

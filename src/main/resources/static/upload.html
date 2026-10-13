@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="css/style-3d.css">
+  <link rel="stylesheet" href="css/feature-ui.css">
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
 
@@ -21,6 +22,20 @@
           Tải Lên Tài Liệu Học Tập 3D
         </h1>
         <p class="text-slate-600 text-sm mt-1.5 font-semibold" data-i18n="upload_sub">Tải lên các file PDF, DOCX hoặc PPTX để tạo không gian sơ đồ kiến thức 3D và thẻ ghi nhớ AI</p>
+      </div>
+
+      <!-- Notebook Selector for RAG Indexing -->
+      <div class="mb-6 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <i data-lucide="book-open" class="h-5 w-5 text-indigo-600"></i>
+          <div>
+            <label for="notebookSelect" class="block text-xs font-extrabold text-slate-800">Sổ tay học tập (Notebook)</label>
+            <p class="text-[11px] text-slate-500 font-medium">Chọn sổ tay để tự động phân tích RAG và lập chỉ mục kiến thức</p>
+          </div>
+        </div>
+        <select id="notebookSelect" class="px-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-indigo-500 min-w-[220px]">
+          <option value="">-- Không chọn Sổ tay --</option>
+        </select>
       </div>
 
       <!-- Drag & Drop container 3D -->
@@ -54,7 +69,7 @@
           </div>
           <h3 class="text-xl font-extrabold text-slate-900" data-i18n="upload_done">Tải Lên Hoàn Tất!</h3>
           <p id="uploadedName" class="text-xs text-slate-700 mt-2 font-bold"></p>
-          <p class="text-xs text-slate-500 font-semibold mt-1" data-i18n="upload_done_sub">AI đã tự động phân tích và tạo Sơ đồ kiến thức 3D cho bạn!</p>
+          <p class="text-xs text-slate-500 font-semibold mt-1" id="uploadProcessingMessage">Tệp đã được nhận. Tài liệu đang được xử lý, vui lòng chờ trong giây lát.</p>
           <div class="mt-6 flex flex-col items-center gap-3">
             <a id="readNowBtn" href="documents.html" class="inline-flex items-center gap-2 btn-3d btn-3d-primary py-3 px-6 text-xs font-bold shadow-xl shadow-indigo-500/30">
               <i data-lucide="sparkles" class="h-4 w-4"></i>
@@ -89,11 +104,33 @@
   </div>
 
   <script src="auth-interceptor.js"></script>
+  <script src="js/api-client.js"></script>
+  <script src="js/document-ui.js"></script>
+  <script src="js/document-features.js"></script>
   <script src="sidebar.js"></script>
   <script src="i18n.js"></script>
   <script>
     renderUnifiedSidebar("documents");
     lucide.createIcons();
+    loadNotebooks();
+
+    async function loadNotebooks() {
+      try {
+        const res = await fetch("/api/notebooks");
+        if (res.ok) {
+          const notebooks = await res.json();
+          const select = document.getElementById("notebookSelect");
+          notebooks.forEach(nb => {
+            const opt = document.createElement("option");
+            opt.value = nb.id;
+            opt.textContent = nb.title || `Notebook #${nb.id}`;
+            select.appendChild(opt);
+          });
+        }
+      } catch (e) {
+        console.error("Lỗi tải danh sách notebook:", e);
+      }
+    }
 
     const fileInput = document.getElementById("fileInput");
     const dropZone = document.getElementById("dropZone");
@@ -135,18 +172,13 @@
 
     async function checkUploadLimit() {
       const u = JSON.parse(localStorage.getItem("user") || "{}");
-      const role = u.role || "FREE";
-      
-      let limit = 3;
-      if (role === "STUDENT") limit = 50;
-      else if (role === "PRO") limit = 200;
-      else if (role === "ADMIN") return false;
+      if (u.role === "ADMIN") return false;
 
       try {
-        const response = await fetch("/api/documents");
+        const response = await fetch("/api/plans/quota");
         if (response.ok) {
-          const docs = await response.json();
-          if (docs.length >= limit) {
+          const quota = await response.json();
+          if (quota.documents && quota.documents.used >= quota.documents.max) {
             document.getElementById("limitModal").classList.remove("hidden");
             return true;
           }
@@ -165,7 +197,10 @@
       window.location.href = "payment.html";
     }
 
+    let uploadInFlight = false;
     async function uploadFile(file) {
+      if (uploadInFlight) return;
+      uploadInFlight = true;
       idleState.classList.add("hidden");
       uploadingState.classList.remove("hidden");
       
@@ -175,6 +210,10 @@
 
       const formData = new FormData();
       formData.append("file", file);
+      const selectedNotebook = document.getElementById("notebookSelect").value;
+      if (selectedNotebook) {
+        formData.append("notebookId", selectedNotebook);
+      }
 
       const progressBar = document.getElementById("progressBar");
       let pct = 0;
@@ -194,6 +233,7 @@
 
         if (response.ok) {
           const savedDoc = await response.json();
+          document.getElementById('uploadProcessingMessage').textContent = DocumentUI.message(savedDoc);
           progressBar.style.width = "100%";
           setTimeout(() => {
             uploadingState.classList.add("hidden");
@@ -206,15 +246,14 @@
             lucide.createIcons();
           }, 300);
         } else {
-          const errData = await response.json();
-          alert(errData.error || "Tải lên thất bại");
+          alert(ApiClient.message(response.status));
           resetDropZone();
         }
       } catch (err) {
         clearInterval(timer);
         alert("Lỗi kết nối máy chủ");
         resetDropZone();
-      }
+      } finally { uploadInFlight = false; }
     }
 
     function resetDropZone() {

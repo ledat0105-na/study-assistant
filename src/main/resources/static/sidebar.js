@@ -27,15 +27,18 @@ function renderUnifiedSidebar(activeNavKey) {
     return;
   }
 
-  const isAdmin = (user.role || "FREE").toUpperCase() === "ADMIN";
-  const userAvatarName = user.name ? user.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() : (isAdmin ? "AD" : "AI");
-  const fullName = user.name || user.username || (isAdmin ? "Quản Trị Viên" : "Học viên AI");
+  const role = (user.role || "STUDENT").toUpperCase();
+  const isAdmin = role === "ADMIN";
+  const isTeacher = role === "TEACHER" || isAdmin;
+  
+  const userAvatarName = user.name ? user.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() : (isAdmin ? "AD" : (role === "TEACHER" ? "GV" : "AI"));
+  const fullName = user.name || user.username || (isAdmin ? "Quản Trị Viên" : (role === "TEACHER" ? "Giảng Viên" : "Học viên AI"));
   const email = user.email || "admin@study.ai";
 
   let navItems = [];
 
-  if (isAdmin) {
-    // Mỗi chức năng Quản trị là 1 trang HTML riêng biệt
+  if (isAdmin && activeNavKey && activeNavKey.startsWith("admin-")) {
+    // Admin functions
     navItems = [
       { key: "admin-overview", label: "Tổng quan Quản trị 3D", icon: "shield-check", href: "admin.html" },
       { key: "admin-pricing", label: "Quản lý Bảng giá & SALE", icon: "tags", href: "admin-pricing.html" },
@@ -46,14 +49,21 @@ function renderUnifiedSidebar(activeNavKey) {
       { key: "profile", label: "Hồ sơ Quản trị viên", icon: "user", href: "profile.html" }
     ];
   } else {
-    // Menu dành riêng cho HỌC VIÊN / NGƯỜI DÙNG - Tất cả công cụ đã hợp nhất vào Trợ lý Chat AI
+    // Default / Student / Teacher Menu
     navItems = [
       { key: "dashboard", label: "Bảng điều khiển", icon: "layout-dashboard", href: "dashboard.html" },
-      { key: "documents", label: "Kho tài liệu học tập", icon: "file-text", href: "documents.html" },
+      { key: "documents", label: "Kho tài liệu học tập", icon: "file-text", href: "documents.html" }
+    ];
+    
+    if (isTeacher) {
+      navItems.push({ key: "teacher-presentations", label: "Bài giảng AI", icon: "presentation", href: "teacher-presentations.html" });
+    }
+    
+    navItems.push(
       { key: "chat", label: "Trợ lý Chat AI & 3D Studio", icon: "sparkles", href: "viewer.html" },
       { key: "progress", label: "Tiến độ & Thống kê", icon: "bar-chart-3", href: "progress.html" },
       { key: "profile", label: "Hồ sơ cá nhân", icon: "user", href: "profile.html" }
-    ];
+    );
   }
 
   const navHtml = navItems.map(item => {

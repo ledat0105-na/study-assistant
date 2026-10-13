@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="css/style-3d.css">
+  <link rel="stylesheet" href="css/feature-ui.css">
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
 
@@ -54,6 +55,9 @@
   </main>
 
   <script src="auth-interceptor.js"></script>
+  <script src="js/api-client.js"></script>
+  <script src="js/document-ui.js"></script>
+  <script src="js/document-features.js"></script>
   <script src="sidebar.js"></script>
   <script>
     renderUnifiedSidebar("documents");
@@ -63,16 +67,17 @@
     let activeFilter = "ALL";
     const searchInput = document.getElementById("searchInput");
 
+    let documentListLoading = false, documentListPoll;
+    window.addEventListener('pagehide', () => clearTimeout(documentListPoll));
     async function loadDocuments() {
+      if (documentListLoading) return;
+      documentListLoading = true;
       try {
-        const response = await fetch("/api/documents");
-        if (response.ok) {
-          allDocs = await response.json();
-          renderDocs();
-        }
-      } catch (err) {
-        console.error("Lỗi nạp tài liệu:", err);
-      }
+        allDocs = await ApiClient.get('/api/documents'); renderDocs();
+        clearTimeout(documentListPoll);
+        if (allDocs.some(doc => DocumentUI.state(doc) === 'PROCESSING')) documentListPoll = setTimeout(loadDocuments, 3000);
+      } catch (error) { DocumentUI.notice(document.getElementById('docsGrid'), DocumentUI.errorMessage(error), loadDocuments); }
+      finally { documentListLoading = false; }
     }
 
     function renderDocs() {
@@ -82,7 +87,7 @@
 
       const filtered = allDocs.filter(doc => {
         const matchesSearch = (doc.title || "").toLowerCase().includes(query);
-        const matchesFilter = activeFilter === "ALL" || doc.format === activeFilter;
+        const matchesFilter = activeFilter === "ALL" || (doc.format || doc.fileType) === activeFilter;
         return matchesSearch && matchesFilter;
       });
 
@@ -105,47 +110,64 @@
             <div class="flex justify-between items-start mb-4">
               <div class="flex items-center gap-3.5">
                 <div class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-2 rounded-xl font-extrabold font-mono text-xs shadow-sm">
-                  ${doc.format || 'PDF'}
+                  ${DocumentUI.escape(doc.format || doc.fileType || '')}
                 </div>
                 <div>
                   <h3 class="font-extrabold text-base text-slate-900 hover:text-indigo-600 transition-colors">
-                    <a href="detail.html?id=${doc.id}">${doc.title}</a>
+                    <a href="detail.html?id=${doc.id}">${DocumentUI.escape(doc.title || doc.originalName || doc.fileName)}</a>
                   </h3>
-                  <p class="text-xs text-slate-500 mt-1 font-medium">${doc.size || '2.4 MB'} • ${doc.pages || 12} trang</p>
+                  <p class="text-xs text-slate-500 mt-1 font-medium">${DocumentUI.escape(doc.size || (doc.fileSize ? (doc.fileSize / 1048576).toFixed(2) + ' MB' : ''))} • ${DocumentUI.escape(doc.pages || doc.totalPages || '—')} trang</p>
                 </div>
               </div>
               <span class="badge-3d badge-3d-emerald">
-                <i data-lucide="check-circle" class="h-3.5 w-3.5"></i> Sẵn sàng
+                ${DocumentUI.escape(DocumentUI.message(doc))}
               </span>
             </div>
-            <div class="text-xs text-slate-500 font-semibold mb-6">Đã tải lên: ${doc.uploadDate || 'Gần đây'}</div>
+            <div class="text-xs text-slate-500 font-semibold mb-6">Đã tải lên: ${DocumentUI.escape(doc.uploadDate || doc.createdAt || 'Gần đây')}</div>
           </div>
           <div class="flex items-center justify-between border-t border-slate-200/80 pt-4">
             <div class="flex gap-2">
               <a href="viewer.html?id=${doc.id}" class="btn-3d btn-3d-primary px-3.5 py-2 text-xs font-bold flex items-center gap-1.5"><i data-lucide="sparkles" class="h-4 w-4"></i> Trợ Lý AI &amp; Studio 3D</a>
               <a href="detail.html?id=${doc.id}" class="btn-3d btn-3d-secondary px-3 py-2 text-xs font-bold">Chi tiết</a>
             </div>
-            <button onclick="deleteDoc(${doc.id})" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="Xóa tài liệu">
+            <button onclick="deleteDoc(${doc.id}, this)" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="Xóa tài liệu">
               <i data-lucide="trash-2" class="h-4 w-4"></i>
             </button>
           </div>
         `;
+        if (DocumentUI.state(doc) === 'FAILED') {
+          const retry = document.createElement('button'); retry.className = 'feature-retry btn-3d btn-3d-secondary'; retry.textContent = 'Thử xử lý lại';
+          retry.onclick = async () => {
+            retry.disabled = true;
+            try { await ApiClient.post(`/api/documents/${doc.id}/retry`); await loadDocuments(); }
+            catch (error) { alert(DocumentUI.errorMessage(error)); }
+            finally { retry.disabled = false; }
+          };
+          card.appendChild(retry);
+        }
         grid.appendChild(card);
       });
 
       lucide.createIcons();
     }
 
-    async function deleteDoc(id) {
-      if (!confirm("Bạn có chắc chắn muốn xóa tài liệu này?")) return;
+    async function deleteDoc(id, btnElement) {
+      if (!confirm("Bạn có chắc chắn muốn xóa tài liệu này? Thao tác này không thể hoàn tác.")) return;
+      if (btnElement) btnElement.disabled = true;
       try {
         const response = await fetch("/api/documents/" + id, { method: "DELETE" });
         if (response.ok) {
           allDocs = allDocs.filter(d => d.id !== id);
           renderDocs();
+        } else {
+          const errData = await response.json().catch(() => ({}));
+          alert(ApiClient.message(response.status));
         }
       } catch (err) {
         console.error("Lỗi xóa tài liệu:", err);
+        alert("Lỗi kết nối khi xóa tài liệu.");
+      } finally {
+        if (btnElement) btnElement.disabled = false;
       }
     }
 

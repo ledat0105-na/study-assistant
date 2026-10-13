@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study AI - Chi tiết & Biên soạn Bài giảng</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style-3d.css">
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
+
+  <!-- 3D Sidebar -->
+  <aside></aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 md:p-10 overflow-y-auto relative z-10 hidden" id="mainContent">
+
+    <!-- Back Navigation -->
+    <div class="mb-6 flex items-center justify-between">
+      <a href="teacher-presentations.html" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-indigo-600 transition-colors">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i> Quay về danh sách bài giảng
+      </a>
+      <div id="headerActions" class="flex gap-3">
+        <button onclick="handleExportPptx()" id="btnExportPptx" class="btn-3d btn-3d-secondary px-4 py-2 text-xs font-extrabold flex items-center gap-2">
+          <i data-lucide="download" class="h-4 w-4 text-indigo-600"></i>
+          <span>Xuất PPTX</span>
+        </button>
+        <button onclick="openPreviewModal()" id="btnPreview" class="btn-3d btn-3d-primary px-4 py-2 text-xs font-extrabold flex items-center gap-2">
+          <i data-lucide="play" class="h-4 w-4"></i>
+          <span>Trình chiếu Preview</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Archived Read-Only Banner -->
+    <div id="archivedBanner" class="hidden mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-sm font-bold flex items-center gap-3 shadow-sm">
+      <i data-lucide="archive" class="h-5 w-5 shrink-0 text-amber-600"></i>
+      <div>
+        <span>Bài giảng này đã ở trạng thái <strong>Lưu trữ (Archived)</strong>. Tất cả tính năng chỉnh sửa và tạo mới đã bị khóa. Bạn chỉ có thể xem nội dung và xuất PPTX.</span>
+      </div>
+    </div>
+
+    <!-- Deck Info Card -->
+    <div class="glass-3d-card border border-slate-200 rounded-3xl p-6 md:p-8 mb-8 relative">
+      <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-3 mb-2">
+            <h1 id="deckTitle" class="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900">...</h1>
+            <span id="deckStatusBadge" class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md border bg-slate-100 text-slate-600 border-slate-200">DRAFT</span>
+          </div>
+          <p id="deckDescription" class="text-slate-600 text-sm font-medium mb-4 max-w-2xl">...</p>
+          <div class="flex flex-wrap gap-4 text-xs font-semibold text-slate-500">
+            <span><i data-lucide="monitor" class="h-4 w-4 inline mr-1 text-slate-400"></i> Tỷ lệ: <strong id="deckRatio">16:9</strong></span>
+            <span><i data-lucide="palette" class="h-4 w-4 inline mr-1 text-slate-400"></i> Giao diện: <strong id="deckTheme">DEFAULT</strong></span>
+            <span><i data-lucide="clock" class="h-4 w-4 inline mr-1 text-slate-400"></i> Cập nhật: <strong id="deckUpdatedAt">...</strong></span>
+            <span><i data-lucide="git-commit" class="h-4 w-4 inline mr-1 text-slate-400"></i> Phiên bản: <strong>v<span id="deckVersion">1</span></strong></span>
+          </div>
+        </div>
+        <div class="flex flex-col gap-2 shrink-0">
+          <button onclick="openMediaModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2">
+            <i data-lucide="image" class="h-4 w-4 text-indigo-600"></i>
+            <span>Thư viện ảnh</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Job Progress Bar (Global) -->
+    <div id="jobProgressContainer" class="hidden mb-8 p-6 glass-3d-card border border-indigo-200 rounded-3xl bg-indigo-50/50">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2">
+          <i data-lucide="loader-2" class="h-5 w-5 animate-spin text-indigo-600"></i>
+          <span id="jobProgressTitle" class="text-sm font-extrabold text-indigo-900">Đang thực hiện tiến trình...</span>
+        </div>
+        <span id="jobProgressText" class="text-xs font-bold text-indigo-700">0 / 0</span>
+      </div>
+      <div class="w-full bg-indigo-100 rounded-full h-2.5 overflow-hidden">
+        <div id="jobProgressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+      </div>
+      <p id="jobProgressStatus" class="text-xs text-indigo-600 font-semibold mt-2">Trạng thái: QUEUED</p>
+    </div>
+
+    <!-- Section Tabs -->
+    <div class="flex border-b border-slate-200 mb-8 gap-8 font-extrabold text-sm">
+      <button onclick="switchTab('outlines')" id="tabBtnOutlines" class="pb-3 border-b-2 border-indigo-600 text-indigo-600 flex items-center gap-2">
+        <i data-lucide="file-text" class="h-4 w-4"></i>
+        <span>1. Dàn ý AI (Outlines)</span>
+      </button>
+      <button onclick="switchTab('slides')" id="tabBtnSlides" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2">
+        <i data-lucide="presentation" class="h-4 w-4"></i>
+        <span>2. Danh sách Slide (Slides)</span>
+      </button>
+    </div>
+
+    <!-- Tab 1: Outlines -->
+    <div id="tabContentOutlines">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h3 class="text-lg font-extrabold text-slate-900">Các phiên bản dàn ý</h3>
+          <p class="text-xs text-slate-500 font-medium">Tạo dàn ý từ tài liệu bằng AI và phê duyệt phiên bản phù hợp để tiến hành tạo Slide.</p>
+        </div>
+        <button onclick="openGenerateOutlineModal()" id="btnGenOutline" class="btn-3d btn-3d-primary px-5 py-2.5 text-xs font-extrabold flex items-center gap-2">
+          <i data-lucide="sparkles" class="h-4 w-4"></i>
+          <span>Tạo Dàn Ý Mới</span>
+        </button>
+      </div>
+
+      <div id="outlinesLoading" class="text-center py-10 hidden">
+        <i data-lucide="loader-2" class="h-8 w-8 animate-spin mx-auto text-indigo-600 mb-2"></i>
+        <p class="text-xs text-slate-500 font-semibold">Đang tải dàn ý...</p>
+      </div>
+
+      <div id="outlinesEmpty" class="text-center py-12 glass-3d-card border border-slate-200 rounded-3xl hidden">
+        <i data-lucide="file-text" class="h-10 w-10 mx-auto text-slate-300 mb-2"></i>
+        <p class="text-sm font-extrabold text-slate-700">Chưa có dàn ý nào được tạo</p>
+        <p class="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-4">Nhấn nút Tạo Dàn Ý Mới để AI phân tích tài liệu và biên soạn khung bài giảng.</p>
+        <button onclick="openGenerateOutlineModal()" class="btn-3d btn-3d-secondary px-5 py-2 text-xs font-extrabold">Bắt đầu tạo dàn ý</button>
+      </div>
+
+      <div id="outlinesList" class="space-y-6">
+        <!-- Revision cards rendered here -->
+      </div>
+    </div>
+
+    <!-- Tab 2: Slides -->
+    <div id="tabContentSlides" class="hidden">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h3 class="text-lg font-extrabold text-slate-900">Danh sách các Trang Slide</h3>
+          <p class="text-xs text-slate-500 font-medium">Các slide được sinh tự động từ Dàn ý đã phê duyệt. Bạn có thể chọn mở từng slide để chỉnh sửa chi tiết.</p>
+        </div>
+        <button onclick="handleGenerateSlides()" id="btnGenSlides" class="btn-3d btn-3d-primary px-5 py-2.5 text-xs font-extrabold flex items-center gap-2">
+          <i data-lucide="wand-2" class="h-4 w-4"></i>
+          <span>Tạo Tất Cả Slide (AI)</span>
+        </button>
+      </div>
+
+      <div id="slidesLoading" class="text-center py-10 hidden">
+        <i data-lucide="loader-2" class="h-8 w-8 animate-spin mx-auto text-indigo-600 mb-2"></i>
+        <p class="text-xs text-slate-500 font-semibold">Đang tải danh sách slide...</p>
+      </div>
+
+      <div id="slidesEmpty" class="text-center py-12 glass-3d-card border border-slate-200 rounded-3xl hidden">
+        <i data-lucide="presentation" class="h-10 w-10 mx-auto text-slate-300 mb-2"></i>
+        <p class="text-sm font-extrabold text-slate-700">Chưa có slide nào được sinh ra</p>
+        <p class="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-4">Đảm bảo bạn đã **Phê duyệt (Approve)** một Dàn ý trước khi bắt đầu tạo Slide.</p>
+      </div>
+
+      <div id="slidesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Slide cards rendered here -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Generate Outline Modal -->
+  <div id="genOutlineModal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg mx-4 overflow-hidden">
+      <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <h3 class="text-lg font-extrabold text-slate-900">Tạo Dàn Ý Bài Giảng AI</h3>
+        <button onclick="closeGenerateOutlineModal()" class="text-slate-400 hover:text-slate-600 focus:outline-none">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+      <form id="genOutlineForm" onsubmit="handleGenerateOutlineSubmit(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1.5">Chủ đề bài giảng (Topic) <span class="text-red-500">*</span></label>
+          <input type="text" id="outlineTopic" required placeholder="Ví dụ: Quang hợp ở thực vật" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring focus:ring-indigo-200 font-semibold text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1.5">Yêu cầu/Chỉ dẫn bổ sung</label>
+          <textarea id="outlineInstruction" rows="3" placeholder="Ví dụ: Tập trung vào chu trình Calvin và có ví dụ thực tế..." class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring focus:ring-indigo-200 font-semibold text-sm"></textarea>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1.5">Số Slide mục tiêu</label>
+            <input type="number" id="outlineSlideCount" value="5" min="1" max="20" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-semibold text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1.5">Đối tượng</label>
+            <input type="text" id="outlineAudience" value="Học sinh THPT" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-semibold text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1.5">Ngôn ngữ</label>
+            <select id="outlineLanguage" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-semibold text-sm">
+              <option value="vi">Tiếng Việt</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+        </div>
+        <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
+          <button type="button" onclick="closeGenerateOutlineModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">Hủy</button>
+          <button type="submit" id="btnSubmitOutlineGen" class="btn-3d btn-3d-primary px-5 py-2 text-xs font-extrabold">Bắt đầu sinh dàn ý</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Preview Modal -->
+  <div id="previewModal" class="fixed inset-0 z-50 hidden bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden">
+      <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+        <div class="flex items-center gap-3">
+          <i data-lucide="play" class="h-5 w-5 text-indigo-600"></i>
+          <h3 class="text-base font-extrabold text-slate-900">Xem trước Trình chiếu Slide</h3>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="previewPageIndicator" class="text-xs font-bold text-slate-500">Slide 1 / 1</span>
+          <button onclick="closePreviewModal()" class="text-slate-400 hover:text-slate-600 focus:outline-none">
+            <i data-lucide="x" class="h-5 w-5"></i>
+          </button>
+        </div>
+      </div>
+      <div class="flex-1 bg-slate-900 p-6 flex items-center justify-center overflow-hidden relative">
+        <!-- Responsive Canvas Container (960x540 ratio) -->
+        <div id="previewCanvas" class="w-full max-w-[960px] aspect-[16/9] bg-white rounded-xl shadow-2xl relative overflow-hidden">
+          <!-- Elements injected here -->
+        </div>
+      </div>
+      <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center">
+        <button onclick="prevPreviewSlide()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 rounded-xl text-xs font-bold text-slate-700">Slide trước</button>
+        <div id="previewNotes" class="text-xs text-slate-500 italic max-w-md truncate">Ghi chú người nói...</div>
+        <button onclick="nextPreviewSlide()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold">Slide tiếp theo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="auth-interceptor.js"></script>
+  <script src="sidebar.js"></script>
+  <script src="js/ui-errors.js"></script>
+  <script src="js/api-client.js"></script>
+  <script src="js/teacher-api.js"></script>
+  <script src="js/job-poller.js"></script>
+  <script src="js/teacher-media.js"></script>
+  <script src="js/teacher-deck.js"></script>
+
+</body>
+</html>

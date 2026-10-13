@@ -41,6 +41,9 @@ public class PaymentController {
     @Autowired
     private AuditLogRepository auditLogRepository;
 
+    @Autowired
+    private com.example.studyassistant.service.QuotaService quotaService;
+
     @org.springframework.beans.factory.annotation.Value("${payment.webhook.secret}")
     private String webhookSecret;
 
@@ -197,7 +200,7 @@ public class PaymentController {
         long usedConversations = conversationRepository.countByUserIdAndIsDeletedFalse(userId);
 
         int maxNotebooks = "PRO".equalsIgnoreCase(plan) || "PREMIUM".equalsIgnoreCase(plan) ? 100 : ("STUDENT".equalsIgnoreCase(plan) || "BASIC".equalsIgnoreCase(plan) ? 20 : 5);
-        int maxDocs = "PRO".equalsIgnoreCase(plan) || "PREMIUM".equalsIgnoreCase(plan) ? 9999 : ("STUDENT".equalsIgnoreCase(plan) || "BASIC".equalsIgnoreCase(plan) ? 50 : 3);
+        int maxDocs = quotaService.getMaxDocuments(plan);
         int maxConversations = "PRO".equalsIgnoreCase(plan) || "PREMIUM".equalsIgnoreCase(plan) ? 500 : ("STUDENT".equalsIgnoreCase(plan) || "BASIC".equalsIgnoreCase(plan) ? 100 : 20);
 
         Map<String, Object> response = new HashMap<>();

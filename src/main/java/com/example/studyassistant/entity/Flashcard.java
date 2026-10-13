@@ -31,4 +31,36 @@ public class Flashcard {
     @ManyToOne
     @JoinColumn(name = "document_id", nullable = true)
     private Document document;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "concept_id", nullable = true)
+    private Concept concept;
+
+    @Column(name = "content_hash", length = 64)
+    private String contentHash;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @Convert(converter = com.example.studyassistant.util.UtcInstantAttributeConverter.class)
+    private java.time.Instant createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    @Convert(converter = com.example.studyassistant.util.UtcInstantAttributeConverter.class)
+    private java.time.Instant updatedAt;
+
+    @Column(name = "deleted_at")
+    @Convert(converter = com.example.studyassistant.util.UtcInstantAttributeConverter.class)
+    private java.time.Instant deletedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = java.time.Instant.now();
+        }
+        updatedAt = createdAt;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = java.time.Instant.now();
+    }
 }
