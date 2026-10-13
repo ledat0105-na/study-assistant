@@ -24,7 +24,14 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
+@lombok.extern.slf4j.Slf4j
 public class DocumentService {
+    @Autowired
+    private com.example.studyassistant.retrieval.service.DocumentParsingService documentParsingService;
+
+    @Autowired
+    private com.example.studyassistant.retrieval.service.DocumentIndexingService documentIndexingService;
+
     @Autowired
     private DocumentRepository documentRepository;
 
@@ -40,6 +47,9 @@ public class DocumentService {
     @Autowired
     private AiService aiService;
 
+    @Autowired
+    private QuotaService quotaService;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     // Đường dẫn lưu file nằm ngoài public webroot để đảm bảo an toàn
@@ -50,12 +60,13 @@ public class DocumentService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng"));
 
-        // 1. Kiểm tra Quota số lượng tài liệu theo plan
-        long currentCount = documentRepository.countByUserId(userId);
-        int maxDocs = getDocumentQuotaByPlan(user.getPlan());
-        if (currentCount >= maxDocs) {
-            throw new IllegalStateException("Bạn đã vượt quá số lượng tài liệu cho phép của gói " + user.getPlan() + " (" + maxDocs + " file).");
+        // 1. Validate file null/empty trước khi tính dung lượng
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng chọn file để upload");
         }
+
+        // 2. Kiểm tra Quota số lượng tài liệu & dung lượng theo plan
+        quotaService.checkStorageAndUploadQuota(userId, user.getPlan(), file.getSize());
 
         // 2. Validate Notebook thuộc sở hữu của User (nếu truyền notebookId)
         Notebook notebook = null;
@@ -118,7 +129,7 @@ public class DocumentService {
             extractionError = "Không thể trích xuất nội dung file: " + ex.getMessage();
         }
 
-        // 7. Tạo bản ghi Document với status UPLOADING -> READY
+        // Parsing success starts PROCESSING; indexing activates the version before READY.
         Document document = new Document();
         document.setUser(user);
         document.setNotebook(notebook);
@@ -134,16 +145,50 @@ public class DocumentService {
             document.setStatus("FAILED");
             document.setErrorMessage(extractionError);
         } else {
-            document.setStatus("READY");
+            document.setStatus("PROCESSING");
         }
         document.setRetryCount(0);
         document.setCreatedAt(LocalDateTime.now());
 
         Document savedDoc = documentServiceSave(document);
 
-        generateKnowledgeMapTopics(savedDoc);
+        // Index every parsed document, including uploads without a notebook.
+        if ("PROCESSING".equals(savedDoc.getStatus())) {
+            try {
+                documentIndexingService.indexDocument(savedDoc.getId());
+            } catch (Exception e) {
+                // DocumentIndexingService handles setting status to FAILED and logging
+            }
+            savedDoc = documentRepository.findById(savedDoc.getId()).orElse(savedDoc);
+        }
 
         return savedDoc;
+    }
+
+    // DOC-08: Gán/Cập nhật Notebook cho tài liệu và thực hiện RAG Indexing
+    public Document assignNotebook(Long userId, Long documentId, Long notebookId) {
+        Document doc = documentRepository.findByIdAndUserId(documentId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("Tài liệu không tồn tại hoặc bạn không có quyền truy cập"));
+
+        Notebook notebook = notebookRepository.findByIdAndUserIdAndIsDeletedFalse(notebookId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("Notebook không tồn tại hoặc bạn không có quyền truy cập"));
+
+        if (!doc.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("Tài liệu không thuộc về người dùng này");
+        }
+
+        doc.setNotebook(notebook);
+        Document saved = documentRepository.save(doc);
+
+        if (saved.getFilePath() != null && Files.exists(Paths.get(saved.getFilePath()))) {
+            try {
+                documentIndexingService.indexDocument(saved.getId());
+            } catch (Exception e) {
+                // DocumentIndexingService sets FAILED status on error
+            }
+        }
+
+        return documentRepository.findById(saved.getId()).orElse(saved);
     }
 
     private Document documentServiceSave(Document doc) {
@@ -171,6 +216,7 @@ public class DocumentService {
         Map<String, Object> response = new HashMap<>();
         response.put("id", doc.getId());
         response.put("status", doc.getStatus());
+        response.put("activeIndexVersion", doc.getActiveIndexVersion());
         response.put("retryCount", doc.getRetryCount());
         response.put("errorMessage", doc.getErrorMessage() != null ? doc.getErrorMessage() : "");
         return response;
@@ -197,11 +243,11 @@ public class DocumentService {
             Path path = Paths.get(doc.getFilePath());
             String text = extractText(path, doc.getFileType());
             doc.setExtractedText(text);
-            doc.setStatus("READY");
-            Document saved = documentRepository.save(doc);
-            topicRepository.deleteAll(topicRepository.findByDocumentId(saved.getId()));
-            generateKnowledgeMapTopics(saved);
-            return saved;
+            documentRepository.save(doc);
+            try {
+                documentIndexingService.indexDocument(doc.getId());
+            } catch (Exception e) {}
+            return documentRepository.findById(doc.getId()).orElse(doc);
         } catch (Exception ex) {
             doc.setStatus("FAILED");
             doc.setErrorMessage("Không thể trích xuất nội dung file: " + ex.getMessage());
@@ -210,21 +256,49 @@ public class DocumentService {
         return documentRepository.save(doc);
     }
 
-    // DOC-05: Xóa tài liệu (Check owner, xóa file vật lý, cascade DB)
+    // Keep referenced learning history; hide the document and release its active index.
+    @org.springframework.transaction.annotation.Transactional
     public void deleteDocument(Long userId, Long documentId) {
         Document doc = documentRepository.findByIdAndUserId(documentId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("Tài liệu không tồn tại hoặc bạn không có quyền xóa"));
 
-        // Xóa file vật lý khỏi đĩa
-        if (doc.getFilePath() != null) {
-            try {
-                Path path = Paths.get(doc.getFilePath());
-                Files.deleteIfExists(path);
-            } catch (IOException ignored) {}
-        }
+        doc = documentRepository.findByIdWithPessimisticLock(documentId)
+                .filter(locked -> locked.getUser().getId().equals(userId))
+                .orElseThrow(() -> new IllegalArgumentException("Tài liệu không tồn tại hoặc bạn không có quyền xóa"));
+        String filePath = doc.getFilePath();
+        String activeIndexVersion = doc.getActiveIndexVersion();
+        doc.setStatus("DELETED");
+        doc.setActiveIndexVersion(null);
+        doc.setErrorMessage(null);
+        documentRepository.saveAndFlush(doc);
 
-        // JPA Cascading sẽ tự động xóa các Topics / Flashcards / Quizzes liên quan
-        documentRepository.delete(doc);
+        // External cleanup must not run if the database transaction rolls back.
+        Runnable cleanup = () -> cleanupDeletedDocument(documentId, activeIndexVersion, filePath);
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
+            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                    new org.springframework.transaction.support.TransactionSynchronization() {
+                        @Override public void afterCommit() { cleanup.run(); }
+                    });
+        } else {
+            cleanup.run();
+        }
+    }
+
+    private void cleanupDeletedDocument(Long documentId, String activeIndexVersion, String filePath) {
+        if (activeIndexVersion != null && !activeIndexVersion.isBlank()) {
+            try {
+                documentIndexingService.cleanupVersion(documentId, activeIndexVersion);
+            } catch (Exception e) {
+                log.warn("Vector cleanup failed for deleted document {}", documentId, e);
+            }
+        }
+        if (filePath != null && !filePath.isBlank()) {
+            try {
+                Files.deleteIfExists(Paths.get(filePath));
+            } catch (Exception e) {
+                log.warn("File cleanup failed for deleted document {}", documentId, e);
+            }
+        }
     }
 
     // DOC-06: Mở file PDF Viewer (Chỉ cho phép Owner tải/đọc file)
@@ -257,138 +331,14 @@ public class DocumentService {
 
     private String extractText(Path filePath, String format) throws IOException {
         String text;
-        switch (format) {
-            case "PDF": {
-                try (org.apache.pdfbox.pdmodel.PDDocument pdf = org.apache.pdfbox.Loader.loadPDF(filePath.toFile())) {
-                    org.apache.pdfbox.text.PDFTextStripper stripper = new org.apache.pdfbox.text.PDFTextStripper();
-                    StringBuilder sb = new StringBuilder();
-                    int totalPages = pdf.getNumberOfPages();
-                    for (int page = 1; page <= totalPages; page++) {
-                        stripper.setStartPage(page);
-                        stripper.setEndPage(page);
-                        sb.append("[Trang ").append(page).append("]\n")
-                                .append(stripper.getText(pdf)).append("\n");
-                    }
-                    text = sb.toString();
-                }
-                break;
-            }
-            case "DOCX": {
-                try (java.io.InputStream is = Files.newInputStream(filePath);
-                     org.apache.poi.xwpf.usermodel.XWPFDocument docx = new org.apache.poi.xwpf.usermodel.XWPFDocument(is);
-                     org.apache.poi.xwpf.extractor.XWPFWordExtractor extractor = new org.apache.poi.xwpf.extractor.XWPFWordExtractor(docx)) {
-                    text = extractor.getText();
-                }
-                break;
-            }
-            case "PPTX": {
-                try (java.io.InputStream is = Files.newInputStream(filePath);
-                     org.apache.poi.xslf.usermodel.XMLSlideShow ppt = new org.apache.poi.xslf.usermodel.XMLSlideShow(is)) {
-                    StringBuilder sb = new StringBuilder();
-                    int slideNo = 1;
-                    for (org.apache.poi.xslf.usermodel.XSLFSlide slide : ppt.getSlides()) {
-                        sb.append("[Slide ").append(slideNo++).append("]\n");
-                        for (org.apache.poi.sl.usermodel.Shape<?, ?> shape : slide.getShapes()) {
-                            if (shape instanceof org.apache.poi.xslf.usermodel.XSLFTextShape textShape) {
-                                sb.append(textShape.getText()).append("\n");
-                            }
-                        }
-                    }
-                    text = sb.toString();
-                }
-                break;
-            }
-            default:
-                throw new IOException("Định dạng không hỗ trợ trích xuất: " + format);
-        }
+        com.example.studyassistant.retrieval.model.ParsedDocument parsed = documentParsingService.parse(filePath, format);
+        text = parsed.toBackwardCompatibleRawText();
         if (text == null) text = "";
         if (text.length() > MAX_EXTRACTED_CHARS) text = text.substring(0, MAX_EXTRACTED_CHARS);
         return text;
     }
 
-    private int getDocumentQuotaByPlan(String plan) {
-        if ("PREMIUM".equalsIgnoreCase(plan)) return 200;
-        if ("BASIC".equalsIgnoreCase(plan)) return 50;
-        return 10; // Gói FREE tối đa 10 tài liệu
-    }
-
-    private void generateKnowledgeMapTopics(Document doc) {
-        String text = doc.getExtractedText();
-        if (text == null || text.isBlank() || !aiService.hasApiKey()) {
-            seedFallbackTopic(doc, "Chưa thể tạo sơ đồ tư duy tự động (thiếu nội dung trích xuất hoặc chưa cấu hình OpenAI API Key). Bạn vẫn có thể đọc trực tiếp tài liệu.");
-            return;
-        }
-
-        String snippet = text.length() > 30000 ? text.substring(0, 30000) : text;
-        String prompt = "Đọc kỹ nội dung tài liệu học tập dưới đây (đã đánh dấu ranh giới trang bằng [Trang N] hoặc [Slide N]) " +
-                "và trả về CHỈ MỘT đối tượng JSON (không thêm chữ nào khác, không dùng markdown ```), có dạng:\n" +
-                "{\"topics\": [{\"name\": \"Tên chương\", \"pageStart\": 1, \"pageEnd\": 5, \"description\": \"Tóm tắt nội dung chương này (2-3 câu)\", " +
-                "\"children\": [{\"name\": \"Tên mục con\", \"pageStart\": 1, \"pageEnd\": 2, \"description\": \"Tóm tắt mục này (1-2 câu)\", " +
-                "\"children\": [{\"name\": \"Một ý/khái niệm/thuật ngữ cụ thể trong mục này\", \"pageStart\": 1, \"pageEnd\": 1, \"description\": \"Giải thích ngắn 1 câu\", \"children\": []}]}]}]}\n\n" +
-                "YÊU CẦU BẮT BUỘC để sơ đồ dễ hiểu (giống sơ đồ tư duy NotebookLM):\n" +
-                "- Dùng ĐÚNG tên chương/mục thật có trong tài liệu, không tự bịa, không dịch sang ngôn ngữ khác.\n" +
-                "- Cấu trúc tối đa 3 CẤP: chương (cấp 1) -> mục con (cấp 2) -> ý/khái niệm/thuật ngữ cụ thể (cấp 3, node lá).\n" +
-                "- SỐ LƯỢNG NHÁNH Ở MỖI CẤP PHẢI DỰA THEO ĐỘ PHONG PHÚ THỰC TẾ CỦA TÀI LIỆU, không theo con số cố định: phần nào tài liệu trình bày nhiều khái niệm/ví dụ/định nghĩa thì tách nhiều nhánh con để người đọc dễ nắm ý; phần nào tài liệu chỉ nói sơ qua thì để ít nhánh hoặc không cần tách cấp 3. TUYỆT ĐỐI không thêm nhánh giả/lặp ý chỉ để cho đủ số lượng.\n" +
-                "- Ưu tiên mục tiêu: người xem sơ đồ nắm được các khái niệm/thuật ngữ quan trọng thực sự có trong tài liệu, không bỏ sót ý chính nhưng cũng không vụn vặt hoá những chi tiết không quan trọng.\n" +
-                "- Tối đa 10 chương chính. Tên node ngắn gọn (dưới 8 từ) nhưng phải cụ thể, không chung chung kiểu \"Nội dung chính\", \"Tổng quan\".\n" +
-                "- pageStart/pageEnd lấy đúng từ nhãn [Trang N]/[Slide N] bao quanh nội dung đó trong tài liệu.\n\n" +
-                "TÀI LIỆU:\n" + snippet;
-
-        try {
-            String raw = aiService.callOpenAI(prompt, true);
-            String json = extractJsonObject(raw);
-            JsonNode root = objectMapper.readTree(json);
-            JsonNode topicsNode = root.get("topics");
-            if (topicsNode == null || !topicsNode.isArray() || topicsNode.isEmpty()) {
-                seedFallbackTopic(doc, "AI không trích xuất được cấu trúc chương rõ ràng từ tài liệu này.");
-                return;
-            }
-            int order = 1;
-            for (JsonNode node : topicsNode) {
-                saveTopicNode(node, doc, null, order++);
-            }
-        } catch (Exception e) {
-            seedFallbackTopic(doc, "Không thể tự động tạo sơ đồ tư duy: " + e.getMessage());
-        }
-    }
-
-    private void saveTopicNode(JsonNode node, Document doc, Topic parent, int order) {
-        Topic topic = new Topic();
-        topic.setName(node.hasNonNull("name") ? node.get("name").asText() : "Chủ đề");
-        topic.setDescription(node.hasNonNull("description") ? node.get("description").asText() : null);
-        topic.setPageStart(node.hasNonNull("pageStart") ? node.get("pageStart").asInt() : 1);
-        topic.setPageEnd(node.hasNonNull("pageEnd") ? node.get("pageEnd").asInt() : topic.getPageStart());
-        topic.setSortOrder(order);
-        topic.setDocument(doc);
-        topic.setParent(parent);
-        Topic saved = topicRepository.save(topic);
-
-        JsonNode children = node.get("children");
-        if (children != null && children.isArray()) {
-            int childOrder = 1;
-            for (JsonNode child : children) {
-                saveTopicNode(child, doc, saved, childOrder++);
-            }
-        }
-    }
-
-    private void seedFallbackTopic(Document doc, String reason) {
-        Topic topic = new Topic();
-        topic.setName(doc.getFileName());
-        topic.setDescription(reason);
-        topic.setPageStart(1);
-        topic.setPageEnd(doc.getTotalPages() != null ? doc.getTotalPages() : 1);
-        topic.setSortOrder(1);
-        topic.setDocument(doc);
-        topicRepository.save(topic);
-    }
-
-    private String extractJsonObject(String raw) {
-        int start = raw.indexOf('{');
-        int end = raw.lastIndexOf('}');
-        if (start == -1 || end == -1 || end < start) {
-            throw new IllegalStateException("Phản hồi của AI không chứa JSON hợp lệ");
-        }
-        return raw.substring(start, end + 1);
+    public int getDocumentQuotaByPlan(String plan) {
+        return quotaService.getMaxDocuments(plan);
     }
 }

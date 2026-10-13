@@ -187,4 +187,24 @@ public class DocumentController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
         }
     }
+
+    // DOC-08: Gán Notebook vào tài liệu và kích hoạt RAG Indexing
+    @PostMapping("/{id}/notebook")
+    public ResponseEntity<?> assignNotebook(
+            @PathVariable Long id,
+            @RequestParam("notebookId") Long notebookId,
+            HttpServletRequest request) {
+
+        Long userId = getCurrentUserId(request);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
+        }
+
+        try {
+            Document doc = documentService.assignNotebook(userId, id, notebookId);
+            return ResponseEntity.ok(doc);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }

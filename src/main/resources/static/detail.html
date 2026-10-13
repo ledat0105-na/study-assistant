@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="css/style-3d.css">
+  <link rel="stylesheet" href="css/feature-ui.css">
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
 
@@ -74,6 +75,9 @@
   </main>
 
   <script src="auth-interceptor.js"></script>
+  <script src="js/api-client.js"></script>
+  <script src="js/document-ui.js"></script>
+  <script src="js/document-features.js"></script>
   <script src="sidebar.js"></script>
   <script>
     renderUnifiedSidebar("documents");
@@ -87,44 +91,25 @@
 
     async function loadDetails() {
       try {
-        const response = await fetch(`/api/documents/${docId}`);
-        if (response.ok) {
-          const doc = await response.json();
-          document.getElementById("docTitle").textContent = doc.title || "Tài liệu học tập";
-          document.getElementById("docFormat").textContent = doc.format || "PDF";
-          document.getElementById("docDate").textContent = doc.uploadDate || "2026-08-22";
-          document.getElementById("docSize").textContent = doc.size || "2.4 MB";
-          document.getElementById("docPages").textContent = (doc.pages || 12) + " trang";
-          document.getElementById("docSummary").textContent = doc.summary || "Tài liệu này bao gồm các chủ đề cốt lõi về trí tuệ nhân tạo và học máy.";
+        const doc = await ApiClient.get(`/api/documents/${encodeURIComponent(docId)}`);
+        document.getElementById('docTitle').textContent = doc.title || doc.originalName || doc.fileName || 'Tài liệu';
+        document.getElementById('docFormat').textContent = doc.format || doc.fileType || '—';
+        document.getElementById('docDate').textContent = doc.uploadDate || doc.createdAt || '—';
+        document.getElementById('docSize').textContent = doc.size || (doc.fileSize ? (doc.fileSize / 1048576).toFixed(2) + ' MB' : '—');
+        document.getElementById('docPages').textContent = (doc.pages || doc.totalPages || '—') + ' trang';
+        const container = document.getElementById('topicsContainer'); container.replaceChildren();
+        if (!DocumentUI.ready(doc)) {
+          document.getElementById('docSummary').textContent = DocumentUI.message(doc); return;
         }
-
-        const resTopics = await fetch(`/api/topics/document/${docId}`);
-        if (resTopics.ok) {
-          const topics = await resTopics.json();
-          const container = document.getElementById("topicsContainer");
-          container.innerHTML = "";
-          if (topics && topics.length > 0) {
-            topics.forEach(t => {
-              const span = document.createElement("span");
-              span.className = "badge-3d badge-3d-indigo text-xs py-1.5 px-3.5";
-              span.textContent = t.label;
-              container.appendChild(span);
-              if (t.children) {
-                t.children.forEach(c => {
-                  const cSpan = document.createElement("span");
-                  cSpan.className = "badge-3d badge-3d-emerald text-xs py-1.5 px-3.5";
-                  cSpan.textContent = c.label;
-                  container.appendChild(cSpan);
-                });
-              }
-            });
-          } else {
-            container.innerHTML = `<span class="text-slate-500 text-xs font-semibold">Chưa có chủ đề nào được trích xuất.</span>`;
-          }
+        const summary = await ApiClient.get(`/api/documents/${docId}/summary`);
+        document.getElementById('docSummary').textContent = summary.summary || 'Mở Studio AI để tạo bản tóm tắt có nguồn.';
+        const graph = await ApiClient.get(`/api/documents/${docId}/mind-map`);
+        for (const node of graph.nodes || []) {
+          const span = document.createElement('span'); span.className = 'badge-3d badge-3d-indigo';
+          span.textContent = node.name || node.canonicalName; container.appendChild(span);
         }
-      } catch (err) {
-        console.error("Lỗi nạp chi tiết tài liệu", err);
-      }
+        if (!container.children.length) container.textContent = 'Mở Studio AI để tạo sơ đồ tư duy.';
+      } catch (error) { DocumentUI.notice(document.getElementById('docSummary'), DocumentUI.errorMessage(error), loadDetails); }
     }
 
     loadDetails();

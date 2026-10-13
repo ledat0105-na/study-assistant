@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study AI - Trình biên soạn Slide</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style-3d.css">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col relative overflow-hidden">
+
+  <!-- Top Bar -->
+  <header class="h-16 bg-slate-800 border-b border-slate-700/80 px-6 flex items-center justify-between z-30 shrink-0">
+    <div class="flex items-center gap-4">
+      <a id="btnBackToDeck" href="#" class="inline-flex items-center gap-2 text-xs font-extrabold text-slate-400 hover:text-white transition-colors">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i> Quay về Bài giảng
+      </a>
+      <div class="h-4 w-px bg-slate-700"></div>
+      <div>
+        <h1 id="editorSlideTitle" class="text-sm font-extrabold text-white truncate max-w-xs md:max-w-md">Slide Editor</h1>
+        <p class="text-[10px] text-slate-400 font-semibold" id="editorSlideMeta">Dung lượng Canvas: 960x540 • Slide v1</p>
+      </div>
+    </div>
+
+    <!-- Archived Banner Notice -->
+    <div id="editorArchivedNotice" class="hidden text-xs font-bold text-amber-400 bg-amber-950/80 border border-amber-800 px-3 py-1 rounded-lg flex items-center gap-2">
+      <i data-lucide="archive" class="h-4 w-4"></i> Chế độ chỉ đọc (Archived)
+    </div>
+
+    <div class="flex items-center gap-3" id="topBarActions">
+      <button onclick="handleSaveSlideMeta()" id="btnSaveMeta" class="btn-3d btn-3d-secondary px-4 py-2 text-xs font-extrabold flex items-center gap-1.5">
+        <i data-lucide="save" class="h-4 w-4 text-indigo-400"></i>
+        <span>Lưu Tiêu Đề & Ghi Chú</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <div class="flex-1 flex overflow-hidden">
+
+    <!-- Left Toolbar (Add Elements) -->
+    <aside class="w-16 bg-slate-800 border-r border-slate-700/80 flex flex-col items-center py-4 gap-4 z-20 shrink-0">
+      <button onclick="handleAddElement('TEXT')" id="btnAddText" title="Thêm Văn Bản (TEXT)" class="p-3 bg-slate-700/60 hover:bg-indigo-600 text-slate-300 hover:text-white rounded-2xl transition-all shadow-md">
+        <i data-lucide="type" class="h-5 w-5"></i>
+      </button>
+      <button onclick="handleAddElement('SHAPE')" id="btnAddShape" title="Thêm Hình Khối (SHAPE)" class="p-3 bg-slate-700/60 hover:bg-indigo-600 text-slate-300 hover:text-white rounded-2xl transition-all shadow-md">
+        <i data-lucide="square" class="h-5 w-5"></i>
+      </button>
+      <button onclick="handleAddElement('IMAGE')" id="btnAddImage" title="Thêm Hình Ảnh (IMAGE)" class="p-3 bg-slate-700/60 hover:bg-indigo-600 text-slate-300 hover:text-white rounded-2xl transition-all shadow-md">
+        <i data-lucide="image" class="h-5 w-5"></i>
+      </button>
+    </aside>
+
+    <!-- Center Canvas Area -->
+    <main class="flex-1 bg-slate-950 p-6 flex flex-col items-center justify-center overflow-auto relative">
+      <div id="canvasContainer" class="w-full max-w-[960px] aspect-[16/9] bg-white rounded-2xl shadow-2xl relative overflow-hidden border border-slate-700">
+        <!-- Slide elements rendered dynamically here -->
+      </div>
+    </main>
+
+    <!-- Right Sidebar (Properties Panel) -->
+    <aside class="w-80 bg-slate-800 border-l border-slate-700/80 p-5 flex flex-col overflow-y-auto z-20 shrink-0 text-slate-200">
+      
+      <!-- Slide Meta Section -->
+      <div class="mb-6 pb-5 border-b border-slate-700/80">
+        <h3 class="text-xs font-extrabold uppercase tracking-wider text-indigo-400 mb-3">Thông tin Slide</h3>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-400 mb-1">Tiêu đề Trang Slide</label>
+            <input type="text" id="inputSlideTitle" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:border-indigo-500 font-semibold">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-400 mb-1">Ghi chú người nói (Speaker Notes)</label>
+            <textarea id="inputSpeakerNotes" rows="3" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:border-indigo-500 font-semibold"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selected Element Inspector Section -->
+      <div class="flex-1">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="text-xs font-extrabold uppercase tracking-wider text-indigo-400">Thuộc tính phần tử</h3>
+          <button onclick="handleDeleteElement()" id="btnDeleteElem" class="text-rose-400 hover:text-rose-300 text-xs font-bold hidden flex items-center gap-1">
+            <i data-lucide="trash-2" class="h-3.5 w-3.5"></i> Xóa
+          </button>
+        </div>
+
+        <div id="noElementSelected" class="text-center py-10 text-slate-500">
+          <i data-lucide="mouse-pointer" class="h-8 w-8 mx-auto mb-2 opacity-50"></i>
+          <p class="text-xs font-semibold">Nhấp chọn một phần tử trên Slide để chỉnh sửa vị trí và thuộc tính.</p>
+        </div>
+
+        <div id="elementForm" class="hidden space-y-4 text-xs">
+          <!-- Type Badge -->
+          <div class="flex justify-between items-center bg-slate-900/60 p-2.5 rounded-xl border border-slate-700">
+            <span class="font-extrabold text-slate-400">Loại:</span>
+            <span id="inspectorType" class="font-extrabold text-indigo-400 uppercase">TEXT</span>
+          </div>
+
+          <!-- Geometry Fields (x, y, w, h, rotation, zIndex) -->
+          <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-700/60 space-y-2">
+            <span class="font-bold text-[11px] text-slate-400">Tọa độ & Kích thước (960x540):</span>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[10px] text-slate-400">X (px)</label>
+                <input type="number" id="elemX" step="1" class="w-full px-2 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white">
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-400">Y (px)</label>
+                <input type="number" id="elemY" step="1" class="w-full px-2 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white">
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-400">Rộng (Width)</label>
+                <input type="number" id="elemW" step="1" class="w-full px-2 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white">
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-400">Cao (Height)</label>
+                <input type="number" id="elemH" step="1" class="w-full px-2 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white">
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-400">Góc xoay (°)</label>
+                <input type="number" id="elemRotation" step="1" class="w-full px-2 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white">
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-400">Thứ tự lớp (zIndex)</label>
+                <input type="number" id="elemZIndex" step="1" class="w-full px-2 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white">
+              </div>
+            </div>
+          </div>
+
+          <!-- TEXT specific fields -->
+          <div id="fieldsText" class="space-y-3 hidden">
+            <div>
+              <label class="block font-bold text-slate-400 mb-1">Nội dung văn bản</label>
+              <textarea id="textPayloadContent" rows="3" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-medium"></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">Cỡ chữ (pt)</label>
+                <input type="number" id="textFontSize" value="24" min="8" max="144" class="w-full px-2 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white">
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">Màu chữ (Hex)</label>
+                <input type="color" id="textColor" value="#1e293b" class="w-full h-8 bg-slate-900 border border-slate-700 rounded-lg cursor-pointer">
+              </div>
+            </div>
+            <div class="flex gap-4 pt-1">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="textBold" class="rounded border-slate-700 text-indigo-600 focus:ring-0">
+                <span class="font-bold">In đậm</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="textItalic" class="rounded border-slate-700 text-indigo-600 focus:ring-0">
+                <span class="font-bold">In nghiêng</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- SHAPE specific fields -->
+          <div id="fieldsShape" class="space-y-3 hidden">
+            <div>
+              <label class="block font-bold text-slate-400 mb-1">Dạng hình khối (Primitive)</label>
+              <select id="shapePrimitive" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-semibold">
+                <option value="RECTANGLE">Hình chữ nhật (RECTANGLE)</option>
+                <option value="CIRCLE">Hình tròn (CIRCLE)</option>
+                <option value="TRIANGLE">Hình tam giác (TRIANGLE)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-400 mb-1">Chữ bên trong khối</label>
+              <input type="text" id="shapeText" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">Màu nền (Fill)</label>
+                <input type="color" id="shapeFillColor" value="#e0e7ff" class="w-full h-8 bg-slate-900 border border-slate-700 rounded-lg cursor-pointer">
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">Màu viền (Stroke)</label>
+                <input type="color" id="shapeStrokeColor" value="#6366f1" class="w-full h-8 bg-slate-900 border border-slate-700 rounded-lg cursor-pointer">
+              </div>
+            </div>
+          </div>
+
+          <!-- IMAGE specific fields -->
+          <div id="fieldsImage" class="space-y-3 hidden">
+            <div>
+              <label class="block font-bold text-slate-400 mb-1">Hình ảnh gắn kèm</label>
+              <div id="imageAssetInfo" class="p-3 bg-slate-900 border border-slate-700 rounded-xl text-slate-300 flex items-center justify-between">
+                <span id="imageAssetFilename" class="truncate font-semibold text-[11px]">Chưa chọn ảnh</span>
+                <button type="button" onclick="openMediaPickerForImage()" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-[10px]">Đổi ảnh</button>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" onclick="handleUpdateElement()" id="btnSaveElem" class="w-full btn-3d btn-3d-primary py-2.5 text-xs font-extrabold mt-4">
+            Cập nhật phần tử
+          </button>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+  <!-- Scripts -->
+  <script src="auth-interceptor.js"></script>
+  <script src="sidebar.js"></script>
+  <script src="js/ui-errors.js"></script>
+  <script src="js/api-client.js"></script>
+  <script src="js/teacher-api.js"></script>
+  <script src="js/teacher-media.js"></script>
+  <script src="js/teacher-slide-editor.js"></script>
+
+</body>
+</html>

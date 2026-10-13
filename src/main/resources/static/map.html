@@ -7,6 +7,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="css/style-3d.css">
+  <link rel="stylesheet" href="css/feature-ui.css">
+  <link rel="stylesheet" href="css/mind-map-renderer.css">
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
 
@@ -24,7 +26,7 @@
           <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">
             Sơ Đồ Tư Duy Kiến Thức 3D
           </h1>
-          <p class="text-xs text-slate-600 mt-1 font-semibold">Bấm vào nút chủ đề để chuyển tới trang PDF tương ứng trong thời gian thực</p>
+          <p class="text-xs text-slate-600 mt-1 font-semibold">Chọn khái niệm, mở hoặc thu nhánh để khám phá tài liệu.</p>
         </div>
       </div>
     </div>
@@ -32,27 +34,15 @@
     <div class="flex-1 flex flex-col gap-6 min-h-[580px]">
       <!-- Mind Map Canvas: sơ đồ phân nhánh thật (đường cong SVG), có zoom/pan,
            màu theo cấp độ, nút mở/thu từng nhánh -->
-      <div class="glass-3d-card p-4 md:p-6 flex flex-col" style="height: 560px;">
+      <div class="glass-3d-card p-4 md:p-6 flex flex-col" style="min-height: 560px;">
         <div class="flex items-center justify-between mb-3 border-b border-slate-200 pb-3 flex-shrink-0">
           <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
             <i data-lucide="network" class="h-4 w-4 text-indigo-600"></i> Sơ Đồ Tư Duy
           </h3>
-          <div class="flex items-center gap-2">
-            <button onclick="mapZoom(-0.1)" class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600" title="Thu nhỏ"><i data-lucide="zoom-out" class="h-3.5 w-3.5"></i></button>
-            <span id="zoomLabel" class="text-[11px] font-mono font-bold text-indigo-700 w-10 text-center">100%</span>
-            <button onclick="mapZoom(0.1)" class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600" title="Phóng to"><i data-lucide="zoom-in" class="h-3.5 w-3.5"></i></button>
-            <button onclick="fitMapToScreen()" class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600" title="Vừa màn hình"><i data-lucide="maximize" class="h-3.5 w-3.5"></i></button>
-            <button onclick="expandAllNodes()" class="text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600">Mở hết</button>
-            <button onclick="collapseAllNodes()" class="text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600">Thu hết</button>
-          </div>
+
         </div>
 
-        <div id="mapViewport" class="flex-1 relative overflow-hidden rounded-2xl bg-slate-50 border border-slate-200 cursor-grab active:cursor-grabbing">
-          <div id="mapCanvas" class="absolute top-0 left-0 origin-top-left" style="transform-origin: 0 0;">
-            <svg id="mapSvg" class="absolute top-0 left-0 pointer-events-none" style="overflow: visible;"></svg>
-            <div id="mapNodes" class="relative"></div>
-          </div>
-        </div>
+        <div id="mapNodes" class="flex-1 min-h-0 overflow-y-auto"></div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -86,284 +76,48 @@
   </main>
 
   <script src="auth-interceptor.js"></script>
+  <script src="js/api-client.js"></script>
+  <script src="js/document-ui.js"></script>
+  <script src="js/document-features.js"></script>
   <script src="sidebar.js"></script>
+  <script src="js/document-mind-map.js"></script>
+  <script src="js/mind-map-renderer.js"></script>
+  <script src="citations.js"></script>
   <script>
     renderUnifiedSidebar("map");
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const docId = urlParams.get("id") || "1";
-
-    let topics = [];
-    let selectedTopic = null;
-    let expanded = {};
-    let rootTitle = "Tài liệu";
-
-    // Cấu hình layout sơ đồ
-    const NODE_H_GAP = 64;   // khoảng cách dọc giữa 2 node lá liền kề
-    const LEVEL_W = 260;     // khoảng cách ngang giữa các cấp
-    const NODE_HEIGHT = 46;
-    const CHAR_WIDTH = 8;    // ước lượng bề rộng mỗi ký tự để tính width node
-    const NODE_PAD = 56;
-
-    const DEPTH_STYLES = [
-      { bg: "#c7d2fe", border: "#818cf8", text: "#1e1b4b" },  // root - indigo
-      { bg: "#bae6fd", border: "#38bdf8", text: "#0c4a6e" },  // depth1 - sky
-      { bg: "#a7f3d0", border: "#34d399", text: "#064e3b" },  // depth2 - emerald
-      { bg: "#99f6e4", border: "#2dd4bf", text: "#134e4a" },  // depth3+ - teal
-    ];
-
-    async function loadTopics() {
+    const docId = new URLSearchParams(location.search).get("id");
+    const box = document.getElementById("mapNodes");
+    document.getElementById("backBtn").href = `viewer.html?id=${encodeURIComponent(docId || '')}`;
+    let loading = false, pollTimer;
+    async function loadTopics(retry = false) {
+      if (loading) return; loading = true;
+      DocumentUI.setBusy(box, true); DocumentUI.notice(box, "Đang nạp sơ đồ tư duy...");
       try {
-        const docRes = await fetch(`/api/documents/${docId}`, { credentials: "same-origin" });
-        if (docRes.ok) {
-          const doc = await docRes.json();
-          rootTitle = doc.title || doc.fileName || "Tài liệu";
+        if (!/^\d+$/.test(docId || '')) throw Object.assign(new Error(), { status: 404 });
+        const doc = await ApiClient.get(`/api/documents/${docId}`);
+        if (!DocumentUI.ready(doc)) {
+          DocumentUI.notice(box, DocumentUI.message(doc), () => loadTopics());
+          if (DocumentUI.state(doc) === 'PROCESSING') pollTimer = setTimeout(() => loadTopics(), 3000);
+          return;
         }
-      } catch (e) {
-        console.error("Không lấy được tên tài liệu:", e);
-      }
-
-      try {
-        const response = await fetch(`/api/topics/document/${docId}`);
-        if (response.ok) {
-          topics = await response.json();
-          if (topics.length > 0) {
-            expanded["root"] = true;
-            topics.forEach(t => { expanded[t.id] = true; });
-            selectedTopic = topics[0];
-            renderMindMap();
-            updateActiveTopicDisplay();
-            setTimeout(fitMapToScreen, 50);
-          }
-        }
-      } catch (err) {
-        console.error("Lỗi nạp danh sách chủ đề:", err);
-      }
+        const graph = await DocumentMindMap.load(doc, retry);
+        if (!graph.nodes.length) { DocumentUI.notice(box, "Chưa có khái niệm có bằng chứng.", () => loadTopics(true)); return; }
+        MindMapRenderer.render(box, graph, undefined, 0, { onRegenerate: () => loadTopics(true), onSelect: node => {
+          document.getElementById("activeLabel").textContent = node.name || node.canonicalName;
+          document.getElementById("activeDesc").textContent = node.description || "Chưa có mô tả.";
+          const source = node.sources?.[0];
+          const location = citationLocation(source || { documentId: docId }, docId) || citationLocation({ documentId: docId }, docId);
+          document.getElementById("pageReaderLabel").textContent = source?.pageStart ? `Trang ${source.pageStart}` : "Trình đọc tài liệu — chưa có vị trí trang";
+          document.getElementById("openFullReaderLink").href = location.href;
+          const reader = document.getElementById("readerFrame");
+          const next = location.href + '&embedded=1'; if (reader.getAttribute('src') !== next) reader.src = next;
+        } });
+        DocumentMindMap.showStatus(box, graph);
+      } catch (error) { DocumentUI.notice(box, DocumentUI.errorMessage(error), () => loadTopics(true)); }
+      finally { loading = false; DocumentUI.setBusy(box, false); }
     }
-
-    function nodeWidth(label) {
-      return Math.max(140, Math.min(280, label.length * CHAR_WIDTH + NODE_PAD));
-    }
-
-    // Thuật toán layout cây kinh điển: node lá xếp dọc cách đều nhau, node cha
-    // đặt ở vị trí trung bình (y) của các con -> ra hình toả nhánh cân đối
-    // giống NotebookLM.
-    function layoutTree(rootNodes) {
-      const yCounter = { value: 0 };
-      let maxDepth = 0;
-
-      function visit(node, depth) {
-        node.depth = depth;
-        node.x = depth * LEVEL_W;
-        node.width = nodeWidth(node.label);
-        maxDepth = Math.max(maxDepth, depth);
-        const isOpen = expanded[node.id] !== false;
-        const kids = (isOpen && node.children && node.children.length > 0) ? node.children : null;
-
-        if (!kids) {
-          node.y = yCounter.value * NODE_H_GAP;
-          yCounter.value += 1;
-        } else {
-          const startIdx = yCounter.value;
-          kids.forEach(child => visit(child, depth + 1));
-          const endIdx = yCounter.value;
-          node.y = ((startIdx + endIdx - 1) / 2) * NODE_H_GAP;
-        }
-      }
-
-      rootNodes.forEach(n => visit(n, 1));
-
-      // Root ảo bên trái, nối vào tất cả chương ở depth 1
-      const rootY = rootNodes.length > 0 ? (rootNodes[0].y + rootNodes[rootNodes.length - 1].y) / 2 : 0;
-      const virtualRoot = { id: "root", label: rootTitle, depth: 0, x: 0, y: rootY, width: nodeWidth(rootTitle), children: rootNodes };
-
-      return { virtualRoot, maxDepth, totalHeight: yCounter.value * NODE_H_GAP };
-    }
-
-    function renderMindMap() {
-      if (topics.length === 0) return;
-
-      const { virtualRoot, maxDepth, totalHeight } = layoutTree(topics);
-
-      const svg = document.getElementById("mapSvg");
-      const nodesLayer = document.getElementById("mapNodes");
-      svg.innerHTML = "";
-      nodesLayer.innerHTML = "";
-
-      const allNodes = [];
-      const edges = [];
-      function collect(node, parent) {
-        allNodes.push(node);
-        if (parent) edges.push({ from: parent, to: node });
-        const isOpen = expanded[node.id] !== false;
-        if (isOpen && node.children) {
-          node.children.forEach(c => collect(c, node));
-        }
-      }
-      collect(virtualRoot, null);
-
-      const totalWidth = (maxDepth + 1) * LEVEL_W + 260;
-      const canvasHeight = Math.max(totalHeight + NODE_HEIGHT * 2, 400);
-
-      document.getElementById("mapCanvas").style.width = totalWidth + "px";
-      document.getElementById("mapCanvas").style.height = canvasHeight + "px";
-      svg.setAttribute("width", totalWidth);
-      svg.setAttribute("height", canvasHeight);
-
-      const yOffset = NODE_HEIGHT;
-
-      // Vẽ đường cong nối cha-con
-      edges.forEach(({ from, to }) => {
-        const x1 = from.x + from.width;
-        const y1 = from.y + yOffset;
-        const x2 = to.x;
-        const y2 = to.y + yOffset;
-        const dx = Math.max(30, (x2 - x1) * 0.5);
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("d", `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`);
-        const style = DEPTH_STYLES[Math.min(to.depth, DEPTH_STYLES.length - 1)];
-        path.setAttribute("stroke", style.border);
-        path.setAttribute("stroke-width", "2");
-        path.setAttribute("fill", "none");
-        path.setAttribute("opacity", "0.75");
-        svg.appendChild(path);
-      });
-
-      // Vẽ node
-      allNodes.forEach(node => {
-        const hasChildren = node.children && node.children.length > 0;
-        const isOpen = expanded[node.id] !== false;
-        const isSelected = selectedTopic && selectedTopic.id === node.id;
-        const style = DEPTH_STYLES[Math.min(node.depth, DEPTH_STYLES.length - 1)];
-
-        const el = document.createElement("div");
-        el.className = "absolute rounded-2xl flex items-center px-4 shadow-sm border-2 font-bold text-xs cursor-pointer transition-transform hover:scale-[1.03] select-none";
-        el.style.left = node.x + "px";
-        el.style.top = node.y + "px";
-        el.style.width = node.width + "px";
-        el.style.height = NODE_HEIGHT + "px";
-        el.style.background = style.bg;
-        el.style.borderColor = isSelected ? "#4f46e5" : style.border;
-        el.style.color = style.text;
-        if (isSelected) el.style.boxShadow = "0 0 0 3px rgba(79,70,229,0.35)";
-        el.title = node.label;
-
-        const labelSpan = document.createElement("span");
-        labelSpan.className = "truncate flex-1";
-        labelSpan.textContent = node.label;
-        el.appendChild(labelSpan);
-
-        if (node.id !== "root") {
-          el.addEventListener("click", (e) => {
-            if (e.target.closest(".map-toggle-btn")) return;
-            selectedTopic = node;
-            updateActiveTopicDisplay();
-            renderMindMap();
-          });
-        }
-
-        if (hasChildren) {
-          const toggle = document.createElement("button");
-          toggle.className = "map-toggle-btn absolute -right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white border-2 flex items-center justify-center shadow-md hover:scale-110 transition-all";
-          toggle.style.borderColor = style.border;
-          toggle.style.color = style.text;
-          toggle.innerHTML = `<i data-lucide="${isOpen ? 'chevron-left' : 'chevron-right'}" class="h-3.5 w-3.5"></i>`;
-          toggle.addEventListener("click", (e) => {
-            e.stopPropagation();
-            expanded[node.id] = !isOpen;
-            renderMindMap();
-          });
-          el.appendChild(toggle);
-        }
-
-        nodesLayer.appendChild(el);
-      });
-
-      lucide.createIcons();
-    }
-
-    function expandAllNodes() {
-      function setAll(nodes) {
-        nodes.forEach(n => {
-          expanded[n.id] = true;
-          if (n.children) setAll(n.children);
-        });
-      }
-      setAll(topics);
-      renderMindMap();
-    }
-
-    function collapseAllNodes() {
-      function setAll(nodes, depth) {
-        nodes.forEach(n => {
-          if (depth >= 1) expanded[n.id] = false;
-          if (n.children) setAll(n.children, depth + 1);
-        });
-      }
-      setAll(topics, 0);
-      renderMindMap();
-    }
-
-    // --- Zoom & Pan ---
-    let mapZoomLevel = 1;
-    let panX = 60, panY = 40;
-    let isPanning = false, panStartX = 0, panStartY = 0, panOriginX = 0, panOriginY = 0;
-
-    function applyMapTransform() {
-      document.getElementById("mapCanvas").style.transform = `translate(${panX}px, ${panY}px) scale(${mapZoomLevel})`;
-      document.getElementById("zoomLabel").textContent = Math.round(mapZoomLevel * 100) + "%";
-    }
-
-    function mapZoom(delta) {
-      mapZoomLevel = Math.min(2, Math.max(0.3, mapZoomLevel + delta));
-      applyMapTransform();
-    }
-
-    function fitMapToScreen() {
-      const viewport = document.getElementById("mapViewport");
-      const canvas = document.getElementById("mapCanvas");
-      const cw = parseFloat(canvas.style.width) || 800;
-      const ch = parseFloat(canvas.style.height) || 400;
-      const availW = viewport.clientWidth - 40;
-      const availH = viewport.clientHeight - 40;
-      mapZoomLevel = Math.min(1, Math.min(availW / cw, availH / ch));
-      panX = 30;
-      panY = Math.max(20, (availH - ch * mapZoomLevel) / 2 + 20);
-      applyMapTransform();
-    }
-
-    const mapViewport = document.getElementById("mapViewport");
-    mapViewport.addEventListener("mousedown", (e) => {
-      isPanning = true;
-      panStartX = e.clientX;
-      panStartY = e.clientY;
-      panOriginX = panX;
-      panOriginY = panY;
-    });
-    window.addEventListener("mousemove", (e) => {
-      if (!isPanning) return;
-      panX = panOriginX + (e.clientX - panStartX);
-      panY = panOriginY + (e.clientY - panStartY);
-      applyMapTransform();
-    });
-    window.addEventListener("mouseup", () => { isPanning = false; });
-    mapViewport.addEventListener("wheel", (e) => {
-      e.preventDefault();
-      mapZoom(e.deltaY < 0 ? 0.08 : -0.08);
-    }, { passive: false });
-
-    function updateActiveTopicDisplay() {
-      if (!selectedTopic) return;
-      document.getElementById("activeLabel").textContent = selectedTopic.label;
-      document.getElementById("activeDesc").textContent = selectedTopic.description || "Không có mô tả chi tiết cho chủ đề này.";
-      const page = selectedTopic.pageStart || 1;
-      document.getElementById("pageReaderLabel").textContent = `Trình Đọc Tài Liệu (Trang ${page})`;
-      const readerUrl = `reader.html?id=${docId}&page=${page}`;
-      document.getElementById("readerFrame").src = readerUrl;
-      document.getElementById("openFullReaderLink").href = readerUrl;
-    }
-
-    loadTopics();
+    window.addEventListener('pagehide', () => clearTimeout(pollTimer));
+    loadTopics(); lucide.createIcons();
   </script>
 </body>
 </html>

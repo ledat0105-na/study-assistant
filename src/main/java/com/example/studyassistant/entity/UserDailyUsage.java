@@ -31,4 +31,10 @@ public class UserDailyUsage {
 
     @Column(name = "flashcard_count", nullable = false)
     private Integer flashcardCount = 0;
+
+    @Column(name = "presentation_outline_count", nullable = false)
+    private Integer presentationOutlineCount = 0;
+
+    @Column(name = "presentation_slide_count", nullable = false)
+    private Integer presentationSlideCount = 0;
 }

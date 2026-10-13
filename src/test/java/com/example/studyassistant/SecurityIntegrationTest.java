@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
+@org.junit.jupiter.api.Tag("Integration")
 public class SecurityIntegrationTest {
 
     @Autowired

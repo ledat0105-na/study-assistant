@@ -8,4 +8,6 @@ import java.util.List;
 @Repository
 public interface QuizResultRepository extends JpaRepository<QuizResult, Long> {
     List<QuizResult> findByUserId(Long userId);
+    java.util.Optional<QuizResult> findByUserIdAndQuizIdAndSubmissionToken(Long userId, Long quizId, String submissionToken);
+    List<QuizResult> findByQuizId(Long quizId);
 }

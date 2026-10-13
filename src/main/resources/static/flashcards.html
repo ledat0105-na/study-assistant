@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="css/style-3d.css">
+  <link rel="stylesheet" href="css/feature-ui.css">
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
 
@@ -99,6 +100,9 @@
   </main>
 
   <script src="auth-interceptor.js"></script>
+  <script src="js/api-client.js"></script>
+  <script src="js/document-ui.js"></script>
+  <script src="js/document-features.js"></script>
   <script src="sidebar.js"></script>
   <script>
     renderUnifiedSidebar("flashcards");
@@ -112,27 +116,21 @@
     let currentIndex = 0;
     let isFlipped = false;
 
+    let cardLoading = false;
     async function loadFlashcards() {
+      if (cardLoading) return; cardLoading = true;
+      document.getElementById('cardFront').textContent = 'Đang nạp thẻ học...';
       try {
-        const res = await fetch(`/api/flashcards/document/${docId}`, { credentials: "same-origin" });
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data)) {
-            flashcards = data;
-          } else if (data && Array.isArray(data.cards)) {
-            flashcards = data.cards;
-          } else {
-            flashcards = [];
-          }
-        } else {
-          flashcards = [];
-        }
-      } catch (err) {
-        console.error("Lỗi tải flashcard", err);
-        flashcards = [];
-      }
-      currentIndex = 0;
-      updateCardDisplay();
+        const doc = await ApiClient.get(`/api/documents/${encodeURIComponent(docId)}`);
+        const result = await DocumentFeatures.flashcards(doc); flashcards = result.cards;
+        currentIndex = 0; document.getElementById('flashcardRetry')?.remove(); updateCardDisplay();
+      } catch (error) {
+        document.getElementById('cardFront').textContent = DocumentUI.errorMessage(error);
+        document.getElementById('cardBack').textContent = 'Vui lòng chờ hoặc thử lại.';
+        let retry = document.getElementById('flashcardRetry');
+        if (!retry) { retry = document.createElement('button'); retry.id = 'flashcardRetry'; retry.className = 'feature-retry btn-3d btn-3d-primary'; document.getElementById('progressText').parentElement.appendChild(retry); }
+        retry.textContent = 'Thử lại'; retry.onclick = loadFlashcards;
+      } finally { cardLoading = false; }
     }
 
     function flipCard() {

@@ -131,6 +131,9 @@ public class ChatService {
         return conversationRepository.searchByUserIdAndKeyword(userId, cleanKeyword);
     }
 
+    @Autowired
+    private com.example.studyassistant.retrieval.service.GroundedAnswerService groundedAnswerService;
+
     // CHAT-07 & CHAT-09: Hỏi dựa trên tài liệu trong Notebook + Lưu nguồn trích dẫn
     public ChatMessage sendMessage(Long userId, Long conversationId, String userQuestion) {
         if (userQuestion == null || userQuestion.trim().isEmpty()) {
@@ -148,46 +151,27 @@ public class ChatService {
         userMsg.setCreatedAt(LocalDateTime.now());
         chatMessageRepository.save(userMsg);
 
-        // 2. Tìm kiếm context tài liệu CHỈ thuộc Notebook hiện tại của User
-        List<Map<String, Object>> sourcesList = new ArrayList<>();
-        StringBuilder promptContext = new StringBuilder();
-
-        if (conversation.getNotebook() != null) {
-            List<Document> docs = documentRepository.findByUserIdAndNotebookId(userId, conversation.getNotebook().getId());
-            if (!docs.isEmpty()) {
-                promptContext.append("Dựa vào thông tin tài liệu môn học dưới đây để giải đáp câu hỏi:\n\n");
-                for (Document doc : docs) {
-                    promptContext.append("--- TÀI LIỆU: ").append(doc.getFileName()).append(" ---\n");
-                    String realText = doc.getExtractedText();
-                    if (realText != null && !realText.isBlank()) {
-                        String snippet = realText.length() > 12000 ? realText.substring(0, 12000) : realText;
-                        promptContext.append(snippet).append("\n");
-                    } else {
-                        List<Topic> topics = topicRepository.findByDocumentId(doc.getId());
-                        for (Topic topic : topics) {
-                            promptContext.append("- Topic: ").append(topic.getName()).append(": ").append(topic.getDescription() != null ? topic.getDescription() : "").append("\n");
-                        }
-                    }
-
-                    // Ghi nhận nguồn citation
-                    Map<String, Object> sourceItem = new HashMap<>();
-                    sourceItem.put("documentId", doc.getId());
-                    sourceItem.put("title", doc.getFileName());
-                    sourceItem.put("pageStart", 1);
-                    sourceItem.put("pageEnd", doc.getTotalPages() != null ? doc.getTotalPages() : 10);
-                    sourcesList.add(sourceItem);
-                }
-                promptContext.append("\n");
-            }
-        }
-
-        // 3. Gọi LLM hoặc Fallback AI
+        // 2. CP7: Dùng GroundedAnswerService cho chat có Notebook
         String aiAnswer;
-        if (openaiApiKey != null && !openaiApiKey.trim().isEmpty()) {
-            aiAnswer = callOpenAi(promptContext.toString() + "Câu hỏi: " + userQuestion);
+        String sourcesJson = "[]";
+        
+        if (conversation.getNotebook() != null) {
+            com.example.studyassistant.retrieval.model.GroundedAnswer groundedAnswer = groundedAnswerService.answer(userId, conversation.getNotebook().getId(), userQuestion);
+            aiAnswer = groundedAnswer.getAnswer();
+            
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                sourcesJson = mapper.writeValueAsString(groundedAnswer.getCitations());
+            } catch (Exception e) {
+                sourcesJson = "[]";
+            }
         } else {
-            aiAnswer = "Chào bạn! Tôi đã nhận được câu hỏi: \"" + userQuestion + "\". " +
-                    (sourcesList.isEmpty() ? "Hiện chưa có tài liệu trích dẫn nào trong Notebook." : "Tôi đã tổng hợp câu trả lời từ các tài liệu học tập trong Notebook của bạn.");
+            // Free chat fallback
+            if (openaiApiKey != null && !openaiApiKey.trim().isEmpty()) {
+                aiAnswer = callOpenAi(userQuestion);
+            } else {
+                aiAnswer = "Chào bạn! Tôi đã nhận được câu hỏi: \"" + userQuestion + "\".";
+            }
         }
 
         // 4. Lưu tin nhắn ASSISTANT + sourcesJson
@@ -195,9 +179,8 @@ public class ChatService {
         assistantMsg.setConversation(conversation);
         assistantMsg.setSender("ASSISTANT");
         assistantMsg.setContent(aiAnswer);
-        assistantMsg.setSourcesJson(sourcesList.toString());
+        assistantMsg.setSourcesJson(sourcesJson);
         assistantMsg.setCreatedAt(LocalDateTime.now());
-
 
         // Cập nhật updatedAt cho Conversation
         conversation.setUpdatedAt(LocalDateTime.now());

@@ -7,8 +7,11 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="css/style-3d.css">
+  <link rel="stylesheet" href="css/mind-map-renderer.css">
+  <link rel="stylesheet" href="css/viewer-layout.css">
+  <link rel="stylesheet" href="css/feature-ui.css">
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans relative overflow-hidden">
+<body class="viewer-page bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans relative">
 
   <!-- 3D Background Orbs -->
   <div class="orb-container">
@@ -40,7 +43,7 @@
   </header>
 
   <!-- Main 3-Column Layout -->
-  <div class="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-4 p-4 h-[calc(100vh-68px)] min-h-0 overflow-hidden relative z-10">
+  <div id="viewerLayout" class="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-4 p-4 min-h-0 relative z-10">
     
     <!-- Column 1: Sources (Nguồn) - Compact 1 Column -->
     <div class="lg:col-span-1 glass-3d-card p-4 flex flex-col h-full min-h-0 overflow-hidden">
@@ -87,7 +90,8 @@
       </div>
 
       <!-- Prompt Input bar -->
-      <form id="chatForm" class="relative mt-auto flex-shrink-0 pt-2 border-t border-slate-100" onclick="event.stopPropagation(); expandChatPanel();">
+      <p id="selectedSources" class="selected-sources" role="status"></p>
+        <form id="chatForm" class="relative mt-auto flex-shrink-0 pt-2 border-t border-slate-100" onclick="event.stopPropagation(); expandChatPanel();">
         <input type="text" id="chatInput" onfocus="expandChatPanel()" placeholder="Đặt câu hỏi hoặc yêu cầu AI từ tài liệu của bạn..." class="input-3d w-full pl-4 pr-14 py-3 text-xs font-semibold" />
         <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 btn-3d btn-3d-primary p-2 text-white shadow-md">
           <i data-lucide="arrow-up" class="h-4 w-4"></i>
@@ -181,8 +185,9 @@
         <div id="tabContent-flashcard" class="studio-tab-panel hidden flex flex-col h-full min-h-0 overflow-hidden space-y-2.5">
           <div class="flex justify-between items-center bg-amber-50/80 p-2.5 rounded-xl border border-amber-200 flex-shrink-0">
             <span id="flashcardCounter" class="text-[11px] font-bold text-amber-800 flex items-center gap-1.5"><i data-lucide="layers" class="h-3.5 w-3.5"></i> Thẻ Flashcard 3D (0/0)</span>
-            <span class="badge-3d badge-3d-amber text-[9px]">ACTIVE RECALL</span>
+            <button id="newFlashcardsButton" type="button" onclick="generateMoreFlashcards()" class="btn-3d btn-3d-primary px-3 py-1.5 text-[11px] font-bold disabled:opacity-50">Tạo thêm thẻ</button>
           </div>
+          <p id="flashcardGenerationStatus" role="status" class="text-xs text-slate-500 font-semibold"></p>
           
           <div id="flashcardInlineBox" class="flex flex-col items-center justify-center p-2 flex-1 overflow-y-auto min-h-0">
             <!-- 3D Flip Card Container -->
@@ -215,7 +220,7 @@
         <div id="tabContent-quiz" class="studio-tab-panel hidden flex flex-col h-full min-h-0 overflow-hidden space-y-2.5">
           <div class="flex justify-between items-center bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200 flex-shrink-0">
             <span id="quizCounter" class="text-[11px] font-bold text-emerald-800 flex items-center gap-1.5"><i data-lucide="help-circle" class="h-3.5 w-3.5"></i> Bài Trắc Nghiệm AI</span>
-            <span class="badge-3d badge-3d-emerald text-[9px]">KIỂM TRA KIẾN THỨC</span>
+            <button id="newQuizButton" type="button" onclick="regenerateDocumentQuiz()" class="btn-3d btn-3d-primary px-3 py-1.5 text-[11px] font-bold disabled:opacity-50">Tạo bài mới</button>
           </div>
           <div id="quizInlineBox" class="flex-1 space-y-3 overflow-y-auto pr-1 min-h-0">
             <p class="text-slate-400 text-center py-8 font-semibold">Đang nạp bài trắc nghiệm...</p>
@@ -266,8 +271,17 @@
     }
   </style>
 
+  <script src="auth-interceptor.js"></script>
+  <script src="js/api-client.js"></script>
+  <script src="js/document-ui.js"></script>
+  <script src="js/document-features.js"></script>
+  <script src="js/quiz-interaction.js"></script>
   <script src="citations.js"></script>
+  <script src="js/summary-view.js"></script>
   <script src="i18n.js"></script>
+  <script src="js/document-mind-map.js"></script>
+  <script src="js/document-summary.js"></script>
+  <script src="js/mind-map-renderer.js"></script>
   <script>
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     if (!user.id) {
@@ -277,12 +291,20 @@
     let selectedDocIds = [];
     let documents = [];
     let activeStudioTab = "overview";
+    let documentStatusPollTimer = null;
+    let isPollingDocumentStatuses = false;
 
     // Data states for inline tools
     let currentFlashcards = [];
     let currentFcIndex = 0;
     let isFcShowingFront = true;
     let currentQuizQuestions = [];
+    let currentQuizId = null;
+    let inlineAttempt = null;
+    let inlineSubmissionToken = null;
+    let inlineQuizSubmitting = false;
+    let inlineSubmittedAnswers = null;
+    let inlineQuizResult = null;
     let quizUserAnswers = {};
 
     const STORAGE_KEY = `study_ai_selected_docs_${user.id || 'guest'}`;
@@ -339,19 +361,116 @@
 
           renderSources();
           updateActiveDocumentDetails();
+          startDocumentStatusPolling();
+        } else {
+          DocumentUI.notice(document.getElementById('sourcesList'), ApiClient.message(response.status), loadDocuments);
         }
       } catch (err) {
-        console.error("Lỗi nạp danh sách tài liệu", err);
+        DocumentUI.notice(document.getElementById("sourcesList"), DocumentUI.errorMessage(err), loadDocuments);
+      }
+    }
+
+    function isDocumentProcessing(doc) {
+      return ["UPLOADING", "PROCESSING"].includes(String(doc.status || "").toUpperCase());
+    }
+
+    function startDocumentStatusPolling() {
+      if (!documents.some(isDocumentProcessing)) return;
+      if (documentStatusPollTimer === null) {
+        documentStatusPollTimer = window.setInterval(pollDocumentStatuses, 3000);
+      }
+      pollDocumentStatuses();
+    }
+
+    async function pollDocumentStatuses() {
+      if (isPollingDocumentStatuses) return;
+      const processingDocs = documents.filter(isDocumentProcessing);
+      if (processingDocs.length === 0) {
+        if (documentStatusPollTimer !== null) {
+          window.clearInterval(documentStatusPollTimer);
+          documentStatusPollTimer = null;
+        }
+        return;
+      }
+
+      isPollingDocumentStatuses = true;
+      try {
+        const updates = await Promise.all(processingDocs.map(async doc => {
+          try {
+            const response = await fetch(`/api/documents/${doc.id}/status`);
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}`);
+            }
+            return await response.json();
+          } catch (error) {
+            console.error(`Không thể cập nhật trạng thái tài liệu ${doc.id}`, error);
+            return null;
+          }
+        }));
+
+        let shouldRenderSources = false;
+        let shouldRefreshActiveDoc = false;
+        updates.forEach(update => {
+          if (!update) return;
+          const doc = documents.find(item => item.id === update.id);
+          if (!doc) return;
+
+          const previousStatus = String(doc.status || "").toUpperCase();
+          const updatedStatus = String(update.status || "").toUpperCase();
+          if (updatedStatus && previousStatus !== updatedStatus) {
+            doc.status = updatedStatus;
+            shouldRenderSources = true;
+            if (["READY", "FAILED"].includes(updatedStatus)
+                && String(selectedDocIds[0]) === String(doc.id)) {
+              shouldRefreshActiveDoc = true;
+            }
+          }
+          doc.errorMessage = update.errorMessage || "";
+          doc.retryCount = update.retryCount;
+          doc.activeIndexVersion = update.activeIndexVersion || null;
+        });
+
+        if (shouldRenderSources) renderSources();
+        if (shouldRefreshActiveDoc) {
+          const activeDoc = documents.find(doc => String(doc.id) === String(selectedDocIds[0]));
+          updateActiveDocumentDetails();
+          if (activeDoc && activeDoc.status === "READY") autoSummarizeActiveDoc();
+          if (["summary", "flashcard", "quiz", "map"].includes(activeStudioTab)) loadStudioTabData(activeStudioTab);
+        }
+      } finally {
+        isPollingDocumentStatuses = false;
+      }
+
+      if (!documents.some(isDocumentProcessing) && documentStatusPollTimer !== null) {
+        window.clearInterval(documentStatusPollTimer);
+        documentStatusPollTimer = null;
       }
     }
 
     let summarizedDocIds = new Set();
 
+    const studioRequests = new Map();
+
+    function isGenerationReady(doc) {
+      return DocumentUI.ready(doc);
+    }
+
+    function loadDocumentSummary(docId) {
+      if (!isGenerationReady(documents.find(doc => String(doc.id) === String(docId)))) {
+        return Promise.reject(Object.assign(new Error(DocumentUI.message(documents.find(doc => String(doc.id) === String(docId)))), { status: 409 }));
+      }
+      return DocumentSummaryLoader.load(docId, documents.find(doc => String(doc.id) === String(docId)));
+    }
+
     async function autoSummarizeActiveDoc() {
       if (selectedDocIds.length !== 1) return;
       const docId = selectedDocIds[0];
-      if (summarizedDocIds.has(docId)) return;
-      summarizedDocIds.add(docId);
+      const doc = documents.find(d => d.id == docId);
+      if (!isGenerationReady(doc)) return;
+      const summaryKey = `${docId}:${doc.activeIndexVersion}`;
+      const version = doc.activeIndexVersion;
+      if (summarizedDocIds.has(summaryKey)) return;
+      summarizedDocIds.add(summaryKey);
 
       const typingDiv = document.createElement("div");
       typingDiv.className = "flex justify-start mb-4";
@@ -360,18 +479,13 @@
       chatMessages.scrollTop = chatMessages.scrollHeight;
 
       try {
-        const response = await fetch(`/api/ai/summary/${docId}`, { credentials: "same-origin" });
+        const data = await loadDocumentSummary(docId);
         if (chatMessages.contains(typingDiv)) chatMessages.removeChild(typingDiv);
-        if (response.ok) {
-          const data = await response.json();
-          appendMessage("ai", data.summary, data.docId || docId);
-        } else {
-          const error = await response.json().catch(() => ({}));
-          appendMessage("ai", "Không thể tự động tóm tắt: " + (error.error || "lỗi không xác định."), docId);
-        }
+        if (String(selectedDocIds[0]) === String(docId) && doc.activeIndexVersion === version) appendMessage("ai", data.summary, data.docId || docId, data.citations || []);
       } catch (error) {
+        summarizedDocIds.delete(summaryKey);
         if (chatMessages.contains(typingDiv)) chatMessages.removeChild(typingDiv);
-        appendMessage("ai", "Lỗi kết nối khi tóm tắt tài liệu.", docId);
+        if (String(selectedDocIds[0]) === String(docId) && doc.activeIndexVersion === version) appendMessage("ai", error.status ? error.message : "Chưa thể tạo tóm tắt. Vui lòng thử lại sau giây lát.", docId);
       }
     }
 
@@ -397,8 +511,8 @@
             <i data-lucide="file-text" class="h-4 w-4"></i>
           </div>
           <div onclick="openDocument(${doc.id})" class="flex-1 min-w-0 cursor-pointer" title="Nhấn để mở tài liệu">
-            <p class="text-xs font-extrabold truncate">${doc.title || doc.fileName}</p>
-            <p class="text-[10px] text-slate-500 mt-0.5 uppercase font-mono font-bold">${doc.format || doc.fileType}</p>
+            <p class="text-xs font-extrabold truncate">${DocumentUI.escape(doc.title || doc.fileName)}</p>
+            <p class="text-[10px] text-slate-500 mt-0.5 uppercase font-mono font-bold">${DocumentUI.escape(doc.format || doc.fileType)}</p>
           </div>
           <div class="flex items-center gap-2">
             <button onclick="deleteDocument(${doc.id})" class="p-1.5 rounded-lg border bg-white hover:bg-rose-50 border-slate-200 text-slate-400 hover:text-rose-600 transition-all" title="Xóa tài liệu">
@@ -433,10 +547,14 @@
         if (response.ok) {
           selectedDocIds = selectedDocIds.filter(dId => dId !== id);
           saveSelectedDocIds();
-          loadDocuments();
+          await loadDocuments();
+        } else {
+          const error = await response.json().catch(() => ({}));
+          alert(ApiClient.message(response.status));
         }
       } catch (err) {
         console.error(err);
+        alert("Lỗi kết nối khi xóa tài liệu. Vui lòng thử lại.");
       }
     }
 
@@ -468,6 +586,27 @@
 
     function updateActiveDocumentDetails() {
       const titleLabel = document.getElementById("notebookTitle");
+      const chosen = selectedDocIds.map(id => documents.find(doc => String(doc.id) === String(id)));
+      const primaryKey = chosen[0] ? `${chosen[0].id}:${chosen[0].activeIndexVersion}` : 'none';
+      if (updateActiveDocumentDetails.primaryKey !== primaryKey) {
+        updateActiveDocumentDetails.primaryKey = primaryKey;
+        currentFlashcards = []; currentQuizQuestions = []; quizUserAnswers = {}; currentQuizId = null; inlineAttempt = null; inlineQuizResult = null; inlineSubmittedAnswers = null; inlineSubmissionToken = null;
+        for (const id of ['summaryInlineBox', 'mapInlineBox', 'quizInlineBox']) {
+          const box = document.getElementById(id); if (box) box.textContent = chosen.length ? 'Đang nạp nội dung tài liệu đã chọn...' : 'Chọn một tài liệu để bắt đầu.';
+        }
+        if (typeof renderFlashcard === 'function') renderFlashcard();
+      }
+      for (const id of ['newFlashcardsButton', 'newQuizButton']) {
+        const button = document.getElementById(id); if (button) button.disabled = !isGenerationReady(chosen[0]);
+      }
+
+      const selectedLabel = document.getElementById("selectedSources");
+      if (selectedLabel) selectedLabel.textContent = chosen.length
+        ? `Đã chọn ${chosen.length} tài liệu · Chat tìm bằng chứng trong notebook của tài liệu đầu tiên.`
+        : "Chọn tài liệu để hỏi đáp có căn cứ.";
+      const send = document.querySelector("#chatForm button[type=submit]");
+      if (send) send.disabled = !chosen.length || chosen.some(doc => !isGenerationReady(doc));
+
       
       if (selectedDocIds.length === 0) {
         titleLabel.textContent = "Vui lòng chọn nguồn tài liệu";
@@ -496,6 +635,7 @@
       if (btnReport) btnReport.onclick = () => window.location.href = `detail.html?id=${primaryDocId}`;
 
       // Refresh current active tab data
+      autoSummarizeActiveDoc();
       loadStudioTabData(activeStudioTab);
     }
 
@@ -557,8 +697,50 @@
     }
 
     async function loadStudioTabData(tabKey) {
+      if (selectedDocIds.length === 0) {
+        const box = document.getElementById(({ summary: 'summaryInlineBox', map: 'mapInlineBox', quiz: 'quizInlineBox' })[tabKey]);
+        if (box) DocumentUI.notice(box, 'Chọn một tài liệu để bắt đầu.');
+        return;
+      }
+      const docId = selectedDocIds[0];
+      const doc = documents.find(item => item.id == docId);
+      if (["summary", "map", "flashcard", "quiz", "read"].includes(tabKey) && !isGenerationReady(doc)) {
+        const box = document.getElementById(({ summary: "summaryInlineBox", map: "mapInlineBox", flashcard: "flashcardInlineBox", quiz: "quizInlineBox", read: "readerInlineBox" })[tabKey]);
+        const message = DocumentUI.message(doc);
+        // Keep the flashcard controls available when processing finishes.
+        let notice = box.querySelector(".processing-notice");
+        if (!notice) {
+          notice = document.createElement("p");
+          notice.className = "processing-notice text-slate-500 text-center py-6 font-semibold";
+          box.prepend(notice);
+        }
+        notice.textContent = message;
+        if (doc?.status === 'FAILED' && (doc.retryCount || 0) < 3 && !box.querySelector('.document-processing-retry')) {
+          const retry = document.createElement('button'); retry.type = 'button'; retry.className = 'document-processing-retry feature-retry btn-3d btn-3d-primary';
+          retry.textContent = 'Thử xử lý lại'; retry.onclick = async () => { retry.disabled = true; try { await retryDocumentProcessing(docId); } finally { retry.disabled = false; } };
+          box.appendChild(retry);
+        }
+        return;
+      }
+      const key = `${tabKey}:${docId}:${doc?.activeIndexVersion}`;
+      if (studioRequests.has(key)) return studioRequests.get(key);
+      const target = document.getElementById(({ summary: 'summaryInlineBox', map: 'mapInlineBox', flashcard: 'flashcardInlineBox', quiz: 'quizInlineBox' })[tabKey]);
+      if (target) DocumentUI.setBusy(target, true);
+      const request = loadStudioTabDataOnce(tabKey).finally(() => {
+        studioRequests.delete(key);
+        if (target && String(selectedDocIds[0]) === String(docId)) DocumentUI.setBusy(target, false);
+      });
+      studioRequests.set(key, request);
+      return request;
+    }
+
+    async function loadStudioTabDataOnce(tabKey) {
       if (selectedDocIds.length === 0) return;
       const docId = selectedDocIds[0];
+      const selectionVersion = documents.find(doc => String(doc.id) === String(docId))?.activeIndexVersion;
+      const stillSelected = () => String(selectedDocIds[0]) === String(docId)
+        && documents.find(doc => String(doc.id) === String(docId))?.activeIndexVersion === selectionVersion;
+      document.querySelectorAll(".processing-notice, .document-processing-retry").forEach(notice => notice.remove());
 
       if (tabKey === "read") {
         const box = document.getElementById("readerInlineBox");
@@ -566,7 +748,12 @@
           const res = await fetch(`/api/documents/${docId}/content`);
           if (res.ok) {
             const data = await res.json();
-            box.innerHTML = `<pre class="whitespace-pre-wrap font-sans text-xs leading-relaxed text-slate-800">${data.content || "Chưa có nội dung trích xuất."}</pre>`;
+            if (!stillSelected()) return;
+            box.replaceChildren();
+            const content = document.createElement("pre");
+            content.className = "whitespace-pre-wrap font-sans text-xs leading-relaxed";
+            content.textContent = data.text || data.content || "Chưa có nội dung trích xuất.";
+            box.appendChild(content);
           } else {
             box.innerHTML = `<p class="text-slate-400 text-center py-6">Không thể nạp nội dung tài liệu.</p>`;
           }
@@ -575,89 +762,174 @@
         }
       } else if (tabKey === "map") {
         const box = document.getElementById("mapInlineBox");
-        try {
-          const res = await fetch(`/api/topics/document/${docId}`);
-          if (res.ok) {
-            const topics = await res.json();
-            if (topics.length === 0) {
-              box.innerHTML = `<p class="text-slate-500 text-center py-6 text-xs font-semibold">Chưa tạo sơ đồ tư duy cho tài liệu này.</p>`;
+        const doc = documents.find(item => item.id == docId);
+        box.textContent = "Đang nạp sơ đồ tư duy...";
+        async function renderMap(retry = false) {
+          box.textContent = retry ? "Đang tạo lại mô tả bằng tiếng Việt. Vui lòng chờ..." : "Đang nạp sơ đồ tư duy...";
+          try {
+            if (!doc) throw new Error("Chưa nạp được thông tin tài liệu.");
+            const graph = await DocumentMindMap.load(doc, retry);
+            if (!stillSelected()) return;
+            box.innerHTML = "";
+            if (graph.nodes.length === 0) box.textContent = "Chưa tìm thấy khái niệm có bằng chứng trong tài liệu này.";
+            if (graph.nodes.length > 0) {
+              MindMapRenderer.render(box, graph, undefined, 0, { onRegenerate: () => renderMap(true) });
+              DocumentMindMap.showStatus(box, graph);
               return;
             }
-            let html = `<div class="space-y-2">`;
-            topics.forEach((tp, idx) => {
-              html += `
-                <div class="p-3 bg-white border border-purple-100 rounded-2xl shadow-sm hover:border-purple-300 transition-all">
-                  <div class="flex justify-between items-center">
-                    <span class="text-xs font-extrabold text-purple-900 flex items-center gap-1.5"><i data-lucide="circle-dot" class="h-3.5 w-3.5 text-purple-600"></i> ${tp.title || tp.name || 'Chủ đề ' + (idx+1)}</span>
-                    <span class="badge-3d badge-3d-indigo text-[9px]">Cấp ${tp.level || 1}</span>
-                  </div>
-                  ${tp.description ? `<p class="text-[10px] text-slate-600 mt-1 line-clamp-2">${tp.description}</p>` : ''}
-                </div>
-              `;
-            });
-            html += `</div>`;
-            box.innerHTML = html;
-            lucide.createIcons();
-          } else {
-            box.innerHTML = `<p class="text-slate-400 text-center py-6 font-semibold">Chưa có sơ đồ tư duy.</p>`;
+          } catch (error) {
+            if (!stillSelected()) return;
+            box.textContent = error.message || "Chưa thể tạo sơ đồ tư duy. Vui lòng thử lại sau.";
           }
-        } catch (e) {
-          box.innerHTML = `<p class="text-slate-400 text-center py-6 font-semibold">Lỗi nạp sơ đồ tư duy.</p>`;
+          if (isGenerationReady(doc)) {
+            const button = document.createElement("button");
+            button.className = "btn-3d btn-3d-primary px-4 py-2 text-xs font-bold";
+            button.textContent = "Thử tạo lại sơ đồ";
+            button.onclick = () => renderMap(true);
+            box.appendChild(button);
+          }
         }
+        await renderMap();
       } else if (tabKey === "flashcard") {
-        try {
-          const res = await fetch(`/api/flashcards/document/${docId}`);
-          if (res.ok) {
-            const data = await res.json();
-            if (Array.isArray(data)) {
-              currentFlashcards = data;
-            } else if (data && Array.isArray(data.cards)) {
-              currentFlashcards = data.cards;
-            } else {
-              currentFlashcards = [];
-            }
-            currentFcIndex = 0;
-            isFcShowingFront = true;
-            renderFlashcard();
-          }
-        } catch (e) {
-          console.error("Lỗi nạp flashcard", e);
-          currentFlashcards = [];
-          renderFlashcard();
-        }
+        await loadDocumentFlashcards(docId);
       } else if (tabKey === "quiz") {
-        const box = document.getElementById("quizInlineBox");
-        try {
-          const res = await fetch(`/api/quizzes/document/${docId}`);
-          if (res.ok) {
-            const data = await res.json();
-            if (Array.isArray(data)) {
-              currentQuizQuestions = data;
-            } else if (data && Array.isArray(data.questions)) {
-              currentQuizQuestions = data.questions;
-            } else {
-              currentQuizQuestions = [];
-            }
-            renderQuizInline();
-          } else {
-            box.innerHTML = `<p class="text-slate-400 text-center py-6 font-semibold">Chưa có bài trắc nghiệm.</p>`;
-          }
-        } catch (e) {
-          box.innerHTML = `<p class="text-slate-400 text-center py-6 font-semibold">Lỗi nạp bài trắc nghiệm.</p>`;
-        }
+        await loadDocumentQuiz(docId);
       } else if (tabKey === "summary") {
         const box = document.getElementById("summaryInlineBox");
+        const doc = documents.find(d => d.id == docId);
+        box.textContent = "Đang đọc và tóm tắt tài liệu. Vui lòng chờ...";
         try {
-          const res = await fetch(`/api/ai/summary/${docId}`);
-          if (res.ok) {
-            const data = await res.json();
-            box.innerHTML = `<div class="leading-relaxed text-slate-800 text-xs">${(data.summary || '').replace(/\n/g, '<br>')}</div>`;
-          } else {
-            box.innerHTML = `<p class="text-slate-400 text-center py-6 font-semibold">Chưa thể nạp tóm tắt.</p>`;
-          }
+          const data = await loadDocumentSummary(docId);
+          if (!stillSelected()) return;
+          box.innerHTML = "";
+          SummaryView.render(box, data);
         } catch (e) {
-          box.innerHTML = `<p class="text-slate-400 text-center py-6 font-semibold">Lỗi nạp tóm tắt.</p>`;
+          if (!stillSelected()) return;
+          box.innerHTML = "";
+          const message = document.createElement("p");
+          message.className = "text-slate-400 text-center py-6 font-semibold";
+          message.textContent = e.status ? e.message : "Chưa thể tạo tóm tắt. Vui lòng thử lại.";
+          box.appendChild(message);
+          const retryButton = document.createElement("button");
+          retryButton.type = "button";
+          retryButton.className = "btn-3d btn-3d-primary px-4 py-2 text-xs font-bold";
+          retryButton.textContent = "Thử tóm tắt lại";
+          retryButton.addEventListener("click", () => loadStudioTabData("summary"));
+          box.appendChild(retryButton);
         }
+      }
+    }
+
+    const flashcardRequests = new Map();
+
+    async function generateMoreFlashcards() {
+      if (selectedDocIds.length) return loadDocumentFlashcards(selectedDocIds[0], true);
+    }
+
+    async function loadDocumentFlashcards(docId, force = false) {
+      const status = document.getElementById("flashcardGenerationStatus");
+      const doc = documents.find(item => String(item.id) === String(docId));
+      if (!isGenerationReady(doc)) {
+        status.textContent = DocumentUI.message(doc);
+        return;
+      }
+      const version = doc.activeIndexVersion;
+      const key = `${docId}:${version}`;
+      const stillSelected = () => String(selectedDocIds[0]) === String(docId) && doc.activeIndexVersion === version;
+      if (flashcardRequests.has(key)) return flashcardRequests.get(key);
+      const button = document.getElementById("newFlashcardsButton");
+      if (button) button.disabled = true;
+      status.textContent = "Đang nạp thẻ học...";
+      const request = (async () => {
+        try {
+          status.textContent = "Đang nạp hoặc tạo một lượt thẻ học ngắn. Vui lòng chờ...";
+          const result = await DocumentFeatures.flashcards(doc, force);
+          const cards = result.cards, generated = result.generation;
+          if (!stillSelected()) return;
+          currentFlashcards = cards;
+          currentFcIndex = 0;
+          isFcShowingFront = true;
+          renderFlashcard();
+          status.textContent = generated ? `Đã thêm ${generated.persistedCount || 0}/${generated.requestedCount} thẻ. ${generated.duplicateSkippedCount || 0} thẻ trùng được bỏ qua. Bấm “Tạo thêm thẻ” nếu bạn muốn học thêm.` : '';
+        } catch (error) {
+          if (stillSelected()) status.textContent = DocumentUI.errorMessage(error) + " Bấm “Tạo thêm thẻ” để thử lại.";
+        } finally {
+          flashcardRequests.delete(key);
+          if (button && stillSelected()) button.disabled = false;
+        }
+      })();
+      flashcardRequests.set(key, request);
+      return request;
+    }
+
+    const quizRequests = new Map();
+
+    async function regenerateDocumentQuiz() {
+      if (selectedDocIds.length) return loadDocumentQuiz(selectedDocIds[0], true);
+    }
+
+    async function loadDocumentQuiz(docId, force = false) {
+      const box = document.getElementById("quizInlineBox");
+      const doc = documents.find(item => String(item.id) === String(docId));
+      if (!isGenerationReady(doc)) {
+        box.textContent = DocumentUI.message(doc);
+        return;
+      }
+      const version = doc.activeIndexVersion;
+      const key = `${docId}:${version}`;
+      const stillSelected = () => String(selectedDocIds[0]) === String(docId) && doc.activeIndexVersion === version;
+      if (quizRequests.has(key)) return quizRequests.get(key);
+      const button = document.getElementById("newQuizButton");
+      if (button) button.disabled = true;
+      box.textContent = "Đang chuẩn bị bài trắc nghiệm...";
+      const request = (async () => {
+        try {
+          box.textContent = "Đang tạo câu hỏi theo nội dung tài liệu. Vui lòng chờ...";
+          const result = await DocumentFeatures.quiz(doc, force);
+          const questions = result.questions, generation = result.generation;
+          if (!stillSelected()) return;
+          if (!force && currentQuizId === result.quizId && currentQuizQuestions.length) { renderQuizInline(); return; }
+          currentQuizQuestions = questions;
+          currentQuizId = result.quizId; inlineAttempt = null; inlineQuizResult = null; inlineSubmittedAnswers = null; inlineSubmissionToken = null;
+          quizUserAnswers = {};
+          renderQuizInline();
+          if (generation && generation.generatedCount < generation.requestedCount) {
+            const counter = document.getElementById("quizCounter");
+            if (counter) counter.textContent += ` — Tạo được ${generation.generatedCount}/${generation.requestedCount} câu; bạn có thể tạo bài mới.`;
+          }
+        } catch (error) {
+          if (stillSelected()) {
+            DocumentUI.notice(box, DocumentUI.errorMessage(error), () => loadDocumentQuiz(docId));
+          }
+        } finally {
+          quizRequests.delete(key);
+          if (button && stillSelected()) button.disabled = false;
+        }
+      })();
+      quizRequests.set(key, request);
+      return request;
+    }
+
+    async function retryDocumentProcessing(docId) {
+      const box = document.getElementById("summaryInlineBox");
+      box.textContent = "Đang thử xử lý lại tài liệu...";
+      try {
+        const response = await fetch(`/api/documents/${docId}/retry`, { method: "POST" });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw Object.assign(new Error(ApiClient.message(response.status)), { status: response.status });
+        }
+
+        const doc = documents.find(item => String(item.id) === String(docId));
+        if (doc) Object.assign(doc, result);
+        renderSources();
+        if (doc && isDocumentProcessing(doc)) {
+          startDocumentStatusPolling();
+        }
+        await loadStudioTabData("summary");
+      } catch (error) {
+        console.error(`Không thể thử xử lý lại tài liệu ${docId}`, error);
+        box.textContent = `Không thể thử xử lý lại: ${DocumentUI.errorMessage(error)}`;
       }
     }
 
@@ -728,77 +1000,61 @@
 
     // Quiz Render & Interactive Answers
     function renderQuizInline() {
-      const box = document.getElementById("quizInlineBox");
-      const counter = document.getElementById("quizCounter");
-
-      if (!Array.isArray(currentQuizQuestions) || currentQuizQuestions.length === 0) {
-        if (counter) counter.textContent = "Bài Trắc Nghiệm AI (0 câu)";
-        box.innerHTML = `<p class="text-slate-500 text-center py-6 text-xs font-semibold">Chưa tạo câu hỏi trắc nghiệm cho tài liệu này.</p>`;
-        return;
-      }
-
+      const box = document.getElementById("quizInlineBox"), counter = document.getElementById("quizCounter");
       if (counter) counter.textContent = `Bài Trắc Nghiệm AI (${currentQuizQuestions.length} câu)`;
-
-      let html = `<div class="space-y-4">`;
-      currentQuizQuestions.forEach((q, qIdx) => {
-        const qId = q.id || qIdx;
-        const selectedOpt = quizUserAnswers[qId];
-        const isAnswered = selectedOpt !== undefined;
-        const isCorrect = isAnswered && selectedOpt === q.correctAnswer;
-
-        html += `
-          <div class="p-3.5 bg-white border border-emerald-100 rounded-2xl shadow-sm space-y-2">
-            <p class="text-xs font-extrabold text-slate-800 leading-snug">
-              <span class="text-emerald-600 font-mono">Câu ${qIdx + 1}:</span> ${q.question || q.questionText || 'Câu hỏi'}
-            </p>
-            <div class="space-y-1.5 pt-1">
-        `;
-
-        const options = q.options || [
-          q.answerA || q.optionA,
-          q.answerB || q.optionB,
-          q.answerC || q.optionC,
-          q.answerD || q.optionD
-        ].filter(Boolean);
-
-        options.forEach((opt, optIdx) => {
-          const optLetter = String.fromCharCode(65 + optIdx);
-          let btnClass = "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100";
-
-          if (isAnswered) {
-            if (optLetter === q.correctAnswer || opt === q.correctAnswer) {
-              btnClass = "bg-emerald-50 border-emerald-400 text-emerald-800 font-bold";
-            } else if (selectedOpt === optLetter || selectedOpt === opt) {
-              btnClass = "bg-rose-50 border-rose-300 text-rose-700 font-bold";
-            }
-          }
-
-          html += `
-            <button onclick="answerQuizQuestion(${qId}, '${optLetter}')" ${isAnswered ? 'disabled' : ''} class="w-full text-left p-2 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2 ${btnClass}">
-              <span class="w-5 h-5 rounded-lg bg-white border border-slate-200 flex items-center justify-center font-bold text-[10px] shrink-0">${optLetter}</span>
-              <span class="flex-1">${opt}</span>
-            </button>
-          `;
-        });
-
-        if (isAnswered) {
-          html += `
-            <div class="mt-2 p-2 rounded-xl ${isCorrect ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-800'} text-[10px] font-semibold">
-              ${isCorrect ? '✓ Chính xác!' : '✗ Chưa đúng.'} ${q.explanation ? `Giải thích: ${q.explanation}` : ''}
-            </div>
-          `;
-        }
-
-        html += `</div></div>`;
-      });
-      html += `</div>`;
-
-      box.innerHTML = html;
+      if (!currentQuizQuestions.length) { box.textContent = "Chưa có câu hỏi trắc nghiệm cho tài liệu này."; return; }
+      QuizInteraction.render(box, { questions: currentQuizQuestions, answers: quizUserAnswers,
+        result: inlineQuizResult, busy: inlineQuizSubmitting, locked: !!inlineSubmittedAnswers },
+        (id, index, value) => answerQuizQuestion(id, value), submitQuizInline);
     }
-
-    function answerQuizQuestion(qId, optLetter) {
-      quizUserAnswers[qId] = optLetter;
-      renderQuizInline();
+    async function submitQuizInline(action, status) {
+      if (inlineQuizSubmitting || inlineQuizResult) return;
+      const validationError = QuizInteraction.validate(currentQuizId, currentQuizQuestions, quizUserAnswers);
+      const missing = QuizInteraction.unanswered(currentQuizQuestions, quizUserAnswers);
+      if (validationError) {
+        status.textContent = validationError + (missing.length ? ` Bạn còn ${missing.length} câu chưa chọn đáp án.` : '');
+        if (!missing.length) return;
+        const first = document.getElementById(`quiz-question-${missing[0].questionId ?? missing[0].id}`);
+        first?.scrollIntoView({ block: 'center', behavior: 'smooth' }); first?.focus({ preventScroll: true }); return;
+      }
+      const docId = selectedDocIds[0], quizId = currentQuizId;
+      const doc = documents.find(d => String(d.id) === String(docId)), version = doc?.activeIndexVersion;
+      const current = () => currentQuizId === quizId && selectedDocIds[0] === docId && doc?.activeIndexVersion === version;
+      inlineQuizSubmitting = true; action.disabled = true;
+      try {
+        DocumentUI.requireReady(doc);
+        if (!inlineAttempt) {
+          const preview = currentQuizQuestions;
+          let attempt;
+          try { attempt = await DocumentFeatures.startAttempt(quizId); }
+          catch (error) { error.stage = 'start'; throw error; }
+          if (!current()) return;
+          const mapped = {};
+          for (const q of attempt.questions) {
+            const old = preview.find(p => String(p.questionId ?? p.id) === String(q.questionId));
+            const oldOptions = old?.options || [old?.answerA, old?.answerB, old?.answerC, old?.answerD].filter(Boolean);
+            const selectedIndex = oldOptions.findIndex((o, i) => (o.optionOrder ?? i) === quizUserAnswers[q.questionId]);
+            const option = q.options[selectedIndex];
+            if (!option || (oldOptions[selectedIndex].optionText ?? oldOptions[selectedIndex]) !== option.optionText)
+              throw Object.assign(new Error('Question options changed'), { status: 409 });
+            mapped[q.questionId] = option.optionOrder;
+          }
+          inlineAttempt = attempt; inlineSubmissionToken = crypto.randomUUID(); currentQuizQuestions = attempt.questions; quizUserAnswers = mapped;
+        }
+        status.textContent = 'Đang chấm bài...';
+        inlineSubmittedAnswers ||= { ...quizUserAnswers };
+        const result = await DocumentFeatures.submitAttempt(inlineAttempt, inlineSubmittedAnswers, inlineSubmissionToken);
+        if (!current()) return;
+        inlineQuizResult = result;
+        inlineQuizSubmitting = false; renderQuizInline();
+      } catch (error) {
+        console.error('Quiz attempt failed', error);
+        if (current()) { inlineQuizSubmitting = false; renderQuizInline(); document.getElementById("quizInteractionStatus").textContent = QuizInteraction.errorMessage(error); }
+      } finally { inlineQuizSubmitting = false; }
+    }
+    function answerQuizQuestion(qId, optionOrder) {
+      if (inlineQuizSubmitting || inlineQuizResult || inlineSubmittedAnswers) return;
+      quizUserAnswers[qId] = optionOrder; renderQuizInline();
     }
 
     // Chat Actions
@@ -806,54 +1062,37 @@
     const chatInput = document.getElementById("chatInput");
     const chatMessages = document.getElementById("chatMessages");
 
-    chatForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const txt = chatInput.value.trim();
-      if (!txt) return;
-
-      if (selectedDocIds.length === 0) {
-        alert("Vui lòng tích chọn ít nhất 1 nguồn tài liệu bên trái để đặt câu hỏi!");
-        return;
-      }
-
-      chatInput.value = "";
-      appendMessage("user", txt);
-
-      const typingDiv = document.createElement("div");
-      typingDiv.className = "flex justify-start mb-4";
-      typingDiv.innerHTML = `
-        <div class="bg-white border border-slate-200 rounded-2xl p-3 text-xs text-indigo-600 font-extrabold max-w-[80%] flex items-center gap-2 shadow-sm">
-          <i data-lucide="loader-2" class="h-4 w-4 animate-spin"></i> <span>Trợ lý AI đang suy nghĩ...</span>
-        </div>
-      `;
-      chatMessages.appendChild(typingDiv);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-      lucide.createIcons();
-
+    let chatBusy = false;
+    async function sendGroundedMessage(txt, ids) {
+      if (chatBusy) return;
+      const docs = ids.map(id => documents.find(doc => String(doc.id) === String(id)));
+      try { docs.forEach(DocumentUI.requireReady); if (!docs.length) DocumentUI.requireReady(null); }
+      catch (error) { appendMessage("ai", DocumentUI.errorMessage(error)); return; }
+      chatBusy = true;
+      const selection = ids.join(","), send = chatForm.querySelector("button[type=submit]");
+      if (send) send.disabled = true;
+      const typing = document.createElement("p"); typing.className = "feature-notice"; typing.setAttribute("role", "status");
+      typing.textContent = "Trợ lý AI đang tìm bằng chứng trong tài liệu..."; chatMessages.appendChild(typing);
       try {
-        const response = await fetch("/api/ai/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: txt, docIds: selectedDocIds })
-        });
-
-        chatMessages.removeChild(typingDiv);
-
-        if (response.ok) {
-          const data = await response.json();
-          appendMessage("ai", data.response, data.docId || selectedDocIds[0]);
-        } else {
-          appendMessage("ai", "Lỗi: Phản hồi từ API AI không thành công.");
+        const data = await DocumentFeatures.chat(docs, txt);
+        if (selectedDocIds.join(",") === selection) appendMessage("ai", data.text, data.docId, data.citations);
+      } catch (error) {
+        if (selectedDocIds.join(",") === selection) {
+          appendMessage("ai", DocumentUI.errorMessage(error));
+          const retry = document.createElement("button"); retry.type = "button"; retry.className = "feature-retry btn-3d btn-3d-primary";
+          retry.textContent = "Thử gửi lại"; retry.onclick = () => { retry.remove(); if (selectedDocIds.join(",") === selection) sendGroundedMessage(txt, ids); };
+          chatMessages.appendChild(retry);
         }
-      } catch (err) {
-        if (chatMessages.contains(typingDiv)) {
-          chatMessages.removeChild(typingDiv);
-        }
-        appendMessage("ai", "Lỗi kết nối máy chủ.");
-      }
+      } finally { typing.remove(); chatBusy = false; if (send) send.disabled = !selectedDocIds.length || selectedDocIds.some(id => !isGenerationReady(documents.find(d => d.id == id))); }
+    }
+    chatForm.addEventListener("submit", async e => {
+      e.preventDefault(); const txt = chatInput.value.trim(); if (!txt || chatBusy) return;
+      const docs = selectedDocIds.map(id => documents.find(doc => String(doc.id) === String(id)));
+      if (!docs.length || docs.some(doc => !isGenerationReady(doc))) { appendMessage("ai", DocumentUI.message(docs.find(doc => !isGenerationReady(doc)))); return; }
+      chatInput.value = ""; appendMessage("user", txt); await sendGroundedMessage(txt, [...selectedDocIds]);
     });
 
-    function appendMessage(sender, text, docIdForCitations) {
+    function appendMessage(sender, text, docIdForCitations, sources = []) {
       const isUser = sender === "user";
       const div = document.createElement("div");
       div.className = `flex ${isUser ? "justify-end" : "justify-start"} mb-4`;
@@ -869,8 +1108,8 @@
       if (isUser) {
         bubble.textContent = text;
       } else {
-        renderAiMessageWithCitations(bubble, text, docIdForCitations);
-        bubble.innerHTML = bubble.innerHTML.replace(/\n/g, "<br>");
+        renderAiMessageWithCitations(bubble, text, docIdForCitations, sources);
+        if (sources.length) renderCitationSources(bubble, sources, docIdForCitations);
       }
       chatMessages.appendChild(div);
       chatMessages.scrollTop = chatMessages.scrollHeight;

@@ -53,76 +53,37 @@ public class FlashcardController {
     }
 
     @GetMapping("/document/{docId}")
-    public ResponseEntity<?> getOrGenerateFlashcardsForDocument(@PathVariable Long docId, HttpServletRequest request) {
+    public ResponseEntity<?> getFlashcardsForDocument(@PathVariable Long docId, HttpServletRequest request) {
         Long userId = getCurrentUserId(request);
         if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
         }
-
         Document doc = documentRepository.findByIdAndUserId(docId, userId).orElse(null);
         if (doc == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Tài liệu không tồn tại hoặc bạn không có quyền truy cập"));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Not Found"));
         }
-
-        List<Flashcard> existing = flashcardRepository.findByDocumentId(docId);
-        if (!existing.isEmpty()) {
-            return ResponseEntity.ok(existing);
-        }
-
-        String text = doc.getExtractedText();
-        if (text == null || text.isBlank()) {
-            return ResponseEntity.ok(Map.of("cards", List.of(), "message", "Tài liệu chưa có nội dung trích xuất để tạo Flashcard."));
-        }
-        if (!aiService.hasApiKey()) {
-            return ResponseEntity.ok(Map.of("cards", List.of(), "message", "OpenAI API Key chưa được cấu hình nên chưa thể tự động tạo Flashcard."));
-        }
-
-        String snippet = text.length() > 5000 ? text.substring(0, 5000) : text;
-        String prompt = "Đọc kỹ nội dung tài liệu học tập dưới đây và tạo 8-10 thẻ Flashcard cốt lõi nhất (thuật ngữ - định nghĩa ngắn gọn) bằng tiếng Việt. " +
-                "Trả về CHỈ MỘT đối tượng JSON (không thêm chữ nào khác), dạng:\n" +
-                "{\"cards\": [{\"front\": \"Thuật ngữ hoặc câu hỏi ngắn\", \"back\": \"Định nghĩa/câu trả lời ngắn 1-2 câu\"}]}\n\n" +
-                "YÊU CẦU: Tạo siêu nhanh, ngắn gọn, súc tích, tập trung ý chính nhất, không dài dòng.\n\n" +
-                "TÀI LIỆU:\n" + snippet;
-
-        try {
-            String raw = aiService.callOpenAI(prompt, true);
-            JsonNode cardsNode = objectMapper.readTree(extractJsonObject(raw)).get("cards");
-            if (cardsNode == null || !cardsNode.isArray() || cardsNode.isEmpty()) {
-                return ResponseEntity.ok(Map.of("cards", List.of(), "message", "AI không tạo được thẻ nào từ tài liệu này."));
-            }
-
-            List<Flashcard> saved = new ArrayList<>();
-            for (JsonNode node : cardsNode) {
-                String front = node.hasNonNull("front") ? node.get("front").asText().trim() : null;
-                String back = node.hasNonNull("back") ? node.get("back").asText().trim() : null;
-                if (front != null && !front.isEmpty() && back != null && !back.isEmpty()) {
-                    Flashcard card = new Flashcard();
-                    card.setQuestion(front);
-                    card.setAnswer(back);
-                    card.setDocument(doc);
-                    saved.add(flashcardRepository.save(card));
-                }
-            }
-            return ResponseEntity.ok(saved);
-        } catch (AiService.NoApiKeyException e) {
-            return ResponseEntity.ok(Map.of("cards", List.of(), "message", "OpenAI API Key chưa được cấu hình."));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Không thể tạo Flashcard: " + e.getMessage()));
-        }
+        List<Flashcard> cards = flashcardRepository.findByDocumentId(docId).stream()
+                .filter(card -> card.getDeletedAt() == null).toList();
+        return ResponseEntity.ok(cards);
     }
 
+    @Deprecated
     @DeleteMapping("/document/{docId}")
     public ResponseEntity<?> regenerateFlashcardsForDocument(@PathVariable Long docId, HttpServletRequest request) {
         Long userId = getCurrentUserId(request);
         if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
         }
         Document doc = documentRepository.findByIdAndUserId(docId, userId).orElse(null);
         if (doc == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Tài liệu không tồn tại hoặc bạn không có quyền truy cập"));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Not Found"));
         }
-        flashcardRepository.deleteAll(flashcardRepository.findByDocumentId(docId));
-        return ResponseEntity.ok(Map.of("message", "Đã xoá bộ thẻ cũ, lần sau mở lại sẽ tạo bộ thẻ mới."));
+        java.util.List<Flashcard> cards = flashcardRepository.findByDocumentId(docId);
+        for (Flashcard card : cards) {
+            card.setDeletedAt(java.time.Instant.now());
+            flashcardRepository.save(card);
+        }
+        return ResponseEntity.ok(Map.of("message", "Legacy soft-delete applied"));
     }
 
     private String extractJsonObject(String raw) {
@@ -254,3 +215,5 @@ public class FlashcardController {
         ));
     }
 }
+
+

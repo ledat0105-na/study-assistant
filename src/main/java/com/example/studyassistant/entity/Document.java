@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "documents")
+@org.hibernate.annotations.SQLRestriction("status <> 'DELETED'")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -51,7 +52,7 @@ public class Document {
     private Integer totalPages;
 
     @Column(nullable = false)
-    private String status = "UPLOADING"; // "UPLOADING", "PROCESSING", "READY", "FAILED"
+    private String status = "UPLOADING"; // UPLOADING, PROCESSING, READY, FAILED, DELETED
 
     @Column(name = "retry_count")
     private Integer retryCount = 0;
@@ -62,6 +63,18 @@ public class Document {
     @Column(name = "created_at")
     @JsonProperty("uploadDate")
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "content_hash", length = 64)
+    @JsonIgnore
+    private String contentHash;
+
+    @Column(name = "active_index_version", length = 128)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String activeIndexVersion;
+
+    @Column(name = "embedding_model", length = 128)
+    @JsonIgnore
+    private String embeddingModel;
 
     // Nội dung text thật trích xuất từ file, dùng để gửi cho AI
     @Lob

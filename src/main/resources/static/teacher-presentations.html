@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study AI - Quản lý Bài giảng AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style-3d.css">
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
+
+  <!-- 3D Sidebar -->
+  <aside></aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 md:p-10 overflow-y-auto relative z-10 hidden" id="mainContent">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">
+          Bài giảng AI
+        </h1>
+        <p class="text-slate-600 text-sm mt-1.5 font-semibold">Tạo và quản lý bài giảng thuyết trình thông minh từ tài liệu.</p>
+      </div>
+      <button onclick="openCreateModal()" class="btn-3d btn-3d-primary px-6 py-3 text-xs font-extrabold shadow-xl shadow-indigo-500/30 flex items-center gap-2.5">
+        <i data-lucide="plus" class="h-4 w-4"></i>
+        <span>Tạo Bài Giảng Mới</span>
+      </button>
+    </div>
+
+    <div id="loadingState" class="hidden text-center py-10">
+      <i data-lucide="loader-2" class="h-8 w-8 animate-spin mx-auto text-indigo-600 mb-4"></i>
+      <p class="text-sm font-semibold text-slate-500">Đang tải danh sách bài giảng...</p>
+    </div>
+
+    <div id="emptyState" class="hidden text-center py-16 glass-3d-card border border-slate-200 shadow-sm rounded-3xl">
+      <div class="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-500 border border-indigo-100 flex items-center justify-center mx-auto mb-4">
+        <i data-lucide="presentation" class="h-8 w-8"></i>
+      </div>
+      <h3 class="text-lg font-extrabold text-slate-900 mb-2">Chưa có bài giảng nào</h3>
+      <p class="text-slate-500 text-sm max-w-sm mx-auto mb-6">Bạn chưa tạo bài giảng nào. Hãy nhấn nút Tạo Bài Giảng Mới để bắt đầu biên soạn bài giảng từ tài liệu AI.</p>
+      <button onclick="openCreateModal()" class="btn-3d btn-3d-secondary px-6 py-2.5 text-xs font-extrabold shadow-md">
+        Tạo Bài Giảng Đầu Tiên
+      </button>
+    </div>
+
+    <div id="deckList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
+      <!-- Deck Cards injected here via JS -->
+    </div>
+  </main>
+
+  <!-- Create Deck Modal -->
+  <div id="createModal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md mx-4 overflow-hidden transform transition-all">
+      <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <h3 class="text-lg font-extrabold text-slate-900">Tạo Bài Giảng Mới</h3>
+        <button onclick="closeCreateModal()" class="text-slate-400 hover:text-slate-600 focus:outline-none">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+      <form id="createForm" onsubmit="handleCreateDeck(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Tên bài giảng <span class="text-red-500">*</span></label>
+          <input type="text" id="deckTitle" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition-all font-semibold text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Mô tả</label>
+          <textarea id="deckDesc" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition-all font-semibold text-sm"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Sổ tay (Notebook) <span class="text-red-500">*</span></label>
+          <select id="deckNotebook" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition-all font-semibold text-sm">
+            <option value="">-- Chọn Sổ Tay --</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Tỷ lệ màn hình</label>
+            <select id="deckRatio" disabled class="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-slate-100 text-slate-500 font-semibold text-sm">
+              <option value="16:9" selected>16:9 (Chuẩn)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Giao diện (Theme)</label>
+            <select id="deckTheme" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition-all font-semibold text-sm">
+              <option value="DEFAULT">Mặc định (Default)</option>
+            </select>
+          </div>
+        </div>
+        <div class="pt-4 flex justify-end gap-3">
+          <button type="button" onclick="closeCreateModal()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition-all">Hủy</button>
+          <button type="submit" id="btnSubmitCreate" class="btn-3d btn-3d-primary px-5 py-2.5 text-sm font-extrabold shadow-md">Tạo bài giảng</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Archive Confirm Modal -->
+  <div id="archiveModal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-sm mx-4 overflow-hidden transform transition-all">
+      <div class="p-6">
+        <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-4">
+          <i data-lucide="archive" class="h-6 w-6"></i>
+        </div>
+        <h3 class="text-lg font-extrabold text-slate-900 mb-2">Lưu trữ bài giảng?</h3>
+        <p class="text-slate-500 text-sm font-medium">Bài giảng này sẽ được chuyển vào chế độ chỉ đọc. Bạn có chắc chắn muốn tiếp tục?</p>
+      </div>
+      <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+        <button onclick="closeArchiveModal()" class="px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition-all">Hủy</button>
+        <button id="btnConfirmArchive" class="px-4 py-2 rounded-xl text-sm font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-md transition-all">Xác nhận</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="auth-interceptor.js"></script>
+  <script src="sidebar.js"></script>
+  <script src="js/ui-errors.js"></script>
+  <script src="js/api-client.js"></script>
+  <script src="js/teacher-api.js"></script>
+  <script src="js/job-poller.js"></script>
+  <script src="js/teacher-presentations.js"></script>
+
+</body>
+</html>
