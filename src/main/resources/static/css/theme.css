@@ -1,0 +1,79 @@
+html[data-theme="light"] { color-scheme: light; }
+
+.app-theme-control {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 50%;
+  background: #fff;
+  color: #334155;
+  box-shadow: 0 4px 16px #0f172a1a;
+  cursor: pointer;
+  font: 600 1.35rem/1 system-ui, sans-serif;
+}
+.app-theme-control:focus-visible { outline: 2px solid #818cf8; outline-offset: 3px; }
+
+#account-alert-banner { bottom: 4.2rem; }
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-pearl: #1b273b;
+  --bg-surface-light: #25344b;
+  --glass-bg: #25344b;
+  --glass-bg-hover: #2e405a;
+  --glass-border: #536783;
+  --color-heading: #f1f5f9;
+  --color-body: #edf3fc;
+  --color-muted: #d8e3f2;
+  --shadow-3d-sm: 0 10px 25px #02061766;
+  --shadow-3d-lg: 0 25px 50px #02061788;
+  background: var(--bg-pearl);
+  color: var(--color-body);
+}
+[data-theme="dark"] :is(body, .app-main) { background-color: #1b273b !important; color: #edf3fc; }
+[data-theme="dark"] :is(.glass-3d, .glass-3d-card, .app-mobile-bar, .app-theme-control,
+  .app-notification, .billing-upgrade-panel, .billing-quota-grid > div, #recoveryEmail[readonly],
+  .input-3d, .btn-3d-secondary, #account-alert-banner, .bg-white, [class*="bg-white/"]) {
+  background: #25344b !important;
+  color: #e2e8f0;
+  border-color: #536783;
+}
+[data-theme="dark"] :is(.bg-slate-50, .bg-slate-100, [class*="bg-slate-50/"], [class*="bg-slate-100/"],
+  .bg-indigo-50, [class*="bg-indigo-50/"], .bg-purple-50, .bg-cyan-50, .bg-rose-50,
+  .bg-emerald-50, .bg-amber-50, [class*="bg-gradient-to"][class*="from-indigo-50"],
+  [class*="bg-gradient-to"][class*="from-slate-50"]) {
+  background: #2e405a !important;
+}
+[data-theme="dark"] :is(.text-slate-950, .text-slate-900, .text-slate-800, .text-slate-700,
+  .text-slate-600, .text-slate-500, .text-slate-400, .app-notification p, .password-checklist) {
+  color: #e4edf9 !important;
+}
+[data-theme="dark"] :is(.text-indigo-800, .text-indigo-700, .text-indigo-600, .text-purple-700,
+  .text-purple-600, .text-blue-700, .text-cyan-700) { color: #becaff !important; }
+[data-theme="dark"] :is(.text-rose-600, .text-red-600, .text-rose-700, .text-red-700) { color: #fda4af !important; }
+[data-theme="dark"] :is(.text-emerald-700, .text-emerald-600, .password-checklist .fulfilled) {
+  color: #6ee7b7 !important;
+}
+[data-theme="dark"] :is(.border-slate-100, .border-slate-200, .border-slate-300,
+  [class*="border-slate-200/"], .input-3d) { border-color: #536783 !important; }
+[data-theme="dark"] :is(.divide-slate-100, .divide-slate-200) > :not([hidden]) ~ :not([hidden]) {
+  border-color: #536783 !important;
+}
+[data-theme="dark"] .orb-3d { opacity: .22; }
+[data-theme="dark"] .glass-3d-card::before { opacity: .18; }
+[data-theme="dark"] .app-notification button.app-notification-cancel {
+  background: #334564;
+  color: #f1f5f9;
+}
+[data-theme="dark"] .app-notification button.app-notification-cancel:hover { background: #455a7b; }
+[data-theme="dark"] .input-3d::placeholder { color: #d1dced; }
+
+[data-theme="dark"] :is(tbody, tbody tr) { background-color: #25344b; }
+[data-theme="dark"] tbody tr:hover { background: #344863 !important; }

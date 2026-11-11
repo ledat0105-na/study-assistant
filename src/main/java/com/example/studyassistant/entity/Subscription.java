@@ -21,7 +21,7 @@ public class Subscription {
     private User user;
 
     @Column(nullable = false)
-    private String plan = "FREE"; // "FREE", "BASIC", "PREMIUM"
+    private String plan = "FREE"; // FREE / PRO / VIP; legacy BASIC/PREMIUM are normalized
 
     @Column(name = "auto_renew", nullable = false)
     private Boolean autoRenew = true;

@@ -69,8 +69,12 @@ public class DocumentIndexingIntegrationFlowTest {
     private Notebook foreignNotebook;
     private Document ownerDoc;
 
+    @org.junit.jupiter.api.io.TempDir
+    Path uploadRoot;
+
     @BeforeEach
     void setUp() {
+        org.springframework.test.util.ReflectionTestUtils.setField(documentService, "uploadDir", uploadRoot.toString());
         ReflectionTestUtils.setField(documentService, "documentIndexingService", documentIndexingService);
         ReflectionTestUtils.setField(documentService, "documentParsingService", documentParsingService);
 

@@ -65,6 +65,7 @@ public class DocumentIndexingReindexMySQLIntegrationTest {
 
     @BeforeEach
     void setup() throws IOException {
+        documentIndexingService = org.springframework.test.util.AopTestUtils.getTargetObject(documentIndexingService);
         testUser = transactionTemplate.execute(status -> {
             User u = new User();
             u.setUsername("reindexUser_" + UUID.randomUUID());

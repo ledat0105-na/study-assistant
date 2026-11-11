@@ -27,17 +27,24 @@ function renderUnifiedSidebar(activeNavKey) {
     return;
   }
 
-  const role = (user.role || "STUDENT").toUpperCase();
+  const role = (user.role || "USER").toUpperCase();
   const isAdmin = role === "ADMIN";
-  const isTeacher = role === "TEACHER" || isAdmin;
+  if (isAdmin && !activeNavKey?.startsWith("admin-")) {
+    location.replace("admin.html");
+    return;
+  }
+  if (!isAdmin && activeNavKey?.startsWith("admin-")) {
+    location.replace("dashboard.html");
+    return;
+  }
   
-  const userAvatarName = user.name ? user.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() : (isAdmin ? "AD" : (role === "TEACHER" ? "GV" : "AI"));
-  const fullName = user.name || user.username || (isAdmin ? "Quản Trị Viên" : (role === "TEACHER" ? "Giảng Viên" : "Học viên AI"));
+  const userAvatarName = user.name ? user.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() : (isAdmin ? "AD" : "AI");
+  const fullName = user.name || user.username || (isAdmin ? "Quản Trị Viên" : "Người dùng");
   const email = user.email || "admin@study.ai";
 
   let navItems = [];
 
-  if (isAdmin && activeNavKey && activeNavKey.startsWith("admin-")) {
+  if (isAdmin) {
     // Admin functions
     navItems = [
       { key: "admin-overview", label: "Tổng quan Quản trị 3D", icon: "shield-check", href: "admin.html" },
@@ -45,19 +52,16 @@ function renderUnifiedSidebar(activeNavKey) {
       { key: "admin-payments", label: "Phê duyệt Thanh toán", icon: "credit-card", href: "admin-payments.html" },
       { key: "admin-users", label: "Quản lý Người dùng", icon: "users", href: "admin-users.html" },
       { key: "admin-docs", label: "Quản lý Tài liệu hệ thống", icon: "folder-open", href: "admin-documents.html" },
-      { key: "admin-audit", label: "Nhật ký Hệ thống Audit", icon: "clipboard-list", href: "admin-audit.html" },
-      { key: "profile", label: "Hồ sơ Quản trị viên", icon: "user", href: "profile.html" }
+      { key: "admin-audit", label: "Nhật ký Hệ thống Audit", icon: "clipboard-list", href: "admin-audit.html" }
     ];
   } else {
-    // Default / Student / Teacher Menu
+    // User navigation
     navItems = [
       { key: "dashboard", label: "Bảng điều khiển", icon: "layout-dashboard", href: "dashboard.html" },
       { key: "documents", label: "Kho tài liệu học tập", icon: "file-text", href: "documents.html" }
     ];
     
-    if (isTeacher) {
-      navItems.push({ key: "teacher-presentations", label: "Bài giảng AI", icon: "presentation", href: "teacher-presentations.html" });
-    }
+    navItems.push({ key: "teacher-presentations", label: "Bài giảng AI", icon: "presentation", href: "teacher-presentations.html" });
     
     navItems.push(
       { key: "chat", label: "Trợ lý Chat AI & 3D Studio", icon: "sparkles", href: "viewer.html" },
@@ -82,10 +86,22 @@ function renderUnifiedSidebar(activeNavKey) {
 
   const sidebarContainer = document.querySelector("aside");
   if (sidebarContainer) {
-    sidebarContainer.className = "w-64 bg-white/80 backdrop-blur-2xl border-r border-slate-200/80 text-slate-800 flex flex-col justify-between p-4 sticky top-0 h-screen z-30 shrink-0 shadow-xl relative overflow-hidden";
+    document.body.classList.add('has-app-sidebar');
+    document.querySelector('main')?.classList.add('app-main');
+    sidebarContainer.id='appSidebar';
+    if(!document.querySelector('.app-mobile-bar')){
+      const bar=document.createElement('div');bar.className='app-mobile-bar';
+      const toggle=document.createElement('button');toggle.type='button';toggle.textContent='☰ Menu';
+      toggle.setAttribute('aria-controls','appSidebar');toggle.setAttribute('aria-expanded','false');
+      toggle.onclick=()=>{const open=sidebarContainer.classList.toggle('is-open');toggle.setAttribute('aria-expanded',String(open));};
+      const badge=document.createElement('span');badge.setAttribute('data-plan-badge','');badge.className='plan-badge';badge.textContent='FREE';
+      bar.append(toggle);if(!isAdmin)bar.append(badge);document.body.prepend(bar);
+    }
+
+    sidebarContainer.className = "app-sidebar w-64 bg-white/80 backdrop-blur-2xl border-r border-slate-200/80 text-slate-800 flex flex-col justify-between p-4 sticky top-0 h-screen z-30 shrink-0 shadow-xl relative overflow-hidden";
     sidebarContainer.innerHTML = `
       <div class="relative z-10">
-        <a href="${isAdmin ? 'admin.html' : 'dashboard.html'}" class="flex items-center gap-3 px-2 py-4 mb-6 border-b border-slate-200/80 hover:opacity-90 transition-opacity">
+        <a href="index.html" aria-label="Study AI – Trang chủ" class="flex items-center gap-3 px-2 py-4 mb-6 border-b border-slate-200/80 hover:opacity-90 transition-opacity">
           <div class="bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-500 p-2.5 rounded-2xl text-white shadow-lg shadow-indigo-500/30 transform hover:scale-105 transition-all duration-300">
             <i data-lucide="sparkles" class="h-6 w-6"></i>
           </div>
@@ -109,6 +125,7 @@ function renderUnifiedSidebar(activeNavKey) {
           </div>
           <div class="flex-1 min-w-0">
             <p class="text-xs font-bold text-slate-900 truncate">${fullName}</p>
+            ${isAdmin ? '' : '<span data-plan-badge class="plan-badge">FREE</span>'}
             <p class="text-[10px] text-slate-500 truncate">${email}</p>
           </div>
         </div>

@@ -50,6 +50,7 @@ public class NotebookController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (IllegalStateException e) {
+            if(e instanceof com.example.studyassistant.billing.MonthlyQuotaService.Exhausted exhausted)return ResponseEntity.status(429).body(exhausted.payload());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
         }
     }

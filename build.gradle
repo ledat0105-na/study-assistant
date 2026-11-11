@@ -21,6 +21,7 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.boot:spring-boot-starter-json'
     implementation 'org.springframework.security:spring-security-crypto'
@@ -54,16 +55,39 @@ tasks.named('test') {
 
 task mysqlIntegrationTest(type: Test) {
     description = 'Runs MySQL Integration Tests'
+    systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
+    systemProperty 'qa.integration.reset-database', providers.gradleProperty('resetQaDatabase').getOrElse('false')
     group = 'verification'
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     useJUnitPlatform {
         includeTags 'Integration'
     }
-    systemProperty 'spring.profiles.active', 'integration'
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
+
+// Load Mockito at startup; self-attachment can hang on restricted Windows sessions.
+tasks.withType(Test).configureEach {
+    doFirst {
+        def testTemp = layout.buildDirectory.dir('tmp/test-runtime').get().asFile
+        testTemp.mkdirs()
+        systemProperty 'java.io.tmpdir', testTemp.absolutePath
+        def mockitoJar = classpath.files.find { it.name.startsWith('mockito-core-') && it.name.endsWith('.jar') }
+        if (mockitoJar != null) jvmArgs "-javaagent:${mockitoJar.absolutePath}"
+    }
+    systemProperty 'file.encoding', 'UTF-8'
+    systemProperty 'spring.test.context.cache.maxSize', '4'
+    systemProperty 'APP_LOG_DIR', layout.buildDirectory.dir('test-logs').get().asFile.absolutePath
+}
+
+tasks.register('e2eTest', Test) {
+    description = 'Runs real MySQL/Qdrant pipeline tests with deterministic AI fixtures'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'E2E' }
+}

@@ -2,6 +2,12 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" href="css/theme.css">
+  <script src="js/theme.js"></script>
+  <script src="js/runtime-errors.js"></script>
+  <script src="js/app-modal.js"></script>
+  <script src="js/billing-ui.js"></script>
+  <script src="js/account-alerts.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Study AI - Quản Lý Bảng Giá & Khuyến Mãi 3D</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -36,7 +42,7 @@
         <span id="planCountLabel" class="badge-3d badge-3d-indigo">0 Gói</span>
       </div>
 
-      <div class="overflow-x-auto">
+      <div class="app-table-scroll overflow-x-auto" tabindex="0" role="region" aria-label="Bảng dữ liệu có thể cuộn ngang">
         <table class="w-full text-left text-xs border-collapse">
           <thead>
             <tr class="bg-slate-100/90 text-slate-600 font-extrabold uppercase border-b border-slate-200">
@@ -78,7 +84,7 @@
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1">Mã Gói (Code)</label>
-              <input type="text" id="planCode" placeholder="PRO, STUDENT..." required class="input-3d w-full font-semibold" />
+              <input type="text" id="planCode" placeholder="FREE, PRO, VIP" required class="input-3d w-full font-semibold" />
             </div>
             <div>
               <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1">Tên Gói Dịch Vụ</label>
@@ -89,11 +95,11 @@
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1">Giá Gốc (VNĐ)</label>
-              <input type="text" id="originalPriceInput" oninput="formatCurrencyInput(this)" placeholder="149.000" required class="input-3d w-full font-extrabold font-mono text-indigo-700" />
+              <input type="text" id="originalPriceInput" oninput="formatCurrencyInput(this)" placeholder="100.000" required class="input-3d w-full font-extrabold font-mono text-indigo-700" />
             </div>
             <div>
               <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1">Giá SALE Khuyến Mãi (VNĐ)</label>
-              <input type="text" id="salePriceInput" oninput="formatCurrencyInput(this)" placeholder="99.000" required class="input-3d w-full font-extrabold font-mono text-emerald-600" />
+              <input type="text" id="salePriceInput" oninput="formatCurrencyInput(this)" placeholder="50.000" required class="input-3d w-full font-extrabold font-mono text-emerald-600" />
             </div>
           </div>
 
@@ -144,12 +150,12 @@
 
   <script src="auth-interceptor.js"></script>
   <script src="sidebar.js"></script>
+  <script src="js/admin-pagination.js"></script>
   <script>
     renderUnifiedSidebar("admin-pricing");
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     if ((user.role || "FREE").toUpperCase() !== "ADMIN") {
-      alert("Quyền truy cập bị từ chối! Trang này chỉ dành cho Quản trị viên.");
-      window.location.href = "dashboard.html";
+      AppModal.alert("Quyền truy cập bị từ chối! Trang này chỉ dành cho Quản trị viên.", {tone: "error"}).then(() => { window.location.href = "dashboard.html"; });
     }
 
     let allPricingPlans = [];
@@ -187,10 +193,11 @@
 
       if (allPricingPlans.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500 font-semibold">Chưa có gói dịch vụ nào. Nhấn "Thêm Gói Mới" để khởi tạo!</td></tr>`;
+            paginateAdminRows(tbody);
         return;
       }
 
-      allPricingPlans.forEach(plan => {
+      allPricingPlans.slice().sort(compareAdminNewest).forEach(plan => {
         const isSale = plan.originalPrice > plan.salePrice;
         const tr = document.createElement("tr");
         tr.className = "hover:bg-slate-50 transition-colors";
@@ -212,6 +219,7 @@
         `;
         tbody.appendChild(tr);
       });
+      paginateAdminRows(tbody);
 
       lucide.createIcons();
     }
@@ -269,7 +277,7 @@
       };
 
       if (!planData.planCode || !planData.name) {
-        alert("Vui lòng điền đầy đủ Mã Gói và Tên Gói Dịch Vụ!");
+        AppModal.alert("Vui lòng điền đầy đủ Mã Gói và Tên Gói Dịch Vụ!");
         return;
       }
 
@@ -281,27 +289,29 @@
         });
 
         if (res.ok) {
-          alert("Đã lưu bảng giá vào CSDL thành công!");
+          AppModal.alert("Đã lưu bảng giá vào CSDL thành công!");
           closePlanModal();
           loadAdminPlans();
         } else {
-          alert("Không thể lưu bảng giá!");
+          AppModal.alert("Không thể lưu bảng giá!");
         }
       } catch (err) {
-        alert("Lỗi kết nối máy chủ.");
+        AppModal.alert("Lỗi kết nối máy chủ.");
       }
     }
 
     async function deletePlan(id) {
-      if (!confirm("Bạn có chắc chắn muốn xóa gói dịch vụ này khỏi CSDL?")) return;
+      if (!(await AppModal.confirm("Bạn có chắc chắn muốn xóa gói dịch vụ này khỏi CSDL?", {title: "Xóa gói dịch vụ", tone: "warning", buttonLabel: "Xóa gói"}))) return;
       try {
         const res = await fetch(`/api/plans/${id}`, { method: "DELETE" });
         if (res.ok) {
-          alert("Đã xóa gói khỏi CSDL thành công.");
+          AppModal.alert("Đã xóa gói khỏi CSDL thành công.");
           loadAdminPlans();
+        } else {
+          AppModal.alert("Không thể xóa gói dịch vụ. Vui lòng thử lại.", {tone: "error"});
         }
       } catch (err) {
-        alert("Lỗi kết nối máy chủ.");
+        AppModal.alert("Lỗi kết nối máy chủ.");
       }
     }
 

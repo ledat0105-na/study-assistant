@@ -33,3 +33,7 @@ button:focus-visible, a:focus-visible, select:focus-visible { outline: 2px solid
 .quiz-option:focus-visible { outline:3px solid #c49aff; outline-offset:2px; }
 .quiz-correct-text { color:#6ee7b7; font-weight:bold; }
 .quiz-wrong-text { color:#fda4af; font-weight:bold; }
+
+/* Viewer uses light panels; keep headings, citations and selection notices readable. */
+.viewer-page .summary-section h3, .viewer-page .citation-link { color: #6d28d9; }
+.viewer-page .selected-sources { color: #4f46e5; }

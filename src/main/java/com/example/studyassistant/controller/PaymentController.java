@@ -44,7 +44,10 @@ public class PaymentController {
     @Autowired
     private com.example.studyassistant.service.QuotaService quotaService;
 
-    @org.springframework.beans.factory.annotation.Value("${payment.webhook.secret}")
+    @Autowired private com.example.studyassistant.billing.MonthlyQuotaService monthlyQuotaService;
+    @Autowired private java.time.Clock billingClock;
+
+    @org.springframework.beans.factory.annotation.Value("${payment.webhook.secret:}")
     private String webhookSecret;
 
     private Long getCurrentUserId(HttpServletRequest request) {
@@ -68,34 +71,17 @@ public class PaymentController {
         }
     }
 
-    private boolean isMojibake(String text) {
-        if (text == null) return false;
-        return text.contains("Ã") || text.contains("Â") || text.contains("") || text.contains("™") || text.contains("ª");
-    }
-
-    // Tự động khởi tạo và sửa lỗi font (Mojibake) bảng giá mẫu trong CSDL
+    // Seed an empty catalog only; viewing prices must never overwrite admin edits.
     private List<PricingPlan> ensureSeedPricingPlans() {
         List<PricingPlan> dbPlans = pricingPlanRepository.findAll();
-        boolean hasMojibake = dbPlans.stream().anyMatch(p -> isMojibake(p.getName()) || isMojibake(p.getDescription()) || isMojibake(p.getBadgeText()) || isMojibake(p.getFeatures()));
 
-        if (dbPlans.isEmpty() || hasMojibake) {
-            Map<String, PricingPlan> defaults = Map.of(
-                "FREE", new PricingPlan(null, "FREE", "Gói Miễn Phí (FREE)", 0.0, 0.0, "vĩnh viễn", false, true, null, "Phù hợp cho trải nghiệm ban đầu", "Tải lên tối đa 3 tài liệu|Sơ đồ kiến thức cơ bản|10 Bài trắc nghiệm AI mỗi tháng", 3, LocalDateTime.now(), LocalDateTime.now()),
-                "STUDENT", new PricingPlan(null, "STUDENT", "Gói Sinh Viên (STUDENT)", 79000.0, 49000.0, "tháng", false, true, "Giảm 38%", "Dành cho học sinh sinh viên học tập hàng ngày", "Tải lên tối đa 50 tài liệu|Sơ đồ kiến thức 3D nâng cao|50 Bài trắc nghiệm AI/tháng|Thẻ Flashcards lật 3D không giới hạn", 50, LocalDateTime.now(), LocalDateTime.now()),
-                "PRO", new PricingPlan(null, "PRO", "Gói Chuyên Nghiệp (PRO)", 149000.0, 99000.0, "tháng", true, true, "Phổ Biến Nhất - GIẢM 33%", "Dành cho người học tích cực & nghiên cứu chuyên sâu", "Tải lên không giới hạn tài liệu|Sơ đồ kiến thức 3D không giới hạn|Không giới hạn Thẻ Flashcards & Bài thi AI|Phân tích chuyên sâu tiến độ học tập|Ưu tiên xử lý từ AI Model", 9999, LocalDateTime.now(), LocalDateTime.now())
-            );
+        if (dbPlans.isEmpty()) {
+            Map<String,PricingPlan> defaults=com.example.studyassistant.billing.BillingController.catalog().stream()
+                    .collect(java.util.stream.Collectors.toMap(PricingPlan::getPlanCode,java.util.function.Function.identity()));
 
             for (PricingPlan def : defaults.values()) {
                 Optional<PricingPlan> existingOpt = pricingPlanRepository.findByPlanCode(def.getPlanCode());
-                if (existingOpt.isPresent()) {
-                    PricingPlan existing = existingOpt.get();
-                    existing.setName(def.getName());
-                    existing.setDescription(def.getDescription());
-                    existing.setFeatures(def.getFeatures());
-                    existing.setBadgeText(def.getBadgeText());
-                    existing.setBillingCycle(def.getBillingCycle());
-                    pricingPlanRepository.save(existing);
-                } else {
+                if (existingOpt.isEmpty()) {
                     pricingPlanRepository.save(def);
                 }
             }
@@ -108,9 +94,7 @@ public class PaymentController {
     // PLAN-01: Xem danh sách các gói dịch vụ và bảng giá công khai từ CSDL
     @GetMapping("/plans")
     public ResponseEntity<?> getPlans() {
-        ensureSeedPricingPlans();
-        List<PricingPlan> activePlans = pricingPlanRepository.findByIsActiveTrueOrderByIdAsc();
-        return ResponseEntity.ok(activePlans);
+        return ResponseEntity.ok(com.example.studyassistant.billing.BillingController.catalog());
     }
 
     // PLAN-ADMIN-01: Xem tất cả các gói dịch vụ (dành cho Admin)
@@ -196,12 +180,15 @@ public class PaymentController {
         String plan = user.getPlan() != null ? user.getPlan() : "FREE";
 
         long usedNotebooks = notebookRepository.countByUserIdAndIsDeletedFalse(userId);
-        long usedDocs = documentRepository.countByUserId(userId);
+        @SuppressWarnings("unchecked")
+        Map<String,Object> monthly=(Map<String,Object>)monthlyQuotaService.status(userId).get("features");
+        long usedDocs=((Number)((Map<?,?>)monthly.get("UPLOAD")).get("used")).longValue();
         long usedConversations = conversationRepository.countByUserIdAndIsDeletedFalse(userId);
 
-        int maxNotebooks = "PRO".equalsIgnoreCase(plan) || "PREMIUM".equalsIgnoreCase(plan) ? 100 : ("STUDENT".equalsIgnoreCase(plan) || "BASIC".equalsIgnoreCase(plan) ? 20 : 5);
-        int maxDocs = quotaService.getMaxDocuments(plan);
-        int maxConversations = "PRO".equalsIgnoreCase(plan) || "PREMIUM".equalsIgnoreCase(plan) ? 500 : ("STUDENT".equalsIgnoreCase(plan) || "BASIC".equalsIgnoreCase(plan) ? 100 : 20);
+        String canonical=com.example.studyassistant.billing.PlanPolicy.normalize(plan);
+        int maxNotebooks=canonical.equals("VIP")?-1:canonical.equals("PRO")?50:3;
+        int maxDocs=com.example.studyassistant.billing.PlanPolicy.limit(canonical,"UPLOAD");
+        int maxConversations=canonical.equals("VIP")?-1:canonical.equals("PRO")?500:20;
 
         Map<String, Object> response = new HashMap<>();
         response.put("currentPlan", plan);
@@ -214,6 +201,7 @@ public class PaymentController {
 
     // PLAN-02 & PAY-01: Tạo yêu cầu thanh toán nâng cấp (lấy giá sale real-time từ DB)
     @PostMapping("/payments/checkout")
+    @org.springframework.transaction.annotation.Transactional
     public ResponseEntity<?> checkoutUpgrade(@RequestBody Map<String, String> body, HttpServletRequest request) {
         Long userId = getCurrentUserId(request);
         if (userId == null) {
@@ -221,28 +209,28 @@ public class PaymentController {
         }
 
         String planId = body.get("planId");
-        if (planId == null) {
+        if (planId == null || planId.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Vui lòng chọn gói dịch vụ"));
         }
 
-        String targetPlanCode = planId.toUpperCase();
-        PricingPlan pricingPlan = pricingPlanRepository.findByPlanCode(targetPlanCode).orElse(null);
+        String targetPlanCode = planId.trim().toUpperCase(Locale.ROOT);
+        if (!Set.of("PRO","VIP").contains(targetPlanCode)) return ResponseEntity.badRequest().body(Map.of("error","Chỉ hỗ trợ nâng cấp PRO hoặc VIP."));
+        int durationMonths;
+        long realPrice;
+        try {durationMonths=Integer.parseInt(body.getOrDefault("months","1"));realPrice=com.example.studyassistant.billing.PlanPolicy.price(targetPlanCode,durationMonths);}
+        catch(IllegalArgumentException ex){return ResponseEntity.badRequest().body(Map.of("error",ex.getMessage()));}
 
-        Long realPrice = 0L;
-        if (pricingPlan != null) {
-            realPrice = pricingPlan.getSalePrice() != null ? pricingPlan.getSalePrice().longValue() : pricingPlan.getOriginalPrice().longValue();
-        } else {
-            if ("STUDENT".equalsIgnoreCase(targetPlanCode) || "BASIC".equalsIgnoreCase(targetPlanCode)) realPrice = 49000L;
-            else if ("PRO".equalsIgnoreCase(targetPlanCode) || "PREMIUM".equalsIgnoreCase(targetPlanCode)) realPrice = 99000L;
-        }
-
-        User user = userRepository.findById(userId).orElseThrow();
+        User user = userRepository.findByIdForUpdate(userId).orElseThrow();
+        if (!"USER".equals(user.getRole())) return ResponseEntity.status(403).build();
+        var pending = paymentRepository.findFirstByUserIdAndStatusOrderByIdDesc(userId, "PENDING");
+        if (pending.isPresent()) return ResponseEntity.ok(paymentStatus(pending.get()));
 
         // Tạo PENDING Payment Transaction
         Payment payment = new Payment();
         payment.setUser(user);
         payment.setPlan(targetPlanCode);
         payment.setAmount(realPrice);
+        payment.setDurationMonths(durationMonths);
         payment.setStatus("PENDING");
         payment.setPaymentNote("Thanh toán nâng cấp gói " + targetPlanCode + " cho " + user.getUsername());
         payment.setCreatedAt(LocalDateTime.now());
@@ -253,6 +241,7 @@ public class PaymentController {
         checkoutInfo.put("transactionId", savedPayment.getId());
         checkoutInfo.put("plan", targetPlanCode);
         checkoutInfo.put("amount", realPrice);
+        checkoutInfo.put("months", durationMonths);
         checkoutInfo.put("status", "PENDING");
         checkoutInfo.put("message", "Vui lòng hoàn tất chuyển khoản. Hệ thống sẽ xác minh để kích hoạt gói.");
 
@@ -274,10 +263,28 @@ public class PaymentController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chữ ký webhook không hợp lệ"));
         }
 
-        Long transactionId = Long.valueOf(webhookData.get("transactionId").toString());
-        String status = webhookData.get("status").toString(); // "SUCCESS", "FAILED"
+        Long transactionId;
+        String status;
+        try {
+            transactionId = Long.valueOf(String.valueOf(webhookData.get("transactionId")));
+            status = String.valueOf(webhookData.get("status"));
+            if (transactionId <= 0 || !("SUCCESS".equalsIgnoreCase(status) || "FAILED".equalsIgnoreCase(status))) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Dữ liệu webhook không hợp lệ."));
+            }
+        } catch (NumberFormatException ex) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Mã giao dịch không hợp lệ."));
+        }
+        if ("SUCCESS".equalsIgnoreCase(status)) {
+            return paymentRepository.existsById(transactionId)
+                    ? ResponseEntity.accepted().body(Map.of("status", "PENDING_ADMIN_REVIEW"))
+                    : ResponseEntity.notFound().build();
+        }
+        return settlePayment(transactionId, status, request, "PAYMENT_WEBHOOK", "PLAN_UPGRADE_WEBHOOK");
+    }
 
-        Optional<Payment> paymentOpt = paymentRepository.findById(transactionId);
+    private ResponseEntity<?> settlePayment(Long transactionId, String status, HttpServletRequest request,
+                                           String actor, String action) {
+        Optional<Payment> paymentOpt = paymentRepository.findByIdForUpdate(transactionId);
         if (paymentOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -288,12 +295,15 @@ public class PaymentController {
         }
 
         if ("SUCCESS".equalsIgnoreCase(status)) {
-            String oldPlan = payment.getUser().getPlan();
+            User user = userRepository.findByIdForUpdate(payment.getUser().getId()).orElseThrow();
+            if (!"USER".equals(user.getRole())) {
+                payment.setStatus("REJECTED");
+                return ResponseEntity.status(409).body(Map.of("error", "Tài khoản quản trị không sử dụng gói dịch vụ."));
+            }
+            String oldPlan = user.getPlan();
             payment.setStatus("APPROVED");
-            paymentRepository.save(payment);
 
             // Activate Subscription & Cập nhật Plan cho User
-            User user = payment.getUser();
             user.setPlan(payment.getPlan());
             userRepository.save(user);
 
@@ -303,17 +313,20 @@ public class PaymentController {
                         s.setUser(user);
                         return s;
                     });
+            sub.setAutoRenew(false);
+            LocalDateTime activatedAt=LocalDateTime.ofInstant(billingClock.instant(),java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
+            LocalDateTime startsAt="ACTIVE".equals(sub.getStatus()) && payment.getPlan().equals(sub.getPlan())
+                    && sub.getEndDate()!=null && sub.getEndDate().isAfter(activatedAt) ? sub.getEndDate() : activatedAt;
             sub.setPlan(payment.getPlan());
-            sub.setAutoRenew(true);
-            sub.setStartDate(LocalDateTime.now());
-            sub.setEndDate(LocalDateTime.now().plusDays(30));
+            sub.setStartDate(activatedAt);
+            sub.setEndDate(startsAt.plusMonths(payment.getDurationMonths()==null ? 1 : payment.getDurationMonths()));
             sub.setStatus("ACTIVE");
             subscriptionRepository.save(sub);
 
             // Ghi nhận Audit Log cho thao tác nhạy cảm nâng cấp gói
             AuditLog auditLog = new AuditLog();
-            auditLog.setActor(user.getUsername());
-            auditLog.setAction("PLAN_UPGRADE_WEBHOOK");
+            auditLog.setActor(actor);
+            auditLog.setAction(action);
             auditLog.setOldValue("Plan: " + oldPlan);
             auditLog.setNewValue("Plan: " + payment.getPlan() + " | TransactionID: " + transactionId);
             auditLog.setIpAddress(request.getRemoteAddr());
@@ -326,6 +339,48 @@ public class PaymentController {
             paymentRepository.save(payment);
             return ResponseEntity.ok(Map.of("message", "Giao dịch thất bại"));
         }
+    }
+
+    @GetMapping("/payments/pending")
+    public ResponseEntity<?> pendingPayments(HttpServletRequest request) {
+        try { requireAdmin(request); }
+        catch (SecurityException ex) { return ResponseEntity.status(403).build(); }
+        catch (IllegalStateException ex) { return ResponseEntity.status(401).build(); }
+        return ResponseEntity.ok(paymentRepository.findByStatus("PENDING"));
+    }
+
+    @PostMapping("/payments/{id}/approve")
+    @org.springframework.transaction.annotation.Transactional
+    public ResponseEntity<?> approvePayment(@PathVariable Long id, HttpServletRequest request) {
+        return settleAsAdmin(id, "SUCCESS", request);
+    }
+
+    @PostMapping("/payments/{id}/reject")
+    @org.springframework.transaction.annotation.Transactional
+    public ResponseEntity<?> rejectPayment(@PathVariable Long id, HttpServletRequest request) {
+        return settleAsAdmin(id, "FAILED", request);
+    }
+
+    private ResponseEntity<?> settleAsAdmin(Long id, String status, HttpServletRequest request) {
+        try { requireAdmin(request); }
+        catch (SecurityException ex) { return ResponseEntity.status(403).build(); }
+        catch (IllegalStateException ex) { return ResponseEntity.status(401).build(); }
+        String actor = userRepository.findById(getCurrentUserId(request)).orElseThrow().getUsername();
+        return settlePayment(id, status, request, actor, "PLAN_UPGRADE_ADMIN");
+    }
+
+    private Map<String, Object> paymentStatus(Payment payment) {
+        return Map.of("transactionId", payment.getId(), "status", payment.getStatus(), "plan", payment.getPlan());
+    }
+
+    @GetMapping("/payments/mine/latest")
+    public ResponseEntity<?> latestPayment(HttpServletRequest request) {
+        Long userId = getCurrentUserId(request);
+        if (userId == null) return ResponseEntity.status(401).build();
+        var pending = paymentRepository.findFirstByUserIdAndStatusOrderByIdDesc(userId, "PENDING");
+        return pending.or(() -> paymentRepository.findFirstByUserIdOrderByIdDesc(userId))
+                .map(payment -> ResponseEntity.ok(paymentStatus(payment)))
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     // PAY-02: Xem lịch sử giao dịch

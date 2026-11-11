@@ -14,9 +14,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function verifyRoleAndLoad() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const role = (user.role || "STUDENT").toUpperCase();
+  const role = (user.role || "USER").toUpperCase();
   
-  if (role !== "TEACHER" && role !== "ADMIN") {
+  if (!user.id || role === "ADMIN") {
     // Show permission screen
     document.getElementById("mainContent").innerHTML = `
       <div class="flex items-center justify-center h-full">
@@ -25,7 +25,7 @@ function verifyRoleAndLoad() {
             <i data-lucide="lock" class="h-8 w-8"></i>
           </div>
           <h2 class="text-xl font-extrabold text-slate-900 mb-2">Quyền truy cập bị từ chối</h2>
-          <p class="text-slate-500 text-sm">Trang này dành riêng cho giảng viên và quản trị viên.</p>
+          <p class="text-slate-500 text-sm">Trang này dành cho tài khoản người dùng.</p>
         </div>
       </div>
     `;

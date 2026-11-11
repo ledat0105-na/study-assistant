@@ -1,7 +1,6 @@
 package com.example.studyassistant.retrieval.service;
 
 import com.example.studyassistant.retrieval.model.VectorRecord;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
@@ -12,18 +11,18 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Disabled("Manual integration test requiring local Qdrant on port 6333")
-@org.junit.jupiter.api.Tag("Integration")
+@org.junit.jupiter.api.Tag("E2E")
 public class QdrantIntegrationTest {
 
     @Test
     void testQdrantLifecycle() {
         QdrantVectorStore store = new QdrantVectorStore(new RestTemplate());
         ReflectionTestUtils.setField(store, "qdrantUrl", "http://localhost:6333");
-        ReflectionTestUtils.setField(store, "collectionPrefix", "rag_test");
+        ReflectionTestUtils.setField(store, "collectionPrefix", "rag_test_" + UUID.randomUUID().toString().replace("-", ""));
         ReflectionTestUtils.setField(store, "embeddingModel", "integration_test_model");
 
         int dimension = 4;
+        ReflectionTestUtils.setField(store, "embeddingDimension", dimension);
         
         // 1. Ensure collection
         store.ensureCollection(dimension);

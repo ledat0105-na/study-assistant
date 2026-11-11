@@ -29,6 +29,7 @@ import static org.mockito.Mockito.*;
         GroundedQuizGenerationServiceAtomicityIntegrationTest.TransactionConfig.class})
 @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
 @ActiveProfiles("test")
+@org.springframework.test.annotation.DirtiesContext(classMode = org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_CLASS)
 @Tag("Integration")
 public class GroundedQuizGenerationServiceAtomicityIntegrationTest {
 

@@ -163,7 +163,8 @@ public class PresentationSlideGenerationMySQLIntegrationTest {
         rev.setDeckId(deck.getId());
         rev.setRevisionNumber(revNumber);
         rev.setStatus(PresentationOutlineStatus.APPROVED);
-        rev.setGenerationScopeSnapshot("{\"notebookId\":" + testNotebook.getId() + ",\"requestedDocumentIds\":[]}");
+        Document frozen = createReadyDocument("scope-fixture-" + revNumber + ".pdf", "v1");
+        rev.setGenerationScopeSnapshot("{\"notebookId\":" + testNotebook.getId() + ",\"requestedDocumentIds\":[" + frozen.getId() + "]}");
         rev.setOutlineJson("{\"schemaVersion\":1,\"title\":\"Test\",\"learningObjective\":\"Obj\",\"audience\":\"All\",\"language\":\"EN\",\"sections\":[{\"title\":\"S1\",\"purpose\":\"Section purpose\",\"slides\":[{\"title\":\"Slide 1\",\"purpose\":\"Teach P1\",\"slideType\":\"CONTENT\",\"keyPoints\":[\"P1\"],\"sourceRefs\":[]}]}]}");
         rev.setContentHash("hash" + revNumber);
         rev.setCreatedBy(deck.getOwner());
@@ -175,6 +176,9 @@ public class PresentationSlideGenerationMySQLIntegrationTest {
     private PresentationGenerationJob createQueuedSlideJob(PresentationDeck deck, PresentationOutlineRevision revision, String idempotencyKey, int slideCount) {
         return transactionTemplate.execute(status -> {
             userRepository.findByIdForUpdate(testUser.getId()).orElseThrow();
+            PresentationOutlineRevision frozenRevision = outlineRepository.findById(revision.getId()).orElseThrow();
+            frozenRevision.setGenerationScopeSnapshot("{\"notebookId\":" + testNotebook.getId() + ",\"requestedDocumentIds\":" + documentIds.toString() + "}");
+            outlineRepository.saveAndFlush(frozenRevision);
             LocalDate reservationDate = LocalDate.now(clock);
             usageDates.add(reservationDate);
             quotaService.checkAndReserveSlideQuota(testUser.getId(), reservationDate, testUser.getPlan(), slideCount);
@@ -409,7 +413,7 @@ public class PresentationSlideGenerationMySQLIntegrationTest {
 
         processor.processJob(job.getId(), deck.getId(), testUser.getId(), testNotebook.getId(), List.of(document.getId()),
                 deck.getApprovedOutlineRevision().getId(), deck.getApprovedOutlineRevision().getContentHash(),
-                List.of(new PlannedSlide(1, "Slide 1", "TITLE_CONTENT", List.of("P1"))));
+                List.of(new PlannedSlide(1, "Slide 1", "CONTENT", List.of("P1"))));
 
         PresentationSlide persisted = slideRepository.findById(slide.getId()).orElseThrow();
         assertThat(persisted.getGenerationState()).isEqualTo(PresentationSlideGenerationState.GENERATED);
@@ -464,7 +468,7 @@ public class PresentationSlideGenerationMySQLIntegrationTest {
                 .thenReturn("{\"title\":\"Broken\",\"layout\":\"TITLE_CONTENT\",\"speakerNotes\":\"bad\",\"elements\":[{\"type\":\"TEXT\",\"payload\":{\"text\":\"Hello\"},\"style\":{\"fontSizePt\":24,\"color\":\"#000000\"},\"x\":10,\"y\":20,\"width\":120,\"height\":30}],\"sourceRefs\":[" + invalidRefs.get(index) + "]}");
 
             processor.processJob(job.getId(), deck.getId(), testUser.getId(), testNotebook.getId(), List.of(document.getId()),
-                revision.getId(), revision.getContentHash(), List.of(new PlannedSlide(1, "Slide 1", "TITLE_CONTENT", List.of("P1"))));
+                revision.getId(), revision.getContentHash(), List.of(new PlannedSlide(1, "Slide 1", "CONTENT", List.of("P1"))));
 
             assertThat(slideRepository.findById(slide.getId()).orElseThrow().getGenerationState()).isEqualTo(PresentationSlideGenerationState.FAILED);
             assertThat(jobRepository.findById(job.getId()).orElseThrow().getStatus()).isEqualTo(PresentationJobStatus.FAILED);
@@ -519,7 +523,7 @@ public class PresentationSlideGenerationMySQLIntegrationTest {
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<?> future = executor.submit(() -> processor.processJob(job.getId(), deck.getId(), testUser.getId(), testNotebook.getId(), List.of(document.getId()),
-                revision.getId(), revision.getContentHash(), List.of(new PlannedSlide(1, "Slide 1", "TITLE_CONTENT", List.of("P1")))));
+                revision.getId(), revision.getContentHash(), List.of(new PlannedSlide(1, "Slide 1", "CONTENT", List.of("P1")))));
 
         assertThat(started.await(5, java.util.concurrent.TimeUnit.SECONDS)).isTrue();
         transactionTemplate.execute(status -> {
@@ -679,7 +683,7 @@ public class PresentationSlideGenerationMySQLIntegrationTest {
     }
 
     @Test
-    void testI_failFastPartialFailure() {
+    void testI_partialFailureRetriesAndContinuesToNextSlide() {
         PresentationDeck deck = transactionTemplate.execute(status -> {
             PresentationDeck d = createDeck();
             PresentationOutlineRevision rev = createOutline(d, 1);
@@ -710,22 +714,21 @@ public class PresentationSlideGenerationMySQLIntegrationTest {
                         .build());
 
         when(llmProvider.generate(anyString(), anyString(), anyDouble()))
-                .thenReturn("{\"title\":\"Slide 1\",\"layout\":\"TITLE_CONTENT\",\"speakerNotes\":\"ok\",\"elements\":[{\"type\":\"TEXT\",\"payload\":{\"text\":\"Hello\"},\"style\":{\"fontSizePt\":24,\"color\":\"#000000\"},\"x\":10,\"y\":20,\"width\":120,\"height\":30}],\"sourceRefs\":[\"S1\"]}")
-                .thenReturn("{\"title\":\"Slide 2\",\"layout\":\"TITLE_CONTENT\",\"speakerNotes\":\"bad\",\"elements\":[{\"type\":\"TEXT\",\"payload\":{\"text\":\"Bad\"},\"style\":{\"fontSizePt\":24,\"color\":\"#000000\"},\"x\":10,\"y\":20,\"width\":120,\"height\":30}],\"sourceRefs\":[\"S99\"]}");
+                .thenReturn("{\"title\":\"Slide 1\",\"layout\":\"TITLE_CONTENT\",\"speakerNotes\":\"ok\",\"elements\":[{\"type\":\"TEXT\",\"payload\":{\"text\":\"Hello\"},\"style\":{\"fontSizePt\":24,\"color\":\"#000000\"},\"x\":10,\"y\":20,\"width\":120,\"height\":30}],\"sourceRefs\":[\"S1\"]}", "{\"title\":\"Slide 2\",\"layout\":\"TITLE_CONTENT\",\"speakerNotes\":\"bad\",\"elements\":[{\"type\":\"TEXT\",\"payload\":{\"text\":\"Bad\"},\"style\":{\"fontSizePt\":24,\"color\":\"#000000\"},\"x\":10,\"y\":20,\"width\":120,\"height\":30}],\"sourceRefs\":[\"S99\"]}", "{\"title\":\"Slide 2\",\"layout\":\"TITLE_CONTENT\",\"speakerNotes\":\"bad\",\"elements\":[{\"type\":\"TEXT\",\"payload\":{\"text\":\"Bad\"},\"style\":{\"fontSizePt\":24,\"color\":\"#000000\"},\"x\":10,\"y\":20,\"width\":120,\"height\":30}],\"sourceRefs\":[\"S99\"]}", "{\"title\":\"Slide 1\",\"layout\":\"TITLE_CONTENT\",\"speakerNotes\":\"ok\",\"elements\":[{\"type\":\"TEXT\",\"payload\":{\"text\":\"Hello\"},\"style\":{\"fontSizePt\":24,\"color\":\"#000000\"},\"x\":10,\"y\":20,\"width\":120,\"height\":30}],\"sourceRefs\":[\"S1\"]}");
 
         processor.processJob(job.getId(), deck.getId(), testUser.getId(), testNotebook.getId(), List.of(document.getId()),
                 deck.getApprovedOutlineRevision().getId(), deck.getApprovedOutlineRevision().getContentHash(),
-                List.of(new PlannedSlide(1, "Slide 1", "TITLE_CONTENT", List.of("P1")),
-                        new PlannedSlide(2, "Slide 2", "TITLE_CONTENT", List.of("P2")),
-                        new PlannedSlide(3, "Slide 3", "TITLE_CONTENT", List.of("P3"))));
+                List.of(new PlannedSlide(1, "Slide 1", "CONTENT", List.of("P1")),
+                        new PlannedSlide(2, "Slide 2", "CONTENT", List.of("P2")),
+                        new PlannedSlide(3, "Slide 3", "CONTENT", List.of("P3"))));
 
         List<PresentationSlide> slides = slideRepository.findByDeckIdOrderBySlideOrderAsc(deck.getId());
         assertThat(slides.get(0).getGenerationState()).isEqualTo(PresentationSlideGenerationState.GENERATED);
         assertThat(slides.get(1).getGenerationState()).isEqualTo(PresentationSlideGenerationState.FAILED);
-        assertThat(slides.get(2).getGenerationState()).isEqualTo(PresentationSlideGenerationState.EMPTY);
-        verify(llmProvider, times(2)).generate(anyString(), anyString(), anyDouble());
+        assertThat(slides.get(2).getGenerationState()).isEqualTo(PresentationSlideGenerationState.GENERATED);
+        verify(llmProvider, times(4)).generate(anyString(), anyString(), anyDouble());
         assertThat(jobRepository.findById(job.getId()).orElseThrow().getStatus()).isEqualTo(PresentationJobStatus.FAILED);
-        assertThat(jobRepository.findById(job.getId()).orElseThrow().getProgressCurrent()).isEqualTo(1);
+        assertThat(jobRepository.findById(job.getId()).orElseThrow().getProgressCurrent()).isEqualTo(2);
         assertThat(jobRepository.findById(job.getId()).orElseThrow().getProgressTotal()).isEqualTo(3);
     }
 
@@ -841,7 +844,7 @@ public class PresentationSlideGenerationMySQLIntegrationTest {
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<?> future = executor.submit(() -> processor.processJob(job.getId(), deck.getId(), testUser.getId(), testNotebook.getId(), List.of(document.getId()),
-                deck.getApprovedOutlineRevision().getId(), deck.getApprovedOutlineRevision().getContentHash(), List.of(new PlannedSlide(1, "Slide 1", "TITLE_CONTENT", List.of("P1")))));
+                deck.getApprovedOutlineRevision().getId(), deck.getApprovedOutlineRevision().getContentHash(), List.of(new PlannedSlide(1, "Slide 1", "CONTENT", List.of("P1")))));
 
         assertThat(started.await(5, java.util.concurrent.TimeUnit.SECONDS)).isTrue();
         transactionTemplate.execute(status -> {
@@ -902,7 +905,7 @@ public class PresentationSlideGenerationMySQLIntegrationTest {
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<?> future = executor.submit(() -> processor.processJob(job.getId(), deck.getId(), testUser.getId(), testNotebook.getId(), List.of(document.getId()),
-                deck.getApprovedOutlineRevision().getId(), deck.getApprovedOutlineRevision().getContentHash(), List.of(new PlannedSlide(1, "Slide 1", "TITLE_CONTENT", List.of("P1")))));
+                deck.getApprovedOutlineRevision().getId(), deck.getApprovedOutlineRevision().getContentHash(), List.of(new PlannedSlide(1, "Slide 1", "CONTENT", List.of("P1")))));
 
         assertThat(started.await(5, java.util.concurrent.TimeUnit.SECONDS)).isTrue();
         transactionTemplate.execute(status -> {

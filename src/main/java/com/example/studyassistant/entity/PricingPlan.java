@@ -17,7 +17,7 @@ public class PricingPlan {
     private Long id;
 
     @Column(name = "plan_code", nullable = false, unique = true)
-    private String planCode; // "FREE", "STUDENT", "PRO"
+    private String planCode; // FREE / PRO / VIP
 
     @Column(nullable = false)
     private String name;

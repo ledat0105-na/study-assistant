@@ -2,6 +2,12 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" href="css/theme.css">
+  <script src="js/theme.js"></script>
+  <script src="js/runtime-errors.js"></script>
+  <script src="js/app-modal.js"></script>
+  <script src="js/billing-ui.js"></script>
+  <script src="js/account-alerts.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Study AI - Bảng Điều Khiển 3D Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -138,18 +144,18 @@
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     document.getElementById("welcomeUser").textContent = "Xin chào, " + (user.name ? user.name.split(" ")[0] : "Bạn học!");
 
-    lucide.createIcons();
+    globalThis.lucide?.createIcons?.();
 
     async function loadDashboardData() {
       try {
-        const resStats = await fetch("/api/progress/dashboard/user/" + user.id);
+        const resStats = await fetch("/api/progress/dashboard");
         if (resStats.ok) {
           const stats = await resStats.json();
           document.getElementById("statDocs").textContent = stats.totalDocuments || 0;
           document.getElementById("statTopics").textContent = stats.totalTopics || 0;
           const flashElement = document.getElementById("statFlashcards");
-          if (flashElement) flashElement.textContent = stats.totalFlashcards || stats.totalThẻghi-nhớs || 0;
-          document.getElementById("statAccuracy").textContent = (stats.averageAccuracy || 0) + "%";
+          if (flashElement) flashElement.textContent = stats.totalFlashcards || 0;
+          document.getElementById("statAccuracy").textContent = String(stats.averageAccuracy ?? 0).replace(/%$/, "") + "%";
         }
 
         const resDocs = await fetch("/api/documents");
