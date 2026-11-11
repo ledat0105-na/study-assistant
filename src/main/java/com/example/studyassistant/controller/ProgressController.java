@@ -68,23 +68,21 @@ public class ProgressController {
         long totalDocs = documentRepository.countByUserId(userId);
         List<Document> userDocs = documentRepository.findByUserId(userId);
 
+        long totalFlashcards = userDocs.stream().mapToLong(doc -> flashcardRepository.findByDocumentId(doc.getId()).stream()
+                .filter(card -> card.getDeletedAt() == null).count()).sum();
         long totalTopics = 0;
         for (Document doc : userDocs) {
             totalTopics += topicRepository.findByDocumentId(doc.getId()).size();
         }
 
-        List<StudyProgress> progressList = studyProgressRepository.findByUserId(userId);
-        long completedTopics = progressList.stream().filter(p -> "COMPLETED".equals(p.getStatus())).count();
-        long learningTopics = progressList.stream().filter(p -> "LEARNING".equals(p.getStatus())).count();
-
-        double avgAccuracy = quizResultRepository.findByUserId(userId).stream()
-                .mapToDouble(QuizResult::getScore)
-                .average()
-                .orElse(0.0);
+        long completedTopics = studyProgressRepository.countValidByUserIdAndStatus(userId, "COMPLETED");
+        long learningTopics = studyProgressRepository.countValidByUserIdAndStatus(userId, "LEARNING");
+        double avgAccuracy = quizResultRepository.averageScoreByUserId(userId);
 
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalDocuments", totalDocs);
         stats.put("totalTopics", totalTopics);
+        stats.put("totalFlashcards", totalFlashcards);
         stats.put("completedTopics", completedTopics);
         stats.put("learningTopics", learningTopics);
         stats.put("averageAccuracy", String.format("%.1f%%", avgAccuracy));

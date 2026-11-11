@@ -21,7 +21,7 @@ public class UserService {
     @Autowired
     private NotebookRepository notebookRepository;
 
-    // ACC-01: Đăng ký tài khoản (BCrypt, role STUDENT, plan FREE)
+    // ACC-01: Đăng ký tài khoản (BCrypt, role USER, plan FREE)
     public User register(User reqUser) {
         if (reqUser.getUsername() == null || reqUser.getUsername().trim().isEmpty()) {
             throw new IllegalArgumentException("Username không được để trống");
@@ -29,14 +29,15 @@ public class UserService {
         if (reqUser.getEmail() == null || reqUser.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email không được để trống");
         }
-        if (reqUser.getPassword() == null || reqUser.getPassword().length() < 6) {
-            throw new IllegalArgumentException("Mật khẩu phải có ít nhất 6 ký tự");
+        if (reqUser.getEmail().trim().length() > 150 || !reqUser.getEmail().trim().matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+")) {
+            throw new IllegalArgumentException("Địa chỉ email không hợp lệ.");
         }
+        com.example.studyassistant.security.PasswordPolicy.validate(reqUser.getPassword());
         if (userRepository.findByUsername(reqUser.getUsername().trim()).isPresent()) {
-            throw new IllegalArgumentException("Username already exists");
+            throw new IllegalArgumentException("Tên đăng nhập đã được sử dụng.");
         }
-        if (userRepository.findByEmail(reqUser.getEmail().trim()).isPresent()) {
-            throw new IllegalArgumentException("Email already exists");
+        if (userRepository.findByEmailIgnoreCase(reqUser.getEmail().trim()).isPresent()) {
+            throw new IllegalArgumentException("Email đã được sử dụng.");
         }
 
         User user = new User();
@@ -45,8 +46,8 @@ public class UserService {
         user.setEmail(reqUser.getEmail().trim());
         user.setPassword(HashUtil.hash(reqUser.getPassword()));
         
-        // Buộc mặc định role=STUDENT và plan=FREE để ngăn privilege escalation
-        user.setRole("STUDENT");
+        // Buộc mặc định role=USER và plan=FREE để ngăn privilege escalation
+        user.setRole("USER");
         user.setPlan("FREE");
         user.setStatus("ACTIVE");
         user.setFailedLoginAttempts(0);
@@ -62,7 +63,7 @@ public class UserService {
 
         Optional<User> userOpt = userRepository.findByUsername(usernameOrEmail.trim());
         if (userOpt.isEmpty()) {
-            userOpt = userRepository.findByEmail(usernameOrEmail.trim());
+            userOpt = userRepository.findByEmailIgnoreCase(usernameOrEmail.trim());
         }
 
         if (userOpt.isEmpty()) {
@@ -121,9 +122,7 @@ public class UserService {
         if (token == null || token.trim().isEmpty()) {
             throw new IllegalArgumentException("Token đặt lại mật khẩu không hợp lệ");
         }
-        if (newPassword == null || newPassword.length() < 6) {
-            throw new IllegalArgumentException("Mật khẩu mới phải từ 6 ký tự trở lên");
-        }
+        com.example.studyassistant.security.PasswordPolicy.validate(newPassword);
 
         User user = userRepository.findByResetToken(token)
                 .orElseThrow(() -> new IllegalArgumentException("Token không hợp lệ hoặc đã hết hạn"));
@@ -139,6 +138,7 @@ public class UserService {
     }
 
     // ACC-05: Cập nhật hồ sơ cá nhân (Không cho sửa id, role, plan, status)
+    @org.springframework.transaction.annotation.Transactional
     public User updateProfile(Long userId, User profileDto) {
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng"));
@@ -147,6 +147,13 @@ public class UserService {
             existingUser.setFullName(profileDto.getFullName().trim());
         }
         
+        if (profileDto.getEmail() != null) {
+            String email = profileDto.getEmail().trim();
+            userRepository.findByEmailIgnoreCase(email).filter(u -> !u.getId().equals(userId)).ifPresent(u -> {
+                throw new IllegalArgumentException("Email đã được sử dụng.");
+            });
+            existingUser.setEmail(email);
+        }
         // Ngăn ngừa Privilege Escalation: Giữ nguyên role, plan, status
         return userRepository.save(existingUser);
     }
@@ -168,7 +175,8 @@ public class UserService {
 
         long existingCount = notebookRepository.countByUserIdAndIsDeletedFalse(userId);
         int quota = getNotebookQuotaByPlan(user.getPlan());
-        if (existingCount >= quota) {
+        if (quota >= 0 && existingCount >= quota) {
+            if(!"VIP".equals(com.example.studyassistant.billing.PlanPolicy.normalize(user.getPlan())))throw new com.example.studyassistant.billing.MonthlyQuotaService.Exhausted(com.example.studyassistant.billing.PlanPolicy.normalize(user.getPlan()),"NOTEBOOK");
             throw new IllegalStateException("Bạn đã đạt giới hạn Notebook cho gói " + user.getPlan() + " (" + quota + " notebook). Vui lòng nâng cấp gói dịch vụ.");
         }
 
@@ -226,8 +234,10 @@ public class UserService {
     }
 
     private int getNotebookQuotaByPlan(String plan) {
-        if ("PREMIUM".equalsIgnoreCase(plan)) return 100;
-        if ("BASIC".equalsIgnoreCase(plan)) return 20;
-        return 5; // FREE plan mặc định tối đa 5 Notebook
+        return switch(com.example.studyassistant.billing.PlanPolicy.normalize(plan)) {
+            case "VIP" -> -1;
+            case "PRO" -> 50;
+            default -> 3;
+        };
     }
 }

@@ -32,6 +32,9 @@ public class QdrantVectorStore implements VectorStore {
     @Value("${ai.embedding.model:text-embedding-3-small}")
     private String embeddingModel;
 
+    @Value("${ai.embedding.dimension:1536}")
+    private int embeddingDimension = 1536;
+
     private final RestTemplate restTemplate;
 
     public QdrantVectorStore() {
@@ -216,18 +219,8 @@ public class QdrantVectorStore implements VectorStore {
 
     @Override
     public void deleteByDocumentAndVersion(Long documentId, String indexVersion) {
-        // Since we don't know the exact dimension here without passing it, 
-        // we assume the current model dimension (or we'd need to search all collections).
-        // For CP3, we just use a default or assume the caller knows.
-        // But since this uses REST, we can just hit the expected collection.
-        // We'll require a small change if we want it completely dynamic.
-        
-        // Wait, we need to know the collection name to delete. We can get it using the default configured dimension.
-        // Alternatively, the VectorStore could take the dimension as an argument.
-        // Let's use an arbitrary dimension of 1536 as a default for the collection name, 
-        // or just rely on the model property which maps to a single collection in this V1 architecture.
-        String collectionName = getCollectionName(1536); // Assuming standard dimension
-        
+        String collectionName = getCollectionName(embeddingDimension);
+
         String url = qdrantUrl + "/collections/" + collectionName + "/points/delete?wait=true";
         
         Map<String, Object> filter = buildFilter(documentId, indexVersion);

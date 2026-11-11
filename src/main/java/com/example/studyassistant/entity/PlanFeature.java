@@ -16,7 +16,7 @@ public class PlanFeature {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String planName; // "FREE", "BASIC", "PREMIUM"
+    private String planName; // FREE / PRO / VIP; legacy BASIC/PREMIUM are normalized
 
     @Column(nullable = false)
     private Integer maxNotebooks;

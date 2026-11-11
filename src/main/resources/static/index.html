@@ -2,174 +2,102 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" href="css/theme.css">
+  <script src="js/theme.js"></script>
+  <script src="js/runtime-errors.js"></script>
+  <script src="js/app-modal.js"></script>
+  <script src="js/auth-recovery.js" defer></script>
+  <script src="js/billing-ui.js"></script>
+  <script src="auth-interceptor.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Study AI - Trợ Lý Học Tập AI 3D Thông Minh</title>
+  <title>Study AI – Trợ lý học tập từ tài liệu</title>
+  <meta name="description" content="Tổ chức tài liệu, hỏi đáp có trích dẫn và ôn tập cùng Study AI.">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="css/style-3d.css">
+  <link rel="stylesheet" href="css/home.css">
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen relative overflow-x-hidden">
-
-  <!-- 3D Orbs Ambient Background -->
-  <div class="orb-container">
-    <div class="orb-3d orb-1"></div>
-    <div class="orb-3d orb-2"></div>
-    <div class="orb-3d orb-3"></div>
-  </div>
+<body class="study-home bg-slate-50 text-slate-800 min-h-screen relative overflow-x-hidden">
 
   <!-- Header 3D Glass Navbar -->
-  <header class="glass-3d sticky top-0 z-40 transition-all border-b border-slate-200/80">
-    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-      <div class="flex items-center gap-3">
+  <header class="home-header glass-3d sticky top-0 z-40 transition-all border-b border-slate-200/80">
+    <div class="home-navbar max-w-7xl mx-auto px-6 flex items-center justify-between">
+      <a href="index.html" aria-label="Study AI – Trang chủ" class="flex items-center gap-3">
         <div class="bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-500 p-2.5 rounded-2xl text-white shadow-lg shadow-indigo-500/30 transform hover:scale-105 transition-all">
           <i data-lucide="sparkles" class="h-6 w-6"></i>
         </div>
         <div>
           <span class="font-extrabold text-xl bg-gradient-to-r from-indigo-700 via-purple-700 to-cyan-600 bg-clip-text text-transparent">Study AI</span>
-          <span class="block text-[9px] uppercase font-extrabold text-indigo-600 tracking-wider">3D Aurora Hub</span>
         </div>
-      </div>
+      </a>
 
-      <nav class="hidden md:flex items-center gap-8 text-sm font-extrabold text-slate-700">
+      <nav class="home-nav-links flex items-center gap-8 text-sm font-extrabold text-slate-700">
         <a href="#features" class="hover:text-indigo-600 transition-colors" data-i18n="nav_features">Tính năng</a>
         <a href="#pricing" class="hover:text-indigo-600 transition-colors" data-i18n="nav_pricing">Bảng giá</a>
         <a href="#faq" class="hover:text-indigo-600 transition-colors" data-i18n="nav_faq">Hỏi đáp FAQ</a>
       </nav>
 
-      <div class="flex items-center gap-4">
-        <button onclick="openAuthModal('login')" class="px-5 py-2.5 btn-3d btn-3d-secondary text-xs font-bold" data-i18n="nav_signin">
+      <div class="home-nav-actions flex items-center gap-4">
+        <button type="button" onclick="openAuthModal('login')" class="px-5 py-2.5 btn-3d btn-3d-secondary text-xs font-bold" data-i18n="nav_signin">
           Đăng nhập
         </button>
-        <button onclick="openAuthModal('register')" class="px-5 py-2.5 btn-3d btn-3d-primary text-xs font-bold shadow-lg shadow-indigo-500/30" data-i18n="nav_getstarted">
+        <button type="button" onclick="openAuthModal('register')" class="px-5 py-2.5 btn-3d btn-3d-primary text-xs font-bold shadow-lg shadow-indigo-500/30" data-i18n="nav_getstarted">
           Trải nghiệm ngay
         </button>
       </div>
     </div>
   </header>
 
-  <!-- Hero Section with 3D Depth Visual -->
-  <section class="max-w-7xl mx-auto px-6 pt-20 pb-28 text-center relative z-10 perspective-1000">
-    <div class="inline-flex items-center gap-2 px-4 py-1.5 badge-3d badge-3d-indigo mb-8 animate-bounce">
-      <i data-lucide="sparkles" class="h-4 w-4 animate-spin text-indigo-600"></i> Next-Gen 3D AI Learning Assistant
+  <main>
+  <section class="home-hero">
+    <div class="home-hero-copy">
+      <h1 class="home-hero-title">Học từ tài liệu<br class="home-title-break"> <span>của chính bạn.</span></h1>
+      <p class="home-hero-description">Tổ chức học liệu theo chủ đề, hỏi AI và mở đoạn trích để kiểm chứng. Ôn lại kiến thức bằng flashcard và quiz ngay từ tài liệu đã tải.</p>
+      <div class="home-hero-actions">
+        <button type="button" onclick="openAuthModal('register')" class="btn-3d btn-3d-primary px-6 py-3 font-bold">Bắt đầu miễn phí <i data-lucide="arrow-right" class="h-4 w-4" aria-hidden="true"></i></button>
+        <a href="#features" class="btn-3d btn-3d-secondary px-6 py-3 font-bold">Khám phá tính năng</a>
+      </div>
+      <p class="home-file-types">Hỗ trợ tài liệu PDF, DOCX và PPTX</p>
     </div>
-    
-    <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight max-w-5xl mx-auto leading-tight text-slate-900 drop-shadow-sm" data-i18n="hero_title">
-      Chuyển Đổi Tài Liệu Phức Tạp Thành <span class="bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-600 bg-clip-text text-transparent">Sơ Đồ Kiến Thức 3D</span> Tương Tác
-    </h1>
-    
-    <p class="mt-8 text-lg md:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed font-semibold" data-i18n="hero_desc">
-      Tải lên tài liệu PDF hoặc DOCX. Trợ lý AI tự động phân tích khái niệm, xây dựng sơ đồ tư duy 3D trực quan, tạo Thẻ ghi nhớ flashcard và bài kiểm tra trắc nghiệm thông minh.
-    </p>
-
-    <div class="mt-12 flex flex-wrap justify-center gap-5">
-      <button onclick="openAuthModal('register')" class="px-8 py-4 btn-3d btn-3d-primary text-sm font-extrabold shadow-2xl shadow-indigo-500/30 flex items-center gap-3">
-        <span data-i18n="nav_getstarted">Bắt Đầu Miễn Phí</span>
-        <i data-lucide="arrow-right" class="h-5 w-5"></i>
-      </button>
-      <a href="#pricing" class="px-8 py-4 btn-3d btn-3d-secondary text-sm font-bold">
-        Xem Bảng Giá Khuyến Mãi 3D
-      </a>
-    </div>
-
-    <!-- 3D Interactive Hero Preview Card -->
-    <div class="mt-16 max-w-5xl mx-auto glass-3d-card p-6 md:p-10 border border-slate-200 shadow-2xl rounded-3xl relative overflow-hidden group">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left relative z-10">
-        <div class="p-6 bg-white/90 rounded-2xl border border-slate-200 shadow-sm hover:border-indigo-400 transition-all">
-          <div class="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 mb-4 shadow-sm">
-            <i data-lucide="network" class="h-6 w-6"></i>
-          </div>
-          <h4 class="font-extrabold text-lg text-slate-900">Sơ Đồ Tư Duy 3D</h4>
-          <p class="text-xs text-slate-600 mt-2 leading-relaxed font-medium">Trực quan hóa cấu trúc bài học với các nút kết nối không gian 3D sinh động.</p>
-        </div>
-
-        <div class="p-6 bg-white/90 rounded-2xl border border-slate-200 shadow-sm hover:border-purple-400 transition-all">
-          <div class="w-12 h-12 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600 mb-4 shadow-sm">
-            <i data-lucide="layers" class="h-6 w-6"></i>
-          </div>
-          <h4 class="font-extrabold text-lg text-slate-900">Lật Thẻ 3D Real-time</h4>
-          <p class="text-xs text-slate-600 mt-2 leading-relaxed font-medium">Ôn tập chủ động Active Recall với hiệu ứng xoay lật 3 chiều chân thực.</p>
-        </div>
-
-        <div class="p-6 bg-white/90 rounded-2xl border border-slate-200 shadow-sm hover:border-cyan-400 transition-all">
-          <div class="w-12 h-12 rounded-xl bg-cyan-50 border border-cyan-200 flex items-center justify-center text-cyan-600 mb-4 shadow-sm">
-            <i data-lucide="bot" class="h-6 w-6"></i>
-          </div>
-          <h4 class="font-extrabold text-lg text-slate-900">Trợ Lý Chatbot AI</h4>
-          <p class="text-xs text-slate-600 mt-2 leading-relaxed font-medium">Hỏi đáp ngữ cảnh tài liệu thông minh với phản hồi chính xác từng trang.</p>
+    <figure class="home-preview">
+      <figcaption><i data-lucide="book-open" aria-hidden="true"></i> Ví dụ hỏi đáp theo tài liệu</figcaption>
+      <div class="home-preview-body">
+        <div class="home-preview-file"><i data-lucide="file-text" aria-hidden="true"></i><span><strong>Bài 1 · Trí tuệ nhân tạo</strong><small>PDF · Chương 1</small></span></div>
+        <p class="home-preview-question">Học có giám sát là gì?</p>
+        <div class="home-preview-answer">
+          <strong>Trợ lý Study AI</strong>
+          <p>Học có giám sát dùng dữ liệu đã gắn nhãn để huấn luyện mô hình dự đoán trên dữ liệu mới.</p>
+          <span class="home-preview-citation"><i data-lucide="bookmark" aria-hidden="true"></i> Bài 1 · Trang 3</span>
         </div>
       </div>
-    </div>
+    </figure>
   </section>
 
-  <!-- Features Bento Grid 3D -->
-  <section id="features" class="max-w-7xl mx-auto px-6 py-24 border-t border-slate-200 relative z-10">
-    <div class="text-center mb-16">
-      <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900" data-i18n="features_title">
-        Công Cụ Học Tập Thông Minh Cho Kỷ Nguyên AI
-      </h2>
-      <p class="text-slate-600 mt-3 font-semibold text-base" data-i18n="features_desc">Mọi tính năng được thiết kế tối ưu để tăng tốc độ ghi nhớ gấp 3 lần</p>
+  <section id="features" class="home-features">
+    <div class="home-section-heading">
+      <h2>Từ tài liệu đến buổi ôn tập</h2>
+      <p>Các công cụ học tập dùng chung nguồn tài liệu bạn đã tải.</p>
     </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <div class="glass-3d-card p-8 md:col-span-2 flex flex-col justify-between min-h-[320px]">
-        <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-200 flex items-center justify-center shadow-md">
-          <i data-lucide="network" class="h-7 w-7"></i>
-        </div>
-        <div class="mt-8">
-          <h3 class="font-extrabold text-2xl text-slate-900" data-i18n="detail_tool_map">Sơ Đồ Kiến Thức Tương Tác 3D</h3>
-          <p class="text-sm text-slate-600 mt-3 leading-relaxed font-medium" data-i18n="map_select_desc">
-            Phân tích tự động nội dung bài học thành các chủ đề cha - con có phân cấp. Click vào bất kỳ nút chủ đề nào để tự động di chuyển đến đúng trang sách PDF liên quan.
-          </p>
-        </div>
-      </div>
-
-      <div class="glass-3d-card p-8 flex flex-col justify-between min-h-[320px]">
-        <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 border border-purple-200 flex items-center justify-center shadow-md">
-          <i data-lucide="layers" class="h-7 w-7"></i>
-        </div>
-        <div class="mt-8">
-          <h3 class="font-extrabold text-2xl text-slate-900" data-i18n="nav_flashcards">Thẻ Ghi Nhớ Lật 3D</h3>
-          <p class="text-sm text-slate-600 mt-3 leading-relaxed font-medium" data-i18n="flash_sub">
-            Lật thẻ flashcard xoay không gian 3D để ghi nhớ định nghĩa cốt lõi và đánh giá mức độ thuộc bài.
-          </p>
-        </div>
-      </div>
-
-      <div class="glass-3d-card p-8 flex flex-col justify-between min-h-[320px]">
-        <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center shadow-md">
-          <i data-lucide="help-circle" class="h-7 w-7"></i>
-        </div>
-        <div class="mt-8">
-          <h3 class="font-extrabold text-2xl text-slate-900" data-i18n="detail_tool_quiz">Trắc Nghiệm Tự Động AI</h3>
-          <p class="text-sm text-slate-600 mt-3 leading-relaxed font-medium" data-i18n="quiz_sub">
-            Tạo đề thi trắc nghiệm khách quan tự động từ giáo trình để kiểm tra trình độ & chấm điểm tức thì.
-          </p>
-        </div>
-      </div>
-
-      <div class="glass-3d-card p-8 md:col-span-2 flex flex-col justify-between min-h-[320px]">
-        <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center shadow-md">
-          <i data-lucide="bar-chart-3" class="h-7 w-7"></i>
-        </div>
-        <div class="mt-8">
-          <h3 class="font-extrabold text-2xl text-slate-900" data-i18n="nav_progress">Theo Dõi Tiến Độ Chi Tiết</h3>
-          <p class="text-sm text-slate-600 mt-3 leading-relaxed font-medium" data-i18n="progress_sub">
-            Trực quan hóa trạng thái học tập (`ĐÃ HOÀN THÀNH`, `ĐANG HỌC`, `CHƯA BẮT ĐẦU`) và chuỗi ngày chăm chỉ Streak trên bảng biểu 3D.
-          </p>
-        </div>
-      </div>
+    <div class="home-feature-grid">
+      <article><i data-lucide="network" aria-hidden="true"></i><h3>Sơ đồ kiến thức</h3><p>Xem mối liên hệ giữa các chủ đề và mở đoạn tài liệu liên quan.</p></article>
+      <article><i data-lucide="layers" aria-hidden="true"></i><h3>Thẻ ghi nhớ</h3><p>Ôn lại khái niệm bằng flashcard và đánh giá mức độ ghi nhớ.</p></article>
+      <article><i data-lucide="clipboard-check" aria-hidden="true"></i><h3>Quiz theo tài liệu</h3><p>Làm bài trắc nghiệm từ học liệu và xem kết quả sau khi nộp.</p></article>
+      <article><i data-lucide="presentation" aria-hidden="true"></i><h3>Bài giảng AI</h3><p>Tạo dàn ý, chỉnh slide và xuất PowerPoint.</p></article>
     </div>
   </section>
 
   <!-- Dynamic Pricing 3D Glass Cards (Load từ CSDL) -->
   <section id="pricing" class="max-w-7xl mx-auto px-6 py-24 border-t border-slate-200 relative z-10">
     <div class="text-center mb-16">
-      <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900" data-i18n="pricing_title">Bảng Giá Dịch Vụ Minh Bạch & Khuyến Mãi</h2>
-      <p class="text-slate-600 mt-3 font-semibold" data-i18n="pricing_sub">Được quản lý và cập nhật khuyến mãi trực tiếp từ CSDL Server-side</p>
+      <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900" data-i18n="pricing_title">Gói dịch vụ</h2>
+      <p class="text-slate-600 mt-3 font-semibold" data-i18n="pricing_sub">Chọn thời hạn và gói phù hợp với nhu cầu học tập.</p>
     </div>
 
     <!-- Pricing Cards Container -->
-    <div id="pricingPlansContainer" class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+    <div class="flex justify-center mb-8"><label for="pricingTermSelect" class="font-bold flex flex-wrap items-center justify-center gap-3 min-w-0">Thời hạn đăng ký:
+      <select id="pricingTermSelect" class="input-3d max-w-full" onchange="loadPricingPlans()"><option value="1">1 tháng</option><option value="3">3 tháng · giảm 10.000đ/tháng</option><option value="12">1 năm · giảm 20.000đ/tháng</option></select>
+    </label></div>
+    <div id="pricingPlansContainer" class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
       <!-- Dynamically filled from /api/plans -->
     </div>
   </section>
@@ -177,8 +105,8 @@
   <!-- FAQ Section -->
   <section id="faq" class="max-w-4xl mx-auto px-6 py-24 border-t border-slate-200 relative z-10">
     <div class="text-center mb-16">
-      <h2 class="text-3xl font-extrabold text-slate-900" data-i18n="faq_title">Câu Hỏi Thường Gặp</h2>
-      <p class="text-slate-600 mt-2 font-semibold" data-i18n="faq_sub">Giải đáp mọi thắc mắc về nền tảng Study AI</p>
+      <h2 class="text-3xl font-extrabold text-slate-900" data-i18n="faq_title">Câu hỏi thường gặp</h2>
+      <p class="text-slate-600 mt-2 font-semibold" data-i18n="faq_sub">Thông tin về định dạng tệp và cách mở nguồn trích dẫn.</p>
     </div>
 
     <div class="space-y-4">
@@ -204,22 +132,24 @@
     </div>
   </section>
 
-  <!-- Footer 3D -->
+  </main>
+
+  <!-- Footer -->
   <footer class="border-t border-slate-200 bg-white/80 backdrop-blur-xl py-12 relative z-10">
     <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
       <div class="flex items-center gap-3">
         <div class="bg-gradient-to-tr from-indigo-600 to-purple-600 p-2 rounded-xl text-white shadow-md"><i data-lucide="sparkles" class="h-5 w-5"></i></div>
-        <span class="font-extrabold text-slate-900 text-base">Study AI 3D Aurora Hub</span>
+        <span class="font-extrabold text-slate-900 text-base">Study AI</span>
       </div>
       <p class="text-xs text-slate-500 font-bold">&copy; 2026 Study AI Assistant. All rights reserved.</p>
     </div>
   </footer>
 
   <!-- Interactive 3D Glassmorphism Auth Modal Dialog Popup (Đăng Nhập / Đăng Ký Trực Tiếp Trên Trang Chủ) -->
-  <div id="authModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
-    <div class="glass-3d-card max-w-md w-full p-8 shadow-2xl relative border-slate-300 rounded-3xl">
+  <div id="authModal" role="dialog" aria-modal="true" aria-label="Đăng nhập hoặc đăng ký" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
+    <div class="glass-3d-card max-w-md w-full p-8 shadow-2xl relative auth-modal-card border-slate-300 rounded-3xl">
       <!-- Close Button -->
-      <button type="button" onclick="closeAuthModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-800 p-1.5 rounded-xl hover:bg-slate-100 transition-colors">
+      <button type="button" onclick="closeAuthModal()" data-auth-close aria-label="Đóng cửa sổ đăng nhập" class="absolute top-5 right-5 text-slate-400 hover:text-slate-800 p-1.5 rounded-xl hover:bg-slate-100 transition-colors">
         <i data-lucide="x" class="h-5 w-5"></i>
       </button>
 
@@ -231,7 +161,7 @@
       </div>
 
       <!-- Tab Switcher -->
-      <div class="flex p-1 bg-slate-100 rounded-2xl border border-slate-200 mb-6">
+      <div class="auth-tabs flex p-1 bg-slate-100 rounded-2xl border border-slate-200 mb-6">
         <button id="tabLoginBtn" onclick="switchAuthTab('login')" class="flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all bg-white text-indigo-700 shadow-sm">
           Đăng Nhập
         </button>
@@ -251,7 +181,7 @@
             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
               <i data-lucide="user" class="h-4 w-4"></i>
             </div>
-            <input id="loginUsernameInput" type="text" required class="input-3d block w-full pl-10 pr-4 py-2.5 text-xs font-semibold" placeholder="Tên đăng nhập hoặc email..." />
+            <input id="loginUsernameInput" type="text" required class="input-3d block w-full pl-10 pr-4 py-2.5 text-xs font-semibold" autocomplete="username" placeholder="Tên đăng nhập hoặc email..." />
           </div>
         </div>
 
@@ -262,12 +192,13 @@
               <i data-lucide="lock" class="h-4 w-4"></i>
             </div>
             <input id="loginPasswordInput" type="password" required class="input-3d block w-full pl-10 pr-10 py-2.5 text-xs font-semibold" placeholder="••••••••" />
-            <button type="button" onclick="togglePasswordVisibility('loginPasswordInput', 'loginEyeIcon')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-indigo-600">
+            <button type="button" onclick="togglePasswordVisibility('loginPasswordInput', 'loginEyeIcon')" aria-label="Hiện mật khẩu" aria-pressed="false" aria-controls="loginPasswordInput" data-password-label="mật khẩu" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-indigo-600">
               <i data-lucide="eye" id="loginEyeIcon" class="h-4 w-4"></i>
             </button>
           </div>
         </div>
 
+        <button type="button" id="forgotPasswordLink" class="text-xs font-bold text-indigo-700 hover:underline">Quên mật khẩu?</button>
         <button type="submit" class="w-full btn-3d btn-3d-primary py-3 text-xs font-extrabold shadow-xl shadow-indigo-500/30 mt-2">
           Đăng Nhập Ngay <i data-lucide="arrow-right" class="h-4 w-4"></i>
         </button>
@@ -293,8 +224,8 @@
         <div>
           <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">Mật Khẩu</label>
           <div class="relative">
-            <input id="regPasswordInput" type="password" required class="input-3d block w-full pl-3.5 pr-10 py-2 text-xs font-semibold" placeholder="••••••••" />
-            <button type="button" onclick="togglePasswordVisibility('regPasswordInput', 'regEyeIcon')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-indigo-600">
+            <input id="regPasswordInput" type="password" autocomplete="new-password" minlength="8" required aria-describedby="registerPasswordRules" class="input-3d block w-full pl-3.5 pr-10 py-2 text-xs font-semibold" placeholder="••••••••" />
+            <button type="button" onclick="togglePasswordVisibility('regPasswordInput', 'regEyeIcon')" aria-label="Hiện mật khẩu" aria-pressed="false" aria-controls="regPasswordInput" data-password-label="mật khẩu" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-indigo-600">
               <i data-lucide="eye" id="regEyeIcon" class="h-4 w-4"></i>
             </button>
           </div>
@@ -303,8 +234,8 @@
         <div>
           <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">Xác Nhận Mật Khẩu</label>
           <div class="relative">
-            <input id="regConfirmPasswordInput" type="password" required class="input-3d block w-full pl-3.5 pr-10 py-2 text-xs font-semibold" placeholder="••••••••" />
-            <button type="button" onclick="togglePasswordVisibility('regConfirmPasswordInput', 'regConfirmEyeIcon')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-indigo-600">
+            <input id="regConfirmPasswordInput" type="password" autocomplete="new-password" minlength="8" required class="input-3d block w-full pl-3.5 pr-10 py-2 text-xs font-semibold" placeholder="••••••••" />
+            <button type="button" onclick="togglePasswordVisibility('regConfirmPasswordInput', 'regConfirmEyeIcon')" aria-label="Hiện mật khẩu xác nhận" aria-pressed="false" aria-controls="regConfirmPasswordInput" data-password-label="mật khẩu xác nhận" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-indigo-600">
               <i data-lucide="eye" id="regConfirmEyeIcon" class="h-4 w-4"></i>
             </button>
           </div>
@@ -314,21 +245,50 @@
           Tạo Tài Khoản Mới <i data-lucide="arrow-right" class="h-4 w-4"></i>
         </button>
       </form>
+      <form id="passwordRecoveryForm" class="hidden space-y-3.5">
+        <h2 class="text-lg font-extrabold text-slate-800">Khôi phục mật khẩu</h2>
+        <p class="text-sm text-slate-600">Nhập email đã đăng ký để nhận mã OTP.</p>
+        <label class="block text-xs font-bold text-slate-700" for="recoveryEmail">Email đã đăng ký</label>
+        <input id="recoveryEmail" type="email" autocomplete="email" maxlength="150" required class="input-3d block w-full px-3.5 py-2.5 text-sm" placeholder="email@example.com">
+        <p id="recoveryStatus" role="status" aria-live="polite" class="text-sm text-slate-700"></p>
+        <div id="recoveryVerifyFields" class="hidden space-y-3.5">
+          <label class="block text-xs font-bold text-slate-700" for="recoveryOtp">Mã OTP gồm 6 chữ số</label>
+          <input id="recoveryOtp" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required disabled class="input-3d block w-full px-3.5 py-2.5 text-sm tracking-widest" placeholder="000000">
+          <label class="block text-xs font-bold text-slate-700" for="recoveryPassword">Mật khẩu mới</label>
+          <div class="relative">
+            <input id="recoveryPassword" type="password" autocomplete="new-password" minlength="8" required disabled aria-describedby="recoveryPasswordRules" class="input-3d block w-full pl-3.5 pr-16 py-2.5 text-sm">
+            <button type="button" onclick="togglePasswordVisibility('recoveryPassword', 'recoveryPasswordEye')" aria-controls="recoveryPassword" data-password-label="mật khẩu mới" aria-label="Hiện mật khẩu mới" aria-pressed="false" class="absolute inset-y-0 right-0 px-3 text-slate-500"><i id="recoveryPasswordEye" data-lucide="eye" class="h-4 w-4"></i></button>
+          </div>
+          <label class="block text-xs font-bold text-slate-700" for="recoveryConfirm">Xác nhận mật khẩu mới</label>
+          <div class="relative">
+          <input id="recoveryConfirm" type="password" autocomplete="new-password" minlength="8" required disabled class="input-3d block w-full pl-3.5 pr-12 py-2.5 text-sm">
+          <button type="button" onclick="togglePasswordVisibility('recoveryConfirm', 'recoveryConfirmEye')" aria-controls="recoveryConfirm" data-password-label="mật khẩu xác nhận" class="absolute inset-y-0 right-0 px-3 text-slate-500" aria-label="Hiện mật khẩu xác nhận" aria-pressed="false"><i id="recoveryConfirmEye" data-lucide="eye" class="h-4 w-4"></i></button>
+          </div>
+          <p class="text-xs text-slate-600">OTP có hiệu lực 2 phút. Được thử tối đa 5 lần.</p>
+          <p id="recoveryExpiry" class="text-xs font-semibold text-slate-700" role="timer"></p>
+          <button id="resendRecoveryOtp" type="button" class="text-xs font-bold text-indigo-700 disabled:text-slate-400">Gửi lại OTP</button>
+          <button id="changeRecoveryEmail" type="button" class="text-xs font-bold text-slate-600 ml-3">Đổi email</button>
+        </div>
+        <button id="recoverySubmit" type="submit" class="w-full btn-3d btn-3d-primary py-3 text-xs font-extrabold">Gửi mã OTP</button>
+        <button type="button" id="recoveryBack" class="w-full text-xs font-bold text-indigo-700 py-2">Quay lại đăng nhập</button>
+      </form>
     </div>
   </div>
 
   <script src="i18n.js"></script>
   <script>
-    lucide.createIcons();
+    globalThis.lucide?.createIcons?.();
 
     function openAuthModal(tab) {
       document.getElementById("authModal").classList.remove("hidden");
+      document.body.classList.add("auth-open");
       switchAuthTab(tab || 'login');
-      lucide.createIcons();
+      globalThis.lucide?.createIcons?.();
     }
 
     function closeAuthModal() {
       document.getElementById("authModal").classList.add("hidden");
+      document.body.classList.remove("auth-open");
       document.getElementById("authAlert").classList.add("hidden");
     }
 
@@ -352,21 +312,24 @@
         regForm.classList.remove("hidden");
         loginForm.classList.add("hidden");
       }
-      lucide.createIcons();
+      globalThis.lucide?.createIcons?.();
     }
 
-    function togglePasswordVisibility(inputId, iconId) {
+    function togglePasswordVisibility(inputId, iconId, show) {
       const input = document.getElementById(inputId);
       const icon = document.getElementById(iconId);
+      const button = icon.closest("button");
+      const visible = show ?? input.type === "password";
+      input.type = visible ? "text" : "password";
+      button.setAttribute("aria-pressed", String(visible));
+      button.setAttribute("aria-label", (visible ? "Ẩn " : "Hiện ") + button.dataset.passwordLabel);
 
-      if (input.type === "password") {
-        input.type = "text";
-        icon.setAttribute("data-lucide", "eye-off");
-      } else {
-        input.type = "password";
-        icon.setAttribute("data-lucide", "eye");
-      }
-      lucide.createIcons();
+      const replacement = document.createElement("i");
+      replacement.id = iconId;
+      replacement.className = "h-4 w-4";
+      replacement.setAttribute("data-lucide", visible ? "eye-off" : "eye");
+      icon.replaceWith(replacement);
+      globalThis.lucide?.createIcons?.();
     }
 
     async function handleModalLogin() {
@@ -387,7 +350,9 @@
 
         if (response.ok && (data.success !== false && data.user)) {
           localStorage.setItem("user", JSON.stringify(data.user));
-          const userRole = (data.user.role || "STUDENT").toUpperCase();
+          const pending=sessionStorage.getItem('pendingBilling');
+          if(pending){sessionStorage.removeItem('pendingBilling');try{const choice=JSON.parse(pending);if(['PRO','VIP'].includes(choice.code)&&[1,3,12].includes(choice.months)){location.href='payment.html?plan='+choice.code+'&months='+choice.months;return;}}catch(_){} }
+          const userRole = (data.user.role || "USER").toUpperCase();
           if (userRole === "ADMIN") {
             window.location.href = "admin.html";
           } else {
@@ -413,6 +378,12 @@
 
       authAlert.classList.add("hidden");
 
+      if (!PasswordRules.valid(password)) {
+        authAlert.textContent = PasswordRules.message;
+        authAlert.classList.remove("hidden");
+        return;
+      }
+
       if (password !== confirmPassword) {
         authAlert.textContent = "Mật khẩu xác nhận không khớp!";
         authAlert.classList.remove("hidden");
@@ -429,8 +400,17 @@
         const data = await response.json();
 
         if (response.ok && (data.success !== false && data.user)) {
-          localStorage.setItem("user", JSON.stringify(data.user || { username, name, email }));
-          window.location.href = "dashboard.html";
+          localStorage.removeItem("user");
+          document.getElementById("modalRegisterForm").reset();
+          togglePasswordVisibility("regPasswordInput", "regEyeIcon", false);
+          togglePasswordVisibility("regConfirmPasswordInput", "regConfirmEyeIcon", false);
+          switchAuthTab("login");
+          const loginName = document.getElementById("loginUsernameInput");
+          loginName.value = username;
+          const loginPassword = document.getElementById("loginPasswordInput");
+          loginPassword.value = "";
+          await AppModal.alert("Tạo tài khoản thành công. Vui lòng đăng nhập để tiếp tục.", {tone: "success"});
+          loginPassword.focus();
         } else {
           authAlert.textContent = data.error || data.message || "Đăng ký thất bại. Tên đăng nhập hoặc email có thể đã tồn tại.";
           authAlert.classList.remove("hidden");
@@ -457,6 +437,9 @@
     }
 
     function renderPricingPlans(plans) {
+      const months=Number(document.getElementById('pricingTermSelect').value);
+      const discount=months===3?10000:months===12?20000:0;
+
       const container = document.getElementById("pricingPlansContainer");
       container.innerHTML = "";
 
@@ -468,7 +451,7 @@
         }`;
 
         const badgeHtml = plan.badgeText ? `
-          <div class="absolute top-4 right-4 badge-3d ${isPopular ? 'badge-3d-indigo' : 'badge-3d-emerald'}">
+          <div class="inline-flex mb-3 max-w-full whitespace-normal badge-3d ${isPopular ? 'badge-3d-indigo' : 'badge-3d-emerald'}">
             ${plan.badgeText}
           </div>
         ` : '';
@@ -482,38 +465,46 @@
 
         const isSale = plan.originalPrice && plan.originalPrice > plan.salePrice;
         const originalPriceFormatted = isSale ? `${plan.originalPrice.toLocaleString('vi-VN')}đ` : '';
-        const salePriceFormatted = plan.salePrice === 0 ? '0đ' : `${plan.salePrice.toLocaleString('vi-VN')}đ`;
+        const unitPrice=plan.salePrice===0?0:plan.salePrice-discount;
+        const salePriceFormatted=unitPrice.toLocaleString("vi-VN")+"đ";
 
         card.innerHTML = `
-          ${badgeHtml}
           <div>
+            ${badgeHtml}
             <h3 class="font-extrabold text-xl ${isPopular ? 'text-indigo-700' : 'text-slate-900'}">${plan.name}</h3>
             <p class="text-slate-500 mt-1 text-xs font-semibold">${plan.description || ''}</p>
             <div class="my-6 flex items-baseline">
               ${isSale ? `<span class="line-through text-slate-400 text-sm font-bold mr-2">${originalPriceFormatted}</span>` : ''}
               <span class="text-4xl font-extrabold text-slate-900">${salePriceFormatted}</span>
-              <span class="text-xs text-slate-500 font-bold ml-1">/ ${plan.billingCycle || 'tháng'}</span>
+              <span class="text-xs text-slate-500 font-bold ml-1">/ tháng</span>
             </div>
+            <p class="text-sm text-indigo-700 font-bold mb-4">${plan.salePrice===0?'Miễn phí · làm mới hạn mức hàng tháng':'Thanh toán '+(unitPrice*months).toLocaleString('vi-VN')+'đ / '+months+' tháng'}</p>
             <ul class="space-y-3.5 text-xs text-slate-800 font-bold">
               ${featuresList}
             </ul>
           </div>
-          <button onclick="${plan.salePrice === 0 ? 'openAuthModal(\'register\')' : 'openAuthModal(\'login\')'}" class="mt-8 w-full btn-3d ${isPopular ? 'btn-3d-primary shadow-lg shadow-indigo-500/30' : 'btn-3d-secondary'} py-3 text-xs font-bold">
-            ${plan.salePrice === 0 ? 'Đăng Ký Miễn Phí' : 'Nâng Cấp Gói ' + (plan.planCode || '')}
+          <button onclick="chooseBillingPlan('${plan.planCode}', ${months})" class="mt-8 w-full btn-3d ${isPopular ? 'btn-3d-primary' : 'btn-3d-secondary'} py-3 text-xs font-bold">
+            ${plan.salePrice===0?'Đăng ký FREE':'Đăng ký '+plan.planCode}
           </button>
         `;
 
         container.appendChild(card);
       });
 
-      lucide.createIcons();
+      globalThis.lucide?.createIcons?.();
     }
 
+    function chooseBillingPlan(code,months) {
+      const user=JSON.parse(localStorage.getItem('user')||'null');
+      if(code==='FREE'){if(user?.id)location.href='profile.html';else openAuthModal('register');return;}
+      if(user?.id)location.href='payment.html?plan='+code+'&months='+months;
+      else {sessionStorage.setItem('pendingBilling',JSON.stringify({code,months}));openAuthModal('login');}
+    }
     function fallbackPricing() {
       renderPricingPlans([
-        { planCode: "FREE", name: "Gói Miễn Phí (FREE)", originalPrice: 0, salePrice: 0, billingCycle: "vĩnh viễn", isPopular: false, badgeText: null, description: "Phù hợp cho trải nghiệm ban đầu", features: "Tải lên tối đa 3 tài liệu|Sơ đồ kiến thức cơ bản|10 Bài trắc nghiệm AI mỗi tháng" },
-        { planCode: "STUDENT", name: "Gói Sinh Viên (STUDENT)", originalPrice: 79000, salePrice: 49000, billingCycle: "tháng", isPopular: false, badgeText: "Giảm 38%", description: "Dành cho học sinh sinh viên học tập hàng ngày", features: "Tải lên tối đa 50 tài liệu|Sơ đồ kiến thức 3D nâng cao|50 Bài trắc nghiệm AI/tháng|Thẻ Flashcards lật 3D không giới hạn" },
-        { planCode: "PRO", name: "Gói Chuyên Nghiệp (PRO)", originalPrice: 149000, salePrice: 99000, billingCycle: "tháng", isPopular: true, badgeText: "Phổ Biến Nhất - GIẢM 33%", description: "Dành cho người học tích cực & nghiên cứu chuyên sâu", features: "Tải lên không giới hạn tài liệu|Sơ đồ kiến thức 3D không giới hạn|Không giới hạn Thẻ Flashcards & Bài thi AI|Phân tích chuyên sâu tiến độ học tập|Ưu tiên xử lý từ AI Model" }
+        {planCode:'FREE',name:'Gói FREE',originalPrice:0,salePrice:0,features:'3 tài liệu/tháng|20 chat/tháng|3 quiz/tháng|3 lượt tạo flashcard/tháng'},
+        {planCode:'PRO',name:'Gói PRO',originalPrice:50000,salePrice:50000,isPopular:true,features:'50 tài liệu/tháng|500 chat/tháng|100 quiz/tháng|100 lượt tạo flashcard/tháng'},
+        {planCode:'VIP',name:'Gói VIP',originalPrice:100000,salePrice:100000,features:'Không giới hạn quota sử dụng|Đủ tính năng AI|Đăng ký theo thời hạn'}
       ]);
     }
 

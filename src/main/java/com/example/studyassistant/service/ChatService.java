@@ -51,7 +51,7 @@ public class ChatService {
         // Kiểm tra quota conversation theo Plan
         long currentCount = conversationRepository.countByUserIdAndIsDeletedFalse(userId);
         int maxConversations = getConversationQuotaByPlan(user.getPlan());
-        if (currentCount >= maxConversations) {
+        if (maxConversations >= 0 && currentCount >= maxConversations) {
             throw new IllegalStateException("Bạn đã đạt giới hạn cuộc trò chuyện của gói " + user.getPlan() + " (" + maxConversations + " cuộc trò chuyện).");
         }
 
@@ -207,9 +207,9 @@ public class ChatService {
     }
 
     private int getConversationQuotaByPlan(String plan) {
-        if ("PREMIUM".equalsIgnoreCase(plan)) return 500;
-        if ("BASIC".equalsIgnoreCase(plan)) return 100;
-        return 20; // FREE plan tối đa 20 cuộc trò chuyện
+        return switch(com.example.studyassistant.billing.PlanPolicy.normalize(plan)) {
+            case "VIP" -> -1; case "PRO" -> 500; default -> 20;
+        };
     }
 
     private String callOpenAi(String prompt) {

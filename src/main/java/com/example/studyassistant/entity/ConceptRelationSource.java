@@ -21,10 +21,12 @@ public class ConceptRelationSource {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.CASCADE)
     @JoinColumn(name = "concept_relation_id", nullable = false)
     private ConceptRelation conceptRelation;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.CASCADE)
     @JoinColumn(name = "document_chunk_id", nullable = false)
     private DocumentChunk documentChunk;
 

@@ -2,6 +2,12 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" href="css/theme.css">
+  <script src="js/theme.js"></script>
+  <script src="js/runtime-errors.js"></script>
+  <script src="js/app-modal.js"></script>
+  <script src="js/billing-ui.js"></script>
+  <script src="js/account-alerts.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Study AI - Nhật Ký Audit Hệ Thống 3D</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -31,7 +37,7 @@
         <span class="badge-3d badge-3d-emerald">Chỉ Đọc</span>
       </div>
 
-      <div class="overflow-x-auto">
+      <div class="app-table-scroll overflow-x-auto" tabindex="0" role="region" aria-label="Bảng dữ liệu có thể cuộn ngang">
         <table class="w-full text-left text-xs border-collapse">
           <thead>
             <tr class="bg-slate-100/90 text-slate-600 font-extrabold uppercase border-b border-slate-200">
@@ -55,12 +61,12 @@
 
   <script src="auth-interceptor.js"></script>
   <script src="sidebar.js"></script>
+  <script src="js/admin-pagination.js"></script>
   <script>
     renderUnifiedSidebar("admin-audit");
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     if ((user.role || "FREE").toUpperCase() !== "ADMIN") {
-      alert("Quyền truy cập bị từ chối! Trang này chỉ dành cho Quản trị viên.");
-      window.location.href = "dashboard.html";
+      AppModal.alert("Quyền truy cập bị từ chối! Trang này chỉ dành cho Quản trị viên.", {tone: "error"}).then(() => { window.location.href = "dashboard.html"; });
     }
 
     async function loadAdminAuditLogs() {
@@ -73,10 +79,11 @@
 
           if (logs.length === 0) {
             tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-500 font-semibold">Chưa có nhật ký audit nào.</td></tr>`;
+            paginateAdminRows(tbody);
             return;
           }
 
-          logs.slice().reverse().forEach(log => {
+          logs.sort(compareAdminNewest).forEach(log => {
             const tr = document.createElement("tr");
             tr.className = "hover:bg-slate-50 transition-colors";
             tr.innerHTML = `
@@ -89,6 +96,7 @@
             `;
             tbody.appendChild(tr);
           });
+          paginateAdminRows(tbody);
         }
       } catch (err) {
         console.error("Lỗi nạp nhật ký audit:", err);

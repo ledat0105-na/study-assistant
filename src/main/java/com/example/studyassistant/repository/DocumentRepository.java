@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface DocumentRepository extends JpaRepository<Document, Long> {
+    long countByStatus(String status);
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"user", "notebook", "notebook.user"})
     java.util.Optional<Document> findKnowledgeGraphDocumentByIdAndUserId(Long id, Long userId);
     List<Document> findByUserId(Long userId);

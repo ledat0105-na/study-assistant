@@ -25,8 +25,8 @@ public class TeacherAuthorizationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
                 
-        if (!"TEACHER".equals(user.getRole()) && !"ADMIN".equals(user.getRole())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Requires TEACHER capability");
+        if (!"USER".equals(user.getRole())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Chức năng dành cho tài khoản người dùng");
         }
         
         return user;

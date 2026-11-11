@@ -253,7 +253,7 @@ class Phase7ExamIntelligenceE2EMySQLIntegrationTest {
         quiz = quizRepository.findById(generated.quizId()).orElseThrow();
         questions.addAll(questionRepository.findByQuizId(quiz.getId()));
 
-        assertThat(quiz.getStatus()).isEqualTo(QuizStatus.DRAFT);
+        assertThat(quiz.getStatus()).isEqualTo(QuizStatus.PUBLISHED);
         assertThat(quiz.getNotebook().getId()).isEqualTo(notebook.getId());
         assertThat(generated.questions()).allSatisfy(result ->
                 assertThat(result.sourceChunkIds()).containsExactly(activeChunk.getId()));

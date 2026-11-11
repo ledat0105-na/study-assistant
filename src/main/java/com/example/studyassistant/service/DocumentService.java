@@ -53,7 +53,8 @@ public class DocumentService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     // Đường dẫn lưu file nằm ngoài public webroot để đảm bảo an toàn
-    private final String UPLOAD_DIR = "storage_private/uploads";
+    @org.springframework.beans.factory.annotation.Value("${documents.storage-root:storage_private/uploads}")
+    private String uploadDir = "storage_private/uploads";
 
     // DOC-01: Upload tài liệu
     public Document uploadDocument(Long userId, Long notebookId, MultipartFile file) throws IOException {
@@ -110,13 +111,13 @@ public class DocumentService {
         }
 
         // 6. Lưu file vào storage_private ngoài webroot
-        File uploadFolder = new File(UPLOAD_DIR);
+        File uploadFolder = new File(uploadDir);
         if (!uploadFolder.exists()) {
             uploadFolder.mkdirs();
         }
 
         String uniqueFileName = UUID.randomUUID().toString() + "_" + originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_");
-        Path filePath = Paths.get(UPLOAD_DIR, uniqueFileName);
+        Path filePath = Paths.get(uploadDir, uniqueFileName);
         Files.write(filePath, file.getBytes());
 
         // Trích xuất nội dung text thật từ file để AI đọc được

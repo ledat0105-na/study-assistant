@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
+@org.springframework.test.annotation.DirtiesContext(classMode = org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_CLASS)
 @org.junit.jupiter.api.Tag("Integration")
 public class SecurityIntegrationTest {
 
@@ -32,8 +33,8 @@ public class SecurityIntegrationTest {
 
         User saved = userService.register(req);
 
-        // Kiểm tra Backend phải ép buộc role STUDENT và plan FREE
-        Assertions.assertEquals("STUDENT", saved.getRole());
+        // Kiểm tra Backend phải ép buộc role USER và plan FREE
+        Assertions.assertEquals("USER", saved.getRole());
         Assertions.assertEquals("FREE", saved.getPlan());
         Assertions.assertEquals("ACTIVE", saved.getStatus());
         Assertions.assertTrue(saved.getPassword().startsWith("$2a$") || saved.getPassword().startsWith("$2b$"));

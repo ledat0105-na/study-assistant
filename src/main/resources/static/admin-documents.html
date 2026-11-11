@@ -2,6 +2,12 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" href="css/theme.css">
+  <script src="js/theme.js"></script>
+  <script src="js/runtime-errors.js"></script>
+  <script src="js/app-modal.js"></script>
+  <script src="js/billing-ui.js"></script>
+  <script src="js/account-alerts.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Study AI - Quản Lý Tài Liệu Hệ Thống 3D</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -24,14 +30,21 @@
 
     <!-- Documents Table Card -->
     <div class="glass-3d-card rounded-3xl overflow-hidden shadow-2xl">
-      <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-white/90">
+      <div class="p-6 border-b border-slate-200 flex flex-wrap gap-3 justify-between items-center bg-white/90">
         <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2.5">
           <i data-lucide="folder-open" class="h-5 w-5 text-indigo-600"></i> Danh Sách File Tài Liệu Trong CSDL
         </h3>
-        <span id="allDocCountLabel" class="badge-3d badge-3d-indigo">0 tài liệu</span>
+        <div class="flex flex-wrap items-center gap-3">
+          <label for="docStatusFilter" class="text-sm font-semibold">Trạng thái</label>
+          <select id="docStatusFilter" class="input-3d text-sm">
+            <option value="">Tất cả tài liệu</option>
+            <option value="FAILED">Xử lý thất bại</option>
+          </select>
+          <span id="allDocCountLabel" class="badge-3d badge-3d-indigo">0 tài liệu</span>
+        </div>
       </div>
 
-      <div class="overflow-x-auto">
+      <div class="app-table-scroll overflow-x-auto" tabindex="0" role="region" aria-label="Bảng dữ liệu có thể cuộn ngang">
         <table class="w-full text-left text-xs border-collapse">
           <thead>
             <tr class="bg-slate-100/90 text-slate-600 font-extrabold uppercase border-b border-slate-200">
@@ -55,25 +68,44 @@
 
   <script src="auth-interceptor.js"></script>
   <script src="sidebar.js"></script>
+  <script src="js/admin-pagination.js"></script>
   <script>
     renderUnifiedSidebar("admin-docs");
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     if ((user.role || "FREE").toUpperCase() !== "ADMIN") {
-      alert("Quyền truy cập bị từ chối! Trang này chỉ dành cho Quản trị viên.");
-      window.location.href = "dashboard.html";
+      AppModal.alert("Quyền truy cập bị từ chối! Trang này chỉ dành cho Quản trị viên.", {tone: "error"}).then(() => { window.location.href = "dashboard.html"; });
     }
+
+    const docStatusFilter = document.getElementById("docStatusFilter");
+    docStatusFilter.value = new URLSearchParams(location.search).get("status") === "FAILED" ? "FAILED" : "";
+    docStatusFilter.addEventListener("change", () => {
+      const url = new URL(location.href);
+      if (docStatusFilter.value) url.searchParams.set("status", docStatusFilter.value);
+      else url.searchParams.delete("status");
+      location.href = url.href;
+    });
+    const documentStatus = {
+      FAILED: ["Xử lý thất bại", "bg-rose-50 text-rose-700"],
+      READY: ["Sẵn sàng", "badge-3d-emerald"],
+      PROCESSING: ["Đang xử lý", "badge-3d-indigo"],
+      UPLOADING: ["Đang tải lên", "badge-3d-indigo"],
+      UPLOADED: ["Đã tải lên", "badge-3d-indigo"]
+    };
 
     async function loadAdminSystemDocuments() {
       try {
         const res = await fetch("/api/admin/documents");
         if (res.ok) {
-          const docs = await res.json();
+          const docs = (await res.json())
+            .filter(doc => !docStatusFilter.value || doc.status === docStatusFilter.value)
+            .sort((a, b) => Number(b.status === "FAILED") - Number(a.status === "FAILED") || compareAdminNewest(a, b));
           const tbody = document.getElementById("docsTableBody");
           tbody.innerHTML = "";
           document.getElementById("allDocCountLabel").textContent = `${docs.length} tài liệu`;
 
           if (docs.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-500 font-semibold">Chưa có tài liệu nào trong hệ thống.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-500 font-semibold">${docStatusFilter.value ? "Không có tài liệu xử lý lỗi." : "Chưa có tài liệu nào trong hệ thống."}</td></tr>`;
+            paginateAdminRows(tbody);
             return;
           }
 
@@ -82,18 +114,32 @@
             tr.className = "hover:bg-slate-50 transition-colors";
             tr.innerHTML = `
               <td class="p-4 pl-6 font-mono font-bold text-slate-500">${d.id}</td>
-              <td class="p-4 font-bold text-slate-900">${d.fileName || d.originalName}</td>
+              <td class="p-4 font-bold text-slate-900" data-doc-name></td>
               <td class="p-4 font-mono uppercase font-bold text-indigo-700">${d.fileType || d.format || 'PDF'}</td>
               <td class="p-4 font-mono font-semibold">${d.fileSize ? (d.fileSize / (1024*1024)).toFixed(2) + ' MB' : '2.4 MB'}</td>
-              <td class="p-4"><span class="badge-3d badge-3d-emerald text-[10px]">${d.status || 'READY'}</span></td>
+              <td class="p-4" data-doc-status></td>
               <td class="p-4 text-center pr-6">
                 <button onclick="deleteDocByAdmin(${d.id})" class="btn-3d btn-3d-secondary px-3 py-1.5 text-xs font-bold !text-rose-600">
                   <i data-lucide="trash-2" class="h-3.5 w-3.5"></i> Xóa File
                 </button>
               </td>
             `;
+            tr.querySelector("[data-doc-name]").textContent = d.fileName || d.originalName || "Tài liệu";
+            const [label, color] = documentStatus[d.status] || ["Chưa rõ", "badge-3d-indigo"];
+            const statusCell = tr.querySelector("[data-doc-status]");
+            const badge = document.createElement("span");
+            badge.className = "badge-3d " + color + " text-[10px]";
+            badge.textContent = label;
+            statusCell.append(badge);
+            if (d.status === "FAILED" && d.errorMessage) {
+              const reason = document.createElement("p");
+              reason.className = "mt-1 text-xs text-slate-600 break-words max-w-xs";
+              reason.textContent = d.errorMessage;
+              statusCell.append(reason);
+            }
             tbody.appendChild(tr);
           });
+          paginateAdminRows(tbody);
           lucide.createIcons();
         }
       } catch (err) {
@@ -102,15 +148,20 @@
     }
 
     async function deleteDocByAdmin(id) {
-      if (!confirm("Bạn có chắc muốn xóa tài liệu này khỏi toàn hệ thống?")) return;
+      const confirmed = await AppModal.confirm("Bạn có chắc muốn xóa tài liệu này khỏi toàn hệ thống?", {
+        title: "Xóa tài liệu", tone: "warning", buttonLabel: "Xóa tài liệu", cancelLabel: "Hủy"
+      });
+      if (!confirmed) return;
       try {
         const res = await fetch(`/api/admin/documents/${id}`, { method: "DELETE" });
         if (res.ok) {
-          alert("Đã xóa tài liệu thành công.");
+          AppModal.alert("Đã xóa tài liệu thành công.");
           loadAdminSystemDocuments();
+        } else {
+          AppModal.alert("Không thể xóa tài liệu. Vui lòng thử lại.", {tone: "error"});
         }
       } catch (err) {
-        alert("Lỗi kết nối máy chủ.");
+        AppModal.alert("Lỗi kết nối máy chủ.");
       }
     }
 
