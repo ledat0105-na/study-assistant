@@ -2,6 +2,12 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" href="css/theme.css">
+  <script src="js/theme.js"></script>
+  <script src="js/runtime-errors.js"></script>
+  <script src="js/app-modal.js"></script>
+  <script src="js/billing-ui.js"></script>
+  <script src="js/account-alerts.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Study AI - Hồ Sơ Cá Nhân 3D</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -39,11 +45,11 @@
             </div>
             <div class="flex justify-between items-center text-xs">
               <span class="text-slate-600 font-extrabold">Gói dịch vụ:</span>
-              <span id="tierLabel" class="badge-3d badge-3d-emerald">GÓI PRO 3D</span>
+              <span data-plan-badge id="tierLabel" class="badge-3d badge-3d-emerald">FREE</span>
             </div>
           </div>
 
-          <a href="payment.html" class="mt-8 w-full btn-3d btn-3d-primary py-3 text-xs font-bold shadow-lg shadow-indigo-500/30">
+          <a id="profileUpgradeLink" href="payment.html?plan=PRO" class="mt-8 w-full btn-3d btn-3d-primary py-3 text-xs font-bold shadow-lg shadow-indigo-500/30">
             Nâng Cấp Gói PRO
           </a>
         </div>
@@ -53,6 +59,7 @@
           <h3 class="text-lg font-extrabold text-slate-900 mb-6 flex items-center gap-2">
             <i data-lucide="user-check" class="h-5 w-5 text-indigo-600"></i> Cập Nhật Thông Tin Tùy Chỉnh
           </h3>
+          <p id="profileStatus" role="status" aria-live="polite" class="mb-4 text-sm"></p>
           <form id="profileForm" class="space-y-5">
             <div>
               <label for="fullNameInput" class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Họ và Tên</label>
@@ -71,23 +78,12 @@
         </div>
       </div>
     </div>
+    <section id="billingQuota" class="glass-3d-card p-6 m-6" aria-live="polite"></section>
   </main>
 
   <script src="auth-interceptor.js"></script>
   <script src="sidebar.js"></script>
   <script src="i18n.js"></script>
-  <script>
-    renderUnifiedSidebar("profile");
-    lucide.createIcons();
-
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (user) {
-      document.getElementById("profileNameLabel").textContent = user.name || user.username || "Học Viên AI";
-      document.getElementById("profileEmailLabel").textContent = user.email || "user@study.ai";
-      document.getElementById("fullNameInput").value = user.name || user.username || "";
-      document.getElementById("emailInput").value = user.email || "";
-      if (document.getElementById("roleLabel")) document.getElementById("roleLabel").textContent = user.role || "FREE";
-    }
-  </script>
+  <script src="js/profile.js"></script>
 </body>
 </html>

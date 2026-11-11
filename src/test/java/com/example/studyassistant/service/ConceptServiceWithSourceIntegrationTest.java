@@ -31,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
+@org.springframework.test.annotation.DirtiesContext(classMode = org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_CLASS)
 @Tag("Integration")
 public class ConceptServiceWithSourceIntegrationTest {
 
@@ -83,16 +84,18 @@ public class ConceptServiceWithSourceIntegrationTest {
         document.setUser(user);
         document.setNotebook(notebook);
         document.setFileName("testdoc.pdf");
+        document.setStatus("READY");
+        document.setActiveIndexVersion("v1");
         document.setFilePath("/tmp/cs_test_" + suffix + ".pdf");
         document.setFileSize(1000L);
-        document.setStatus("INDEXED");
+        document.setStatus("READY");
         document.setActiveIndexVersion("v1");
         document = documentRepository.saveAndFlush(document);
 
         chunk = new DocumentChunk();
         chunk.setDocument(document);
         chunk.setChunkIndex(0);
-        chunk.setContent("Machine learning is great.");
+        chunk.setContent("Machine learning is great. evidence 1");
         chunk.setTokenCount(10);
         chunk.setIndexVersion("v1");
         chunk = chunkRepository.saveAndFlush(chunk);
@@ -100,7 +103,7 @@ public class ConceptServiceWithSourceIntegrationTest {
         chunk2 = new DocumentChunk();
         chunk2.setDocument(document);
         chunk2.setChunkIndex(1);
-        chunk2.setContent("Deep learning is better.");
+        chunk2.setContent("Deep learning is better. evidence 2");
         chunk2.setTokenCount(10);
         chunk2.setIndexVersion("v1");
         chunk2 = chunkRepository.saveAndFlush(chunk2);
@@ -150,13 +153,15 @@ public class ConceptServiceWithSourceIntegrationTest {
     @Test
     void test2_ForcedSourceFailureRollsBackConcept() {
         DocumentChunk detachedChunk = new DocumentChunk();
-        detachedChunk.setId(99999L); // Invalid chunk ID to force FK violation
+        detachedChunk.setId(99999L);
+        detachedChunk.setDocument(document);
+        detachedChunk.setIndexVersion("v1"); // Invalid chunk ID to force FK violation
 
         assertThatThrownBy(() -> {
             conceptService.getOrCreateWithSource(
                     notebook, "Orphan Concept", "Desc", "TERM", detachedChunk, "evidence", 0.9
             );
-        }).isInstanceOf(DataIntegrityViolationException.class);
+        }).isInstanceOf(KnowledgeGraphStateException.class);
         
         // Ensure Concept was rolled back (no orphan)
         assertThat(conceptRepository.findByNotebookIdAndNormalizedName(notebook.getId(), "orphan concept")).isEmpty();
@@ -175,7 +180,8 @@ public class ConceptServiceWithSourceIntegrationTest {
         );
 
         assertThat(src1.getConcept().getId()).isEqualTo(src2.getConcept().getId());
-        assertThat(src2.getConcept().getDescription()).isEqualTo("Original desc"); // Unchanged
+        assertThat(src2.getConcept().getDescription()).isEqualTo("Modified desc");
+        assertThat(conceptRepository.findById(src2.getConcept().getId()).orElseThrow().getDescription()).isEqualTo("Modified desc");
         assertThat(src1.getId()).isNotEqualTo(src2.getId()); // New source created for chunk2
         assertThat(conceptSourceRepository.findByConceptId(src1.getConcept().getId())).hasSize(2);
     }
@@ -282,7 +288,9 @@ public class ConceptServiceWithSourceIntegrationTest {
         conceptRepository.saveAndFlush(concept);
 
         DocumentChunk detachedChunk = new DocumentChunk();
-        detachedChunk.setId(99999L); 
+        detachedChunk.setId(99999L);
+        detachedChunk.setDocument(document);
+        detachedChunk.setIndexVersion("v1");
 
         // Both Concept is existing AND chunk is invalid.
         // It should fallback to insertSourceOnly, which will fail FK, and NOT be swallowed.
@@ -290,7 +298,7 @@ public class ConceptServiceWithSourceIntegrationTest {
             conceptService.getOrCreateWithSource(
                     notebook, "Will Fail", "Desc", "TERM", detachedChunk, "evidence", 0.9
             );
-        }).isInstanceOf(DataIntegrityViolationException.class);
+        }).isInstanceOf(KnowledgeGraphStateException.class);
     }
 
     // 9. outer transaction caller remains safe

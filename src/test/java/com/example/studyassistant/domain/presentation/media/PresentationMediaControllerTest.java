@@ -60,8 +60,8 @@ class PresentationMediaControllerTest {
     }
 
     @Test
-    void L_studentCapabilityIsForbidden() {
-        teacher.setRole("STUDENT");
+    void L_adminCapabilityIsForbidden() {
+        teacher.setRole("ADMIN");
         assertThatThrownBy(() -> controller.list(2L, request))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(error -> ((ResponseStatusException) error).getStatusCode())

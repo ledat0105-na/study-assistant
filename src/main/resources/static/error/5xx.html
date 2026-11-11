@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Tạm gián đoạn | Study AI</title>
+  <script>
+    try {
+      const saved = localStorage.getItem('study-assistant-theme');
+      if (saved === 'light' || saved === 'dark') document.documentElement.dataset.theme = saved;
+    } catch (_) {}
+  </script>
+  <style>
+    :root { color-scheme:light; --surface:#fff; --page:#f4f7fe; --ink:#142143; --muted:#52627b; --line:#dce4ef; --accent:#4338ca; --soft:#eef2ff; --shadow:#1d2d5720; }
+    @media (prefers-color-scheme:dark) { :root:not([data-theme="light"]) { color-scheme:dark; --surface:#25344b; --page:#1b273b; --ink:#f3f6ff; --muted:#d3dff0; --line:#526784; --accent:#c0c9ff; --soft:#314460; --shadow:#080e1a60; } }
+    :root[data-theme="dark"] { color-scheme:dark; --surface:#25344b; --page:#1b273b; --ink:#f3f6ff; --muted:#d3dff0; --line:#526784; --accent:#c0c9ff; --soft:#314460; --shadow:#080e1a60; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; min-height:100dvh; display:grid; place-items:center; padding:1rem; background:radial-gradient(ellipse at 25% 15%,var(--soft),transparent 55%),var(--page); color:var(--ink); font:1rem/1.6 system-ui,sans-serif; }
+    main { width:min(100%,37rem); padding:clamp(1.35rem,5vw,3.2rem); background:var(--surface); border:1px solid var(--line); border-radius:1.45rem; box-shadow:0 20px 52px var(--shadow); }
+    .brand { display:inline-flex; align-items:center; gap:.65rem; color:var(--ink); text-decoration:none; font-weight:750; }
+    .brand-mark { display:grid; place-items:center; width:2rem; height:2rem; border-radius:.55rem; background:#4338ca; color:#fff; font-size:.9rem; }
+    .status { display:inline-block; margin:1.85rem 0 .45rem; padding:.25rem .65rem; border-radius:100px; color:var(--accent); background:var(--soft); font-size:.78rem; font-weight:750; }
+    h1 { margin:0; line-height:1.15; letter-spacing:-.035em; font-size:clamp(1.8rem,6vw,2.85rem); }
+    p { margin:.85rem 0 0; max-width:36ch; color:var(--muted); }
+    .actions { display:flex; flex-wrap:wrap; gap:.65rem; margin-top:1.55rem; }
+    .actions a { display:inline-flex; align-items:center; justify-content:center; min-height:2.8rem; padding:.55rem 1rem; border-radius:.65rem; border:1px solid var(--line); color:var(--ink); font-weight:700; text-decoration:none; }
+    .actions .primary { background:#4338ca; border-color:#4338ca; color:#fff; }
+    .actions a:hover { box-shadow:0 0 0 2px var(--line); }
+    a:focus-visible { outline:2px solid #818cf8; outline-offset:3px; }
+    @media(max-width:340px) { .actions a { width:100%; } }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">AI</span>Study AI</a>
+    <div><span class="status">Tạm gián đoạn</span></div>
+    <h1>Trang chưa tải được</h1>
+    <p>Study AI đang gặp sự cố tạm thời. Bạn có thể thử mở lại trang hoặc quay về trang chủ.</p>
+    <div class="actions">
+      <a id="retry" class="primary" href="/">Thử lại</a>
+      <a href="/">Về trang chủ</a>
+    </div>
+  </main>
+  <script>
+    const next = new URLSearchParams(location.search).get("retry");
+    try {
+      const target = next || (location.pathname === "/errors.html" ? "/" : location.href);
+      const url = new URL(target, location.origin);
+      if (url.origin === location.origin && !/^\/(?:api(?:\/|$)|errors\.html$|error\/)/.test(url.pathname)) {
+        document.getElementById("retry").href = url.href;
+      }
+    } catch (_) {}
+  </script>
+</body>
+</html>

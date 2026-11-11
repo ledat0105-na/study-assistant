@@ -2,6 +2,12 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" href="css/theme.css">
+  <script src="js/theme.js"></script>
+  <script src="js/runtime-errors.js"></script>
+  <script src="js/app-modal.js"></script>
+  <script src="js/billing-ui.js"></script>
+  <script src="js/account-alerts.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Study AI - Tải Lên Tài Liệu 3D</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -111,7 +117,7 @@
   <script src="i18n.js"></script>
   <script>
     renderUnifiedSidebar("documents");
-    lucide.createIcons();
+    globalThis.lucide?.createIcons?.();
     loadNotebooks();
 
     async function loadNotebooks() {
@@ -178,7 +184,7 @@
         const response = await fetch("/api/plans/quota");
         if (response.ok) {
           const quota = await response.json();
-          if (quota.documents && quota.documents.used >= quota.documents.max) {
+          if (quota.documents && quota.documents.max >= 0 && quota.documents.used >= quota.documents.max) {
             document.getElementById("limitModal").classList.remove("hidden");
             return true;
           }
@@ -243,15 +249,15 @@
             if (readNowBtn && savedDoc && savedDoc.id) {
               readNowBtn.href = `viewer.html?id=${savedDoc.id}&tab=summary`;
             }
-            lucide.createIcons();
+            globalThis.lucide?.createIcons?.();
           }, 300);
         } else {
-          alert(ApiClient.message(response.status));
+          AppModal.alert(ApiClient.message(response.status));
           resetDropZone();
         }
       } catch (err) {
         clearInterval(timer);
-        alert("Lỗi kết nối máy chủ");
+        AppModal.alert("Lỗi kết nối máy chủ");
         resetDropZone();
       } finally { uploadInFlight = false; }
     }

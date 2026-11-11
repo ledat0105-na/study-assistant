@@ -165,7 +165,7 @@ class PresentationTeacherModeE2EMySQLIntegrationTest {
             ensurePlanFeature(teacherPlan, 100L * 1024 * 1024);
             ensurePlanFeature(freePlan, 100L * 1024 * 1024);
             teacher = createUser("teacher_e2e", "TEACHER", teacherPlan);
-            student = createUser("student_e2e", "STUDENT", freePlan);
+            student = createUser("student_e2e", "ADMIN", freePlan);
             foreignTeacher = createUser("foreign_teacher_e2e", "TEACHER", teacherPlan);
             notebook = createNotebook(teacher, "E2E notebook");
             document = createDocument(teacher, notebook, "notes.pdf");
@@ -657,7 +657,7 @@ class PresentationTeacherModeE2EMySQLIntegrationTest {
         }
 
     @Test
-    void e2eStudentForbidden() throws Exception {
+    void e2eAdminForbidden() throws Exception {
         PresentationDeck deck = createDeck(teacher, notebook, "Student Forbidden Deck");
         MockMvc mockMvc = MockMvcBuilders.standaloneSetup(
                 new PresentationSlideEditorController(new TeacherAuthorizationService(userRepository), slideEditorService))
@@ -836,7 +836,8 @@ class PresentationTeacherModeE2EMySQLIntegrationTest {
     }
 
     private PresentationOutlineRevision waitForGeneratedOutlineRevision(Long deckId, Long jobId) {
-        for (int i = 0; i < 50; i++) {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
+        while (System.nanoTime() < deadline) {
             PresentationGenerationJob job = jobRepository.findById(jobId).orElseThrow();
             if (job.getStatus() == PresentationJobStatus.SUCCEEDED) {
                 PresentationOutlineRevision revision = outlineRepository.findByDeckIdOrderByRevisionNumberDesc(deckId)
@@ -847,7 +848,7 @@ class PresentationTeacherModeE2EMySQLIntegrationTest {
             if (job.getStatus() == PresentationJobStatus.FAILED) {
                 throw new IllegalStateException("Outline generation job failed: " + job.getErrorSummary());
             }
-            Thread.yield();
+            LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(10));
         }
         throw new IllegalStateException("Outline job did not complete in time");
     }

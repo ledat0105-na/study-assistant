@@ -2,6 +2,12 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" href="css/theme.css">
+  <script src="js/theme.js"></script>
+  <script src="js/runtime-errors.js"></script>
+  <script src="js/app-modal.js"></script>
+  <script src="js/billing-ui.js"></script>
+  <script src="js/account-alerts.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Study AI - Quản Lý Người Dùng 3D</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -20,7 +26,7 @@
         <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">
           Quản Lý Người Dùng Toàn Hệ Thống
         </h1>
-        <p class="text-slate-600 text-sm mt-1.5 font-semibold">Thêm tài khoản, đổi vai trò (ADMIN / STUDENT), phân gói dịch vụ (FREE / STUDENT / PRO), khóa/mở khóa & xóa tài khoản</p>
+        <p class="text-slate-600 text-sm mt-1.5 font-semibold">Thêm tài khoản, đổi vai trò (ADMIN / USER), xem gói dịch vụ (FREE / PRO / VIP), khóa/mở khóa & xóa tài khoản</p>
       </div>
       <button onclick="openUserModal()" class="btn-3d btn-3d-primary px-5 py-3 text-xs font-extrabold shadow-xl shadow-indigo-500/30 flex items-center gap-2">
         <i data-lucide="user-plus" class="h-4 w-4"></i> Thêm Người Dùng Mới
@@ -36,7 +42,7 @@
         <span id="userCountBadge" class="badge-3d badge-3d-indigo">0 Thành viên</span>
       </div>
 
-      <div class="overflow-x-auto">
+      <div class="app-table-scroll overflow-x-auto" tabindex="0" role="region" aria-label="Bảng dữ liệu có thể cuộn ngang">
         <table class="w-full text-left text-xs border-collapse">
           <thead>
             <tr class="bg-slate-100/90 text-slate-600 font-extrabold uppercase border-b border-slate-200">
@@ -93,16 +99,8 @@
           <div>
             <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1">Vai Trò (Role)</label>
             <select id="userRole" class="input-3d w-full font-semibold">
-              <option value="STUDENT">STUDENT (Học viên)</option>
+              <option value="USER">USER (Người dùng)</option>
               <option value="ADMIN">ADMIN (Quản trị viên)</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1">Gói Dịch Vụ (Plan)</label>
-            <select id="userPlan" class="input-3d w-full font-semibold">
-              <option value="FREE">Gói FREE</option>
-              <option value="STUDENT">Gói STUDENT (49k)</option>
-              <option value="PRO">Gói PRO (99k)</option>
             </select>
           </div>
         </div>
@@ -127,12 +125,12 @@
 
   <script src="auth-interceptor.js"></script>
   <script src="sidebar.js"></script>
+  <script src="js/admin-pagination.js"></script>
   <script>
     renderUnifiedSidebar("admin-users");
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     if ((user.role || "FREE").toUpperCase() !== "ADMIN") {
-      alert("Quyền truy cập bị từ chối! Trang này chỉ dành cho Quản trị viên.");
-      window.location.href = "dashboard.html";
+      AppModal.alert("Quyền truy cập bị từ chối! Trang này chỉ dành cho Quản trị viên.", {tone: "error"}).then(() => { window.location.href = "dashboard.html"; });
     }
 
     let allUsersList = [];
@@ -156,10 +154,11 @@
 
       if (allUsersList.length === 0) {
         tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-500 font-semibold">Chưa có người dùng nào trong CSDL.</td></tr>`;
+            paginateAdminRows(tbody);
         return;
       }
 
-      allUsersList.forEach(u => {
+      allUsersList.slice().sort(compareAdminNewest).forEach(u => {
         const isAdminUser = (u.role || "").toUpperCase() === "ADMIN";
         const isLocked = (u.status || "").toUpperCase() === "LOCKED";
 
@@ -172,10 +171,10 @@
           <td class="p-4 text-slate-600 font-semibold">${u.email}</td>
           <td class="p-4 font-extrabold ${isAdminUser ? 'text-rose-600' : 'text-indigo-700'}">
             <span class="badge-3d ${isAdminUser ? 'badge-3d-indigo text-rose-700' : 'badge-3d-indigo'} text-[10px]">
-              ${u.role || 'STUDENT'}
+              ${u.role || 'USER'}
             </span>
           </td>
-          <td class="p-4 font-bold text-slate-800">${u.plan || 'FREE'}</td>
+          <td class="p-4 font-bold text-slate-800">${u.role === 'ADMIN' ? '—' : (u.plan || 'FREE')}</td>
           <td class="p-4">
             <span class="badge-3d ${isLocked ? 'badge-3d-indigo text-rose-600' : 'badge-3d-emerald'} text-[10px]">
               ${u.status || 'ACTIVE'}
@@ -193,6 +192,7 @@
         `;
         tbody.appendChild(tr);
       });
+      paginateAdminRows(tbody);
 
       lucide.createIcons();
     }
@@ -218,8 +218,7 @@
       document.getElementById("userUsername").value = u.username || "";
       document.getElementById("userUsername").readOnly = true;
       document.getElementById("userEmail").value = u.email || "";
-      document.getElementById("userRole").value = (u.role || "STUDENT").toUpperCase();
-      document.getElementById("userPlan").value = (u.plan || "FREE").toUpperCase();
+      document.getElementById("userRole").value = (u.role || "USER").toUpperCase();
       document.getElementById("userStatus").value = (u.status || "ACTIVE").toUpperCase();
 
       document.getElementById("userModalTitle").textContent = `Chỉnh Sửa Người Dùng: ${u.username}`;
@@ -235,7 +234,6 @@
         username: document.getElementById("userUsername").value,
         email: document.getElementById("userEmail").value,
         role: document.getElementById("userRole").value,
-        plan: document.getElementById("userPlan").value,
         status: document.getElementById("userStatus").value
       };
 
@@ -250,21 +248,21 @@
         });
 
         if (res.ok) {
-          alert("Lưu thông tin người dùng thành công!");
+          AppModal.alert("Lưu thông tin người dùng thành công!");
           closeUserModal();
           loadAdminUsers();
         } else {
           const errData = await res.json();
-          alert(errData.error || "Thao tác không thành công!");
+          AppModal.alert(errData.error || "Thao tác không thành công!");
         }
       } catch (err) {
-        alert("Lỗi kết nối máy chủ.");
+        AppModal.alert("Lỗi kết nối máy chủ.");
       }
     }
 
     async function toggleUserLock(userId, currentStatus) {
       const newStatus = (currentStatus || "").toUpperCase() === "LOCKED" ? "ACTIVE" : "LOCKED";
-      if (!confirm(`Bạn có chắc muốn chuyển trạng thái tài khoản sang ${newStatus}?`)) return;
+      if (!(await AppModal.confirm(`Bạn có chắc muốn chuyển trạng thái tài khoản sang ${newStatus}?`, {title: "Đổi trạng thái tài khoản", tone: "warning", buttonLabel: "Xác nhận"}))) return;
 
       try {
         const res = await fetch(`/api/admin/users/${userId}/status`, {
@@ -274,29 +272,29 @@
         });
 
         if (res.ok) {
-          alert(`Đã đổi trạng thái tài khoản thành ${newStatus}!`);
+          AppModal.alert(`Đã đổi trạng thái tài khoản thành ${newStatus}!`);
           loadAdminUsers();
         } else {
-          alert("Thao tác thất bại.");
+          AppModal.alert("Thao tác thất bại.");
         }
       } catch (err) {
-        alert("Lỗi kết nối máy chủ.");
+        AppModal.alert("Lỗi kết nối máy chủ.");
       }
     }
 
     async function deleteUser(userId) {
-      if (!confirm("CẢNH BÁO: Xóa người dùng này khỏi CSDL? Tất cả dữ liệu liên quan sẽ bị loại bỏ!")) return;
+      if (!(await AppModal.confirm("CẢNH BÁO: Xóa người dùng này khỏi CSDL? Tất cả dữ liệu liên quan sẽ bị loại bỏ!", {title: "Xóa tài khoản", tone: "warning", buttonLabel: "Xóa tài khoản"}))) return;
       try {
         const res = await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
         if (res.ok) {
-          alert("Đã xóa người dùng thành công.");
+          AppModal.alert("Đã xóa người dùng thành công.");
           loadAdminUsers();
         } else {
           const err = await res.json();
-          alert(err.error || "Thao tác thất bại.");
+          AppModal.alert(err.error || "Thao tác thất bại.");
         }
       } catch (err) {
-        alert("Lỗi kết nối máy chủ.");
+        AppModal.alert("Lỗi kết nối máy chủ.");
       }
     }
 

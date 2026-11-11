@@ -66,7 +66,9 @@ const ApiClient = (function() {
         let filename = 'presentation.pptx';
         const filenameMatch = contentDisposition.match(/filename\*?=(?:UTF-8'')?["']?([^"';\n]+)["']?/i);
         if (filenameMatch && filenameMatch[1]) {
-          filename = decodeURIComponent(filenameMatch[1]);
+          try { filename = decodeURIComponent(filenameMatch[1]); }
+          catch (_) { filename = 'presentation.pptx'; }
+          filename = filename.split(/[\\/]/).pop().replace(/[\x00-\x1f\x7f]/g, '') || 'presentation.pptx';
         }
         return { blob, filename };
       }
@@ -88,7 +90,7 @@ const ApiClient = (function() {
 
       return data;
     } catch (error) {
-      if (error.status) throw error; // Already normalized
+      if (error && error.status) throw error; // Already normalized
       throw {
         status: 503,
         code: 'NETWORK_ERROR',

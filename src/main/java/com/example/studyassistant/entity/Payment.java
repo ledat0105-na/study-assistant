@@ -21,10 +21,13 @@ public class Payment {
     private User user;
 
     @Column(nullable = false)
-    private String plan; // "STUDENT", "PRO"
+    private String plan; // PRO / VIP
 
     @Column(nullable = false)
     private Long amount;
+
+    @Column(name="duration_months", nullable=false, columnDefinition="int default 1")
+    private Integer durationMonths = 1;
 
     @Column(nullable = false)
     private String status; // "PENDING", "APPROVED", "REJECTED"

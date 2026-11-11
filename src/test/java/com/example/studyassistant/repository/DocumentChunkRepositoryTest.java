@@ -33,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SpringBootTest
 @Transactional
+@org.springframework.test.annotation.DirtiesContext(classMode = org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_CLASS)
 @org.junit.jupiter.api.Tag("Integration")
 public class DocumentChunkRepositoryTest {
 
@@ -55,6 +56,7 @@ public class DocumentChunkRepositoryTest {
         String unique = String.valueOf(System.currentTimeMillis());
 
         User user = new User();
+        user.setUsername("chunk_test_" + unique);
         user.setEmail("chunk_test_" + unique + "@example.com");
         user.setPassword("$2a$10$hashedplaceholder");
         user.setFullName("Chunk Test User");

@@ -61,7 +61,7 @@ class PresentationPptxExportControllerTest {
         teacher.setRole("TEACHER");
         student = new User();
         student.setId(42L);
-        student.setRole("STUDENT");
+        student.setRole("ADMIN");
         teacherSession = new MockHttpSession();
         teacherSession.setAttribute("userId", teacher.getId());
         studentSession = new MockHttpSession();

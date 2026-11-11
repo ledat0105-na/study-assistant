@@ -2,6 +2,12 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" href="css/theme.css">
+  <script src="js/theme.js"></script>
+  <script src="js/runtime-errors.js"></script>
+  <script src="js/app-modal.js"></script>
+  <script src="js/billing-ui.js"></script>
+  <script src="js/account-alerts.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Study AI - Phê Duyệt Thanh Toán 3D</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -31,7 +37,7 @@
         <span class="badge-3d badge-3d-indigo">Cập nhật Real-time</span>
       </div>
 
-      <div class="overflow-x-auto">
+      <div class="app-table-scroll overflow-x-auto" tabindex="0" role="region" aria-label="Bảng dữ liệu có thể cuộn ngang">
         <table class="w-full text-left text-xs border-collapse">
           <thead>
             <tr class="bg-slate-100/90 text-slate-600 font-extrabold uppercase border-b border-slate-200">
@@ -55,12 +61,12 @@
 
   <script src="auth-interceptor.js"></script>
   <script src="sidebar.js"></script>
+  <script src="js/admin-pagination.js"></script>
   <script>
     renderUnifiedSidebar("admin-payments");
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     if ((user.role || "FREE").toUpperCase() !== "ADMIN") {
-      alert("Quyền truy cập bị từ chối! Trang này chỉ dành cho Quản trị viên.");
-      window.location.href = "dashboard.html";
+      AppModal.alert("Quyền truy cập bị từ chối! Trang này chỉ dành cho Quản trị viên.", {tone: "error"}).then(() => { window.location.href = "dashboard.html"; });
     }
 
     async function loadPendingPayments() {
@@ -73,16 +79,17 @@
 
           if (list.length === 0) {
             tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-500 font-semibold">Không có yêu cầu nâng cấp gói nào đang chờ phê duyệt.</td></tr>`;
+            paginateAdminRows(tbody);
             return;
           }
 
-          list.forEach(p => {
+          list.sort(compareAdminNewest).forEach(p => {
             const tr = document.createElement("tr");
             tr.className = "hover:bg-slate-50 transition-colors";
             tr.innerHTML = `
-              <td class="p-4 pl-6 font-extrabold text-slate-900">${p.user.fullName || p.user.username}</td>
+              <td class="p-4 pl-6 font-extrabold text-slate-900">${p.user.name || p.user.fullName || p.user.username}</td>
               <td class="p-4 text-slate-600 font-semibold">${p.user.email}</td>
-              <td class="p-4"><span class="badge-3d badge-3d-indigo">${p.plan}</span></td>
+              <td class="p-4"><span class="badge-3d badge-3d-indigo">${p.plan} · ${p.durationMonths || 1} tháng</span></td>
               <td class="p-4 font-mono font-extrabold text-indigo-700">${(p.amount || 0).toLocaleString('vi-VN')}đ</td>
               <td class="p-4 text-slate-600 font-semibold max-w-xs truncate">${p.paymentNote || ''}</td>
               <td class="p-4 text-center pr-6 flex justify-center gap-2">
@@ -92,6 +99,7 @@
             `;
             tbody.appendChild(tr);
           });
+          paginateAdminRows(tbody);
           lucide.createIcons();
         }
       } catch (err) {
@@ -100,32 +108,32 @@
     }
 
     async function approvePayment(id) {
-      if (!confirm("Xác nhận phê duyệt nâng cấp gói cho tài khoản này?")) return;
+      if (!(await AppModal.confirm("Xác nhận phê duyệt nâng cấp gói cho tài khoản này?", {title: "Duyệt nâng cấp", tone: "info", buttonLabel: "Phê duyệt"}))) return;
       try {
         const res = await fetch(`/api/payments/${id}/approve`, { method: "POST" });
         if (res.ok) {
-          alert("Phê duyệt nâng cấp gói thành công!");
+          AppModal.alert("Phê duyệt nâng cấp gói thành công!");
           loadPendingPayments();
         } else {
-          alert("Thao tác thất bại!");
+          AppModal.alert("Thao tác thất bại!");
         }
       } catch (err) {
-        alert("Lỗi kết nối máy chủ.");
+        AppModal.alert("Lỗi kết nối máy chủ.");
       }
     }
 
     async function rejectPayment(id) {
-      if (!confirm("Từ chối yêu cầu thanh toán nâng cấp này?")) return;
+      if (!(await AppModal.confirm("Từ chối yêu cầu thanh toán nâng cấp này?", {title: "Từ chối nâng cấp", tone: "warning", buttonLabel: "Từ chối"}))) return;
       try {
         const res = await fetch(`/api/payments/${id}/reject`, { method: "POST" });
         if (res.ok) {
-          alert("Đã từ chối giao dịch thành công.");
+          AppModal.alert("Đã từ chối giao dịch thành công.");
           loadPendingPayments();
         } else {
-          alert("Thao tác thất bại!");
+          AppModal.alert("Thao tác thất bại!");
         }
       } catch (err) {
-        alert("Lỗi kết nối máy chủ.");
+        AppModal.alert("Lỗi kết nối máy chủ.");
       }
     }
 

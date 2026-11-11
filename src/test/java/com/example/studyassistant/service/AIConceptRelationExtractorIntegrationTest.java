@@ -29,6 +29,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
+@org.springframework.test.annotation.DirtiesContext(classMode = org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_CLASS)
 @Tag("Integration")
 public class AIConceptRelationExtractorIntegrationTest {
 
@@ -101,7 +102,9 @@ public class AIConceptRelationExtractorIntegrationTest {
             testDoc.setUser(testUser);
             testDoc.setNotebook(testNotebook);
             testDoc.setFileName("doc_" + suffix + ".txt");
-            testDoc.setFilePath("/tmp/" + suffix);
+            testDoc.setStatus("READY");
+        testDoc.setActiveIndexVersion("v1");
+        testDoc.setFilePath("/tmp/" + suffix);
             documentRepository.saveAndFlush(testDoc);
 
             testChunk = new DocumentChunk();

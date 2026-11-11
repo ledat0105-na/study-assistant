@@ -15,6 +15,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@org.springframework.test.annotation.DirtiesContext(classMode = org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_CLASS)
 @Tag("Integration")
 public class GraphContextExpansionServiceIntegrationTest {
 
@@ -77,6 +78,7 @@ public class GraphContextExpansionServiceIntegrationTest {
         userRepository.deleteAllInBatch();
 
         user = new User();
+        user.setUsername("qa_" + java.util.UUID.randomUUID());
         user.setEmail("context@example.com");
         user.setPassword("pass");
         user.setRole("STUDENT");

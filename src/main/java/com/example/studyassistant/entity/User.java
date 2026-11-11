@@ -27,21 +27,37 @@ public class User {
     private String email;
 
     @Column(nullable = false)
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Column(nullable = false)
-    private String role = "STUDENT"; // "STUDENT" or "ADMIN"
+    private String role = "USER";
+
+    public String getRole() {
+        return switch (role == null ? "" : role.toUpperCase(java.util.Locale.ROOT)) {
+            case "STUDENT", "TEACHER", "" -> "USER";
+            default -> role.toUpperCase(java.util.Locale.ROOT);
+        };
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void normalizeRole() {
+        role = getRole();
+    }
 
     @Column(nullable = false)
-    private String plan = "FREE"; // "FREE", "BASIC", "PREMIUM"
+    private String plan = "FREE"; // FREE / PRO / VIP; legacy BASIC/PREMIUM are normalized
 
     @Column(nullable = false)
     private String status = "ACTIVE"; // "ACTIVE", "LOCKED", "SUSPENDED"
 
     @Column(name = "reset_token")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private String resetToken;
 
     @Column(name = "reset_token_expiry")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private LocalDateTime resetTokenExpiry;
 
     @Column(name = "failed_login_attempts")

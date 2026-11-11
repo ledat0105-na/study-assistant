@@ -22,7 +22,7 @@ public class DataInitializer implements CommandLineRunner {
             admin.setEmail("admin@study.ai");
             admin.setPassword(HashUtil.hash("Admin123!"));
             admin.setRole("ADMIN");
-            admin.setPlan("PREMIUM");
+            admin.setPlan("FREE");
             admin.setStatus("ACTIVE");
             admin.setFailedLoginAttempts(0);
             userRepository.save(admin);

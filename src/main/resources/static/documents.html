@@ -2,6 +2,12 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" href="css/theme.css">
+  <script src="js/theme.js"></script>
+  <script src="js/runtime-errors.js"></script>
+  <script src="js/app-modal.js"></script>
+  <script src="js/billing-ui.js"></script>
+  <script src="js/account-alerts.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Study AI - Quản Lý Tài Liệu 3D</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -32,15 +38,16 @@
     <!-- Filters & Search -->
     <div class="flex flex-col sm:flex-row gap-4 mb-8">
       <div class="flex-1 relative">
-        <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400"></i>
+        <i data-lucide="search" aria-hidden="true" class="document-search-icon absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400"></i>
         <input
           id="searchInput"
           type="text"
           placeholder="Tìm kiếm tài liệu theo tên..."
-          class="input-3d w-full pl-12 pr-4 py-3 text-sm font-semibold placeholder-slate-400"
+          aria-label="Tìm kiếm tài liệu theo tên"
+          class="input-3d w-full text-sm font-semibold placeholder-slate-400"
         />
       </div>
-      <div class="flex items-center gap-2.5" id="filterContainer">
+      <div class="flex flex-wrap items-center gap-2.5" id="filterContainer">
         <button onclick="setFilter('ALL')" class="filter-btn btn-3d btn-3d-primary px-4 py-2.5 text-xs font-bold">ALL</button>
         <button onclick="setFilter('PDF')" class="filter-btn btn-3d btn-3d-secondary px-4 py-2.5 text-xs font-bold">PDF</button>
         <button onclick="setFilter('DOCX')" class="filter-btn btn-3d btn-3d-secondary px-4 py-2.5 text-xs font-bold">DOCX</button>
@@ -61,7 +68,7 @@
   <script src="sidebar.js"></script>
   <script>
     renderUnifiedSidebar("documents");
-    lucide.createIcons();
+    globalThis.lucide?.createIcons?.();
 
     let allDocs = [];
     let activeFilter = "ALL";
@@ -98,7 +105,7 @@
             Không tìm thấy tài liệu nào phù hợp.
           </div>
         `;
-        lucide.createIcons();
+        globalThis.lucide?.createIcons?.();
         return;
       }
 
@@ -140,7 +147,7 @@
           retry.onclick = async () => {
             retry.disabled = true;
             try { await ApiClient.post(`/api/documents/${doc.id}/retry`); await loadDocuments(); }
-            catch (error) { alert(DocumentUI.errorMessage(error)); }
+            catch (error) { AppModal.alert(DocumentUI.errorMessage(error)); }
             finally { retry.disabled = false; }
           };
           card.appendChild(retry);
@@ -148,7 +155,7 @@
         grid.appendChild(card);
       });
 
-      lucide.createIcons();
+      globalThis.lucide?.createIcons?.();
     }
 
     async function deleteDoc(id, btnElement) {
@@ -161,11 +168,11 @@
           renderDocs();
         } else {
           const errData = await response.json().catch(() => ({}));
-          alert(ApiClient.message(response.status));
+          AppModal.alert(ApiClient.message(response.status));
         }
       } catch (err) {
         console.error("Lỗi xóa tài liệu:", err);
-        alert("Lỗi kết nối khi xóa tài liệu.");
+        AppModal.alert("Lỗi kết nối khi xóa tài liệu.");
       } finally {
         if (btnElement) btnElement.disabled = false;
       }

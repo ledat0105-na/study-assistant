@@ -55,6 +55,7 @@ public class DocumentController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (IllegalStateException e) {
+            if(e instanceof com.example.studyassistant.billing.MonthlyQuotaService.Exhausted exhausted)return ResponseEntity.status(429).body(exhausted.payload());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Lưu file thất bại: " + e.getMessage()));
@@ -120,6 +121,7 @@ public class DocumentController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (IllegalStateException e) {
+            if(e instanceof com.example.studyassistant.billing.MonthlyQuotaService.Exhausted exhausted)return ResponseEntity.status(429).body(exhausted.payload());
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of("error", e.getMessage()));
         }
     }

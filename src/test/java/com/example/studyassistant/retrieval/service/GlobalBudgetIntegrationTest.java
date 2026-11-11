@@ -69,6 +69,7 @@ public class GlobalBudgetIntegrationTest {
         userRepository.deleteAllInBatch();
 
         user = new User();
+        user.setUsername("qa_" + java.util.UUID.randomUUID());
         user.setEmail("budget@example.com");
         user.setPassword("pass");
         user.setRole("STUDENT");

@@ -2,6 +2,12 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" href="css/theme.css">
+  <script src="js/theme.js"></script>
+  <script src="js/runtime-errors.js"></script>
+  <script src="js/app-modal.js"></script>
+  <script src="js/billing-ui.js"></script>
+  <script src="js/account-alerts.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Study AI - Tổng Quan Quản Trị Hệ Thống 3D</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -132,12 +138,12 @@
 
   <script src="auth-interceptor.js"></script>
   <script src="sidebar.js"></script>
+  <script src="js/admin-pagination.js"></script>
   <script>
     renderUnifiedSidebar("admin-overview");
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     if ((user.role || "FREE").toUpperCase() !== "ADMIN") {
-      alert("Quyền truy cập bị từ chối! Trang này chỉ dành cho Quản trị viên.");
-      window.location.href = "dashboard.html";
+      AppModal.alert("Quyền truy cập bị từ chối! Trang này chỉ dành cho Quản trị viên.", {tone: "error"}).then(() => { window.location.href = "dashboard.html"; });
     }
 
     async function loadOverviewStats() {
@@ -169,7 +175,7 @@
             return;
           }
 
-          logs.slice().reverse().slice(0, 5).forEach(log => {
+          logs.sort(compareAdminNewest).slice(0, 5).forEach(log => {
             const item = document.createElement("div");
             item.className = "p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs";
             item.innerHTML = `

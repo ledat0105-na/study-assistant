@@ -25,7 +25,8 @@ public class QuizResult {
     private Double score; // Quiz score double representation
 
     @org.hibernate.annotations.Generated(event = org.hibernate.generator.EventType.INSERT)
-    @Column(name = "completed_at", insertable = false, updatable = false)
+    @Column(name = "completed_at", insertable = false, updatable = false,
+            columnDefinition = "datetime(6) default current_timestamp(6)")
     private LocalDateTime completedAt;
 
     @ManyToOne

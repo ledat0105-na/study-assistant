@@ -18,6 +18,9 @@ const translations = {
   nav_signin: "Đăng nhập",
   nav_getstarted: "Đăng ký",
   
+  hero_title_prefix: "Chuyển Đổi Tài Liệu Phức Tạp Thành",
+  hero_title_highlight: "Sơ Đồ Kiến Thức 3D",
+  hero_title_suffix: "Tương Tác",
   // Landing page
   hero_title: "Chuyển Đổi Tài Liệu Phức Tạp Thành Sơ Đồ Kiến Thức Trực Quan",
   hero_desc: "Tải lên tài liệu PDF hoặc DOCX của bạn. AI tự động phân tích khái niệm, xây dựng sơ đồ chủ đề, tạo thẻ ghi nhớ và chuẩn bị các bài trắc nghiệm tùy chỉnh cho riêng bạn.",

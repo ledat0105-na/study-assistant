@@ -10,7 +10,7 @@ function fixture(fetch) {
   const notices = [];
   let refreshed = 0;
   const context = vm.createContext({ fetch, selectedDocIds: [1, 2], confirm: () => true,
-    ApiClient: { message: () => 'Không tìm thấy tài liệu hoặc bạn không có quyền xóa.' }, alert: message => notices.push(message), console: { error() {} },
+    ApiClient: { message: () => 'Không tìm thấy tài liệu hoặc bạn không có quyền xóa.' }, AppModal: { alert: message => notices.push(message) }, console: { error() {} },
     saveSelectedDocIds() {}, loadDocuments: async () => { refreshed++; } });
   vm.runInContext(code, context);
   return { context, notices, refreshed: () => refreshed };

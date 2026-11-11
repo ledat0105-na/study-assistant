@@ -30,11 +30,21 @@ body.viewer-page {
 #fcContentText { margin-block: 1rem; white-space: pre-wrap; }
 #flashcardGenerationStatus { flex-shrink: 0; }
 
-@media (max-width: 1023px) {
+@media (max-width: 1100px) {
   body.viewer-page { height: auto; min-height: 100dvh; overflow-y: auto; overflow-x: hidden; }
-  #viewerLayout { flex: none; grid-template-rows: none; overflow: visible; }
-  #viewerLayout > div { height: auto; }
+  #viewerLayout { flex: none; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; overflow: visible; }
+  #viewerLayout > div { grid-column: auto; height: auto; }
   #sourcesList { max-height: 14rem; flex: none; }
   #viewerLayout > #chatPanel { height: clamp(350px, 60dvh, 600px); }
   #viewerLayout > #studioPanel { height: max(400px, min(760px, 90dvh)); }
+}
+
+/* Keep navigation actions and long Vietnamese titles inside small screens. */
+@media (max-width: 639px) {
+  .viewer-page > header { flex-wrap: wrap; gap: .75rem; padding-inline: 1rem; }
+  .viewer-page > header > div { min-width: 0; max-width: 100%; }
+  .viewer-page > header > div:first-child { width: 100%; }
+  .viewer-page > header > div:first-child > div { min-width: 0; }
+  .viewer-page > header > div:last-child { margin-left: auto; flex-shrink: 0; }
+  .viewer-page #notebookTitle { min-width: 0; max-width: 65vw; }
 }

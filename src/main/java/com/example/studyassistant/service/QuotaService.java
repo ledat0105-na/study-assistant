@@ -32,8 +32,23 @@ public class QuotaService {
     @Autowired
     private Clock clock;
 
+    @org.springframework.beans.factory.annotation.Value("${billing.enforcement.enabled:true}")
+    private boolean billingEnabled = true;
+
     // Lấy cấu hình tính năng gói từ DB (Mặc định nếu chưa init DB)
     public PlanFeature getPlanFeature(String planName) {
+        if(billingEnabled && java.util.Set.of("FREE","PRO","VIP","PREMIUM","BASIC","STUDENT").contains(planName==null?"FREE":planName.toUpperCase())) {
+            String plan=com.example.studyassistant.billing.PlanPolicy.normalize(planName);
+            boolean vip=plan.equals("VIP"),pro=plan.equals("PRO");
+            return new PlanFeature(null,plan,vip?Integer.MAX_VALUE:pro?50:3,
+                    vip?Integer.MAX_VALUE:pro?500:20,vip?Integer.MAX_VALUE:pro?100:3,
+                    vip?Integer.MAX_VALUE:pro?100:3,vip?Integer.MAX_VALUE:pro?50:3,
+                    vip?Long.MAX_VALUE:pro?2L*1024*1024*1024:100L*1024*1024,
+                    vip?36500:pro?365:7,vip?Integer.MAX_VALUE:pro?50:3,
+                    vip?Integer.MAX_VALUE:pro?20:1,vip?Integer.MAX_VALUE:pro?200:10,
+                    vip?Long.MAX_VALUE:pro?2L*1024*1024*1024:100L*1024*1024);
+        }
+
         String name = (planName != null) ? planName.toUpperCase() : "FREE";
         if ("STUDENT".equals(name)) name = "BASIC";
         if ("PRO".equals(name)) name = "PREMIUM";
@@ -102,7 +117,7 @@ public class QuotaService {
 
         // 1. Số lượng upload
         long currentDocCount = documentRepository.countByUserId(userId);
-        if (currentDocCount >= feature.getMonthlyUploadLimit()) {
+        if (!billingEnabled && currentDocCount >= feature.getMonthlyUploadLimit()) {
             throw new IllegalStateException("Bạn đã đạt giới hạn " + feature.getMonthlyUploadLimit() + " tài liệu upload của gói " + userPlan + ".");
         }
 
@@ -111,7 +126,8 @@ public class QuotaService {
                 .mapToLong(doc -> doc.getFileSize() != null ? doc.getFileSize() : 0L)
                 .sum();
 
-        if (currentTotalBytes + newFileSize > feature.getMaxStorageBytes()) {
+        if (newFileSize > feature.getMaxStorageBytes() - currentTotalBytes) {
+            if(billingEnabled)throw new com.example.studyassistant.billing.MonthlyQuotaService.Exhausted(com.example.studyassistant.billing.PlanPolicy.normalize(userPlan),"STORAGE");
             long maxMb = feature.getMaxStorageBytes() / (1024 * 1024);
             throw new IllegalStateException("Dung lượng lưu trữ của bạn đã vượt quá giới hạn " + maxMb + "MB của gói " + userPlan + ".");
         }

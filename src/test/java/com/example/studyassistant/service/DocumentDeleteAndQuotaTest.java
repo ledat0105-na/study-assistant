@@ -62,8 +62,12 @@ class DocumentDeleteAndQuotaTest {
     private Document indexedDocument;
     private Document unindexedDocument;
 
+    @org.junit.jupiter.api.io.TempDir
+    Path uploadRoot;
+
     @BeforeEach
     void setUp() {
+        org.springframework.test.util.ReflectionTestUtils.setField(documentService, "uploadDir", uploadRoot.toString());
         testUser = new User();
         testUser.setId(1L);
         testUser.setUsername("teacher1");

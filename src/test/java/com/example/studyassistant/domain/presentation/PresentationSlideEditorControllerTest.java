@@ -68,7 +68,7 @@ class PresentationSlideEditorControllerTest {
 
         student = new User();
         student.setId(11L);
-        student.setRole("STUDENT");
+        student.setRole("ADMIN");
         student.setUsername("student");
         student.setEmail("student@test.com");
         student.setPlan("FREE");

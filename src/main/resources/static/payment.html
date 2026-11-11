@@ -2,13 +2,19 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" href="css/theme.css">
+  <script src="js/theme.js"></script>
+  <script src="js/runtime-errors.js"></script>
+  <script src="js/app-modal.js"></script>
+  <script src="js/billing-ui.js"></script>
+  <script src="js/account-alerts.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Study AI - Nâng Cấp Gói 3D</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="css/style-3d.css">
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
+<body class="billing-checkout-page bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
 
   <!-- 3D Sidebar -->
   <aside></aside>
@@ -26,14 +32,14 @@
       <div class="glass-3d-card p-8 space-y-6">
         <div>
           <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-3">Gói dịch vụ đã chọn</h3>
-          <div class="bg-indigo-50/80 border border-indigo-200 p-5 rounded-2xl flex justify-between items-center shadow-inner">
+          <div class="billing-checkout-card bg-indigo-50/80 border border-indigo-200 p-5 rounded-2xl flex flex-col sm:flex-row flex-wrap justify-between items-start gap-4 shadow-inner">
             <div>
-              <span id="planName" class="badge-3d badge-3d-indigo text-sm">PRO 3D</span>
-              <p class="text-xs text-slate-600 mt-1 font-semibold">Thời hạn: 1 Tháng không giới hạn</p>
+              <span id="planName" class="badge-3d badge-3d-indigo text-sm">PRO</span>
+              <p class="text-xs text-slate-600 mt-1 font-semibold"><label for="subscriptionMonths">Thời hạn</label> <select id="subscriptionMonths" class="input-3d w-full max-w-full"><option value="1">1 tháng</option><option value="3">3 tháng · giảm 10.000đ/tháng</option><option value="12">1 năm · giảm 20.000đ/tháng</option></select></p>
             </div>
             <div>
               <span id="planOriginalPrice" class="line-through text-slate-400 text-sm font-bold mr-2 hidden"></span>
-              <span id="planPrice" class="text-3xl font-extrabold text-indigo-700">99.000đ</span>
+              <span id="planPrice" class="text-2xl break-words font-extrabold text-indigo-700">Đang tính…</span>
             </div>
           </div>
         </div>
@@ -43,19 +49,19 @@
           <div class="bg-white/90 border border-slate-200 p-6 rounded-2xl space-y-4 shadow-sm">
             <div class="flex justify-between items-center text-xs">
               <span class="text-slate-600 font-bold">Ngân hàng:</span>
-              <span class="text-slate-900 font-extrabold">MB Bank (Ngân Hàng Quân Đội)</span>
+              <span class="text-slate-900 font-extrabold"><span id="billingBankName">Chưa cấu hình</span></span>
             </div>
             <div class="flex justify-between items-center text-xs">
               <span class="text-slate-600 font-bold">Số tài khoản:</span>
-              <span class="text-indigo-600 font-mono font-extrabold text-sm">123456789999</span>
+              <span class="text-indigo-600 font-mono font-extrabold text-sm"><span id="billingBankAccount">Chưa cấu hình</span></span>
             </div>
             <div class="flex justify-between items-center text-xs">
               <span class="text-slate-600 font-bold">Chủ tài khoản:</span>
-              <span class="text-slate-900 font-extrabold">STUDY AI ASSISTANT</span>
+              <span class="text-slate-900 font-extrabold"><span id="billingBankHolder">Chưa cấu hình</span></span>
             </div>
             <div class="flex justify-between items-center text-xs">
               <span class="text-slate-600 font-bold">Số tiền thanh toán:</span>
-              <span id="transferPrice" class="text-emerald-600 font-extrabold font-mono text-sm">99.000đ</span>
+              <span id="transferPrice" class="text-emerald-600 font-extrabold font-mono text-sm">Đang tính…</span>
             </div>
             <div class="flex justify-between items-center text-xs">
               <span class="text-slate-600 font-bold">Nội dung chuyển khoản:</span>
@@ -64,6 +70,7 @@
           </div>
         </div>
 
+        <p class="text-xs text-slate-600 leading-relaxed">Gia hạn cùng gói sẽ cộng tiếp thời gian còn lại. Đăng ký gói khác sẽ kích hoạt ngay sau khi duyệt và thay thế thời hạn gói hiện tại. Hạn mức sử dụng làm mới vào đầu mỗi tháng.</p>
         <!-- Submit form -->
         <div class="space-y-4">
           <div>
@@ -73,7 +80,7 @@
 
           <div class="flex justify-end gap-3 pt-2">
             <a href="profile.html" class="btn-3d btn-3d-secondary py-3 px-6 text-xs font-bold">Hủy Bỏ</a>
-            <button onclick="submitPayment()" class="btn-3d btn-3d-primary py-3 px-6 text-xs font-bold shadow-lg shadow-indigo-500/30">Xác Nhận Đã Chuyển Khoản</button>
+            <button id="submitSubscription" disabled onclick="submitPayment()" class="btn-3d btn-3d-primary py-3 px-6 text-xs font-bold shadow-lg shadow-indigo-500/30">Gửi Yêu Cầu Đăng Ký</button>
           </div>
         </div>
       </div>
@@ -83,70 +90,6 @@
   <script src="auth-interceptor.js"></script>
   <script src="sidebar.js"></script>
   <script src="i18n.js"></script>
-  <script>
-    renderUnifiedSidebar("profile");
-
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const urlParams = new URLSearchParams(window.location.search);
-    const selectedPlanCode = (urlParams.get("plan") || "PRO").toUpperCase();
-
-    async function loadPlanDetails() {
-      try {
-        const res = await fetch("/api/plans");
-        if (res.ok) {
-          const plans = await res.json();
-          const targetPlan = plans.find(p => p.planCode === selectedPlanCode) || {
-            name: selectedPlanCode === "STUDENT" ? "Gói Sinh Viên" : "Gói Chuyên Nghiệp",
-            salePrice: selectedPlanCode === "STUDENT" ? 49000 : 99000,
-            originalPrice: selectedPlanCode === "STUDENT" ? 79000 : 149000
-          };
-
-          const sPrice = (targetPlan.salePrice || targetPlan.originalPrice || 99000).toLocaleString('vi-VN') + 'đ';
-          
-          document.getElementById("planName").textContent = targetPlan.name || selectedPlanCode;
-          document.getElementById("planPrice").textContent = sPrice;
-          document.getElementById("transferPrice").textContent = sPrice;
-          
-          if (targetPlan.originalPrice && targetPlan.originalPrice > targetPlan.salePrice) {
-            const oPrice = targetPlan.originalPrice.toLocaleString('vi-VN') + 'đ';
-            const origEl = document.getElementById("planOriginalPrice");
-            origEl.textContent = oPrice;
-            origEl.classList.remove("hidden");
-          }
-          
-          document.getElementById("transferSyntax").textContent = `UPGRADE ${selectedPlanCode} ${user.username || 'USER'}`.toUpperCase();
-        }
-      } catch (err) {
-        console.error("Lỗi nạp thông tin gói:", err);
-      }
-    }
-
-    lucide.createIcons();
-
-    async function submitPayment() {
-      const note = document.getElementById("paymentNote").value;
-      try {
-        const response = await fetch("/api/payments/checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            planId: selectedPlanCode,
-            paymentNote: note
-          })
-        });
-
-        if (response.ok) {
-          alert("Gửi thông tin chuyển khoản thành công! Yêu cầu của bạn đang được Quản trị viên đối soát phê duyệt.");
-          window.location.href = "profile.html";
-        } else {
-          alert("Không thể tạo yêu cầu thanh toán.");
-        }
-      } catch (err) {
-        alert("Lỗi kết nối máy chủ.");
-      }
-    }
-
-    loadPlanDetails();
-  </script>
+  <script src="js/subscription-checkout.js"></script>
 </body>
 </html>

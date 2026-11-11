@@ -193,7 +193,8 @@ public class QuizController {
         }
 
         User user = userRepository.findById(userId).orElseThrow();
-        int maxQuestions = "PREMIUM".equalsIgnoreCase(user.getPlan()) ? 50 : ("BASIC".equalsIgnoreCase(user.getPlan()) ? 20 : 10);
+        String tier=com.example.studyassistant.billing.PlanPolicy.normalize(user.getPlan());
+        int maxQuestions=tier.equals("VIP")?50:tier.equals("PRO")?20:10;
 
         List<Map<String, String>> questionsRaw = (List<Map<String, String>>) body.get("questions");
         if (questionsRaw == null || questionsRaw.isEmpty()) {

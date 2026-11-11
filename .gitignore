@@ -39,3 +39,12 @@ out/
 # Local database connection helper; may contain private credentials.
 /GetSchema.java
 /GetSchema.class
+
+# Local API credentials
+/application.properties
+
+# Runtime error logs
+/logs/
+
+# Local QA scratch scripts and intermediate diagnostics
+/work/

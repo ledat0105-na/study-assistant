@@ -43,7 +43,8 @@ const UIErrors = (function() {
     }, 5000);
   }
 
-  function handle(error) {
+  function handle(error = {}) {
+    error = error || {};
     let msg = 'Đã xảy ra lỗi.';
     if (error.status === 401) {
       // Auth interceptor redirects

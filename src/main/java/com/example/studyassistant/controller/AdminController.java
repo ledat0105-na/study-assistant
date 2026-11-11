@@ -76,6 +76,20 @@ public class AdminController {
     }
 
     // ADM-01: Dashboard tổng quan thống kê
+    @Autowired private com.example.studyassistant.service.IncidentMonitor incidents;
+
+    @GetMapping("/alerts")
+    public ResponseEntity<?> alerts(HttpServletRequest request) {
+        try { verifyAdminRole(request); }
+        catch (IllegalStateException ex) { return ResponseEntity.status(401).build(); }
+        catch (SecurityException ex) { return ResponseEntity.status(403).build(); }
+        return ResponseEntity.ok(Map.of(
+                "pendingPayments", paymentRepository.countByStatus("PENDING"),
+                "failedDocuments", documentRepository.countByStatus("FAILED"),
+                "serverErrors", incidents.serverErrors(),
+                "browserErrors", incidents.browserErrors()));
+    }
+
     @GetMapping("/dashboard")
     public ResponseEntity<?> getAdminDashboard(HttpServletRequest request) {
         try {
@@ -129,7 +143,7 @@ public class AdminController {
                 map.put("username", u.getUsername());
                 map.put("email", u.getEmail());
                 map.put("role", u.getRole());
-                map.put("plan", u.getPlan());
+                map.put("plan", "ADMIN".equals(u.getRole()) ? null : u.getPlan());
                 map.put("status", u.getStatus());
                 return map;
             }).collect(Collectors.toList());
@@ -164,12 +178,12 @@ public class AdminController {
             user.setEmail(reqUser.getEmail().trim());
             String rawPassword = reqUser.getPassword() != null && !reqUser.getPassword().isEmpty() ? reqUser.getPassword() : "123456";
             user.setPassword(HashUtil.hash(rawPassword));
-                        String role = reqUser.getRole() != null ? reqUser.getRole().toUpperCase() : "STUDENT";
-            if (!role.equals("STUDENT") && !role.equals("TEACHER") && !role.equals("ADMIN")) {
+                        String role = reqUser.getRole() != null ? reqUser.getRole().toUpperCase() : "USER";
+            if (!role.equals("USER") && !role.equals("ADMIN")) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Invalid role"));
             }
             user.setRole(role);
-            user.setPlan(reqUser.getPlan() != null ? reqUser.getPlan().toUpperCase() : "FREE");
+            user.setPlan("FREE");
             user.setStatus("ACTIVE");
 
             User saved = userRepository.save(user);
@@ -203,12 +217,12 @@ public class AdminController {
             if (body.containsKey("email")) target.setEmail(body.get("email"));
                         if (body.containsKey("role")) {
                 String role = body.get("role").toUpperCase();
-                if (!role.equals("STUDENT") && !role.equals("TEACHER") && !role.equals("ADMIN")) {
+                if (!role.equals("USER") && !role.equals("ADMIN")) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Invalid role"));
                 }
                 target.setRole(role);
             }
-            if (body.containsKey("plan")) target.setPlan(body.get("plan").toUpperCase());
+
             if (body.containsKey("status")) target.setStatus(body.get("status").toUpperCase());
 
             User updated = userRepository.save(target);

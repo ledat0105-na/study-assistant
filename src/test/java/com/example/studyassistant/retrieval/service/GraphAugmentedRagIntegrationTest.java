@@ -85,6 +85,7 @@ public class GraphAugmentedRagIntegrationTest {
         userRepository.deleteAllInBatch();
 
         userA = new User();
+        userA.setUsername("qa_" + java.util.UUID.randomUUID());
         userA.setEmail("e2e@example.com");
         userA.setPassword("pass");
         userA.setRole("STUDENT");

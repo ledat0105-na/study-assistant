@@ -272,13 +272,10 @@ public class FlashcardPhase6ApiMySQLIntegrationTest {
         Flashcard card = flashcardRepository.findById(flashcardId).orElseThrow();
         assertThat(card.getDeletedAt()).isNotNull();
         
-        // E13: Legacy generation cannot bypass grounded service
-        try {
-            mockMvc.perform(get("/api/flashcards/document/" + doc.getId()).session(session))
-                    .andExpect(status().is5xxServerError()); // UnsupportedOperationException mapped by default or explicit handler
-        } catch(Exception e) {
-            // Nested exception is UnsupportedOperationException
-        }
+        // E13: Reading stored cards must succeed without invoking legacy generation.
+        mockMvc.perform(get("/api/flashcards/document/" + doc.getId()).session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
     }
 }
 
