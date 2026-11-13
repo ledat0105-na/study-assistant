@@ -20,9 +20,15 @@ public class GroundedContextService {
     private final TokenCounter tokenCounter;
 
     public GroundedContext buildContext(Long userId, Long notebookId, String query, long remainingBudget) {
+        return buildContext(userId, notebookId, query, remainingBudget, null);
+    }
+
+    public GroundedContext buildContext(Long userId, Long notebookId, String query, long remainingBudget,
+                                        List<Long> documentIds) {
         RetrievalResult retrievalResult;
         try {
-            retrievalResult = retrievalService.search(userId, notebookId, query);
+            retrievalResult = documentIds == null ? retrievalService.search(userId, notebookId, query)
+                    : retrievalService.search(userId, notebookId, query, documentIds);
         } catch (Exception e) {
             log.error("Infrastructure failure during retrieval", e);
             throw new RuntimeException("Infrastructure failure during retrieval", e);

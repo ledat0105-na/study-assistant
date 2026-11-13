@@ -155,9 +155,11 @@ async function openCreateModal() {
 
   const select = document.getElementById("deckNotebook");
   select.innerHTML = '<option value="">-- Đang tải Sổ tay... --</option>';
+  updateNotebookUploadLink();
 
   try {
     const notebooks = await ApiClient.get('/api/notebooks');
+    if (select.value) return;
     select.innerHTML = '<option value="">-- Chọn Sổ Tay --</option>';
     if (notebooks && notebooks.length > 0) {
       notebooks.forEach(nb => {
@@ -166,13 +168,50 @@ async function openCreateModal() {
         opt.textContent = nb.title || `Notebook #${nb.id}`;
         select.appendChild(opt);
       });
-      select.selectedIndex = 1; // Default to first available notebook
+      select.selectedIndex = 1;
+      updateNotebookUploadLink();
     } else {
-      select.innerHTML = '<option value="">Chưa có Sổ tay nào (Vui lòng tạo trước)</option>';
+      select.innerHTML = '<option value="">Chưa có sổ tay nào</option>';
     }
   } catch (e) {
-    select.innerHTML = '<option value="">Lỗi tải danh sách Sổ tay</option>';
+    if (!select.value) select.innerHTML = '<option value="">Lỗi tải danh sách Sổ tay</option>';
   }
+}
+
+async function createPresentationNotebook() {
+  const title = document.getElementById("newDeckNotebookTitle");
+  if (!title.value.trim()) {
+    title.focus();
+    UIErrors.showToast("Nhập tên sổ tay mới.", "error");
+    return;
+  }
+  const button = document.getElementById("createDeckNotebook");
+  if (button.disabled) return;
+  button.disabled = true;
+  title.disabled = true;
+  try {
+    const notebook = await ApiClient.post('/api/notebooks', { title: title.value.trim() });
+    const select = document.getElementById("deckNotebook");
+    if (!select.options.namedItem(String(notebook.id)) && ![...select.options].some(option => option.value === String(notebook.id))) {
+      select.add(new Option(notebook.title, notebook.id));
+    }
+    select.value = String(notebook.id);
+    updateNotebookUploadLink();
+    title.value = "";
+    UIErrors.showToast("Đã tạo và chọn sổ tay.", "success");
+  } catch (error) {
+    UIErrors.handle(error);
+  } finally {
+    button.disabled = false;
+    title.disabled = false;
+  }
+}
+
+function updateNotebookUploadLink() {
+  const id = document.getElementById("deckNotebook").value;
+  document.getElementById("deckNotebookUpload").href = id
+    ? "upload.html?notebookId=" + encodeURIComponent(id)
+    : "upload.html";
 }
 
 function closeCreateModal() {

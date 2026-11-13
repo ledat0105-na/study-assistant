@@ -85,7 +85,9 @@ const ApiClient = (function() {
       if (!response.ok) {
         throw { status: response.status,
           code: data?.error === 'Tài liệu chưa được xử lý để trò chuyện (thiếu Notebook).' ? 'DOCUMENT_NOTEBOOK_REQUIRED' : typeof data?.code === 'string' && /^[A-Z_]{1,80}$/.test(data.code) ? data.code : 'API_ERROR',
-          message: message(response.status) };
+          message: response.status === 429 && data?.code === 'QUOTA_EXCEEDED'
+            ? 'Tài khoản đã hết hạn mức cho thao tác này. Xem hạn mức và ngày làm mới trong Hồ sơ cá nhân.'
+            : message(response.status) };
       }
 
       return data;

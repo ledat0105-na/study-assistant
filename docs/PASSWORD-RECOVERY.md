@@ -6,7 +6,7 @@ Tại cửa sổ đăng nhập, chọn Quên mật khẩu, nhập email đã đ�
 
 Có thể đăng nhập bằng tên đăng nhập hoặc email; email không phân biệt chữ hoa/thường. Sau khi đặt lại, đăng nhập bằng mật khẩu mới; mật khẩu cũ không còn hợp lệ. Việc đặt lại không tự mở tài khoản bị quản trị viên khóa hoặc đình chỉ.
 
-Cấu hình địa chỉ gửi OTP bằng biến môi trường MAIL_USERNAME. Thông tin đăng nhập SMTP được lưu trong application.properties ở thư mục gốc dự án, tệp này đã có trong .gitignore. Không đưa tệp riêng này vào kho mã nguồn hoặc gửi kèm bản bàn giao công khai. Các môi trường khác có thể dùng MAIL_USERNAME, MAIL_PASSWORD, MAIL_HOST, MAIL_PORT. Mật khẩu Gmail là mật khẩu ứng dụng, không phải mật khẩu đăng nhập tài khoản Google.
+Địa chỉ gửi đã cấu hình: datlnt05@gmail.com. Thông tin đăng nhập SMTP được lưu trong application.properties ở thư mục gốc dự án, tệp này đã có trong .gitignore. Không đưa tệp riêng này vào kho mã nguồn hoặc gửi kèm bản bàn giao công khai. Các môi trường khác có thể dùng MAIL_USERNAME, MAIL_PASSWORD, MAIL_HOST, MAIL_PORT. Mật khẩu Gmail là mật khẩu ứng dụng, không phải mật khẩu đăng nhập tài khoản Google.
 
 Cấu hình gửi thư sử dụng Spring JavaMailSender và STARTTLS, có thời gian chờ kết nối/gửi/đọc để tránh treo yêu cầu. Tham khảo: https://docs.spring.io/spring-boot/reference/io/email.html
 

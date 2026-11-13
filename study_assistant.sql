@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS topics (
 -- =========================
 CREATE TABLE IF NOT EXISTS flashcards (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    topic_id BIGINT NOT NULL,
+    topic_id BIGINT NULL,
     question TEXT NOT NULL,
     answer TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS flashcards (
 -- =========================
 CREATE TABLE IF NOT EXISTS quizzes (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    topic_id BIGINT NOT NULL,
+    topic_id BIGINT NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,

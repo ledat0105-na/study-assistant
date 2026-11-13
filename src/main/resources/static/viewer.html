@@ -608,7 +608,7 @@
 
       const selectedLabel = document.getElementById("selectedSources");
       if (selectedLabel) selectedLabel.textContent = chosen.length
-        ? `Đã chọn ${chosen.length} tài liệu · Chat tìm bằng chứng trong notebook của tài liệu đầu tiên.`
+        ? `Đã chọn ${chosen.length} tài liệu · Chat tìm bằng chứng trong các tài liệu đã chọn.`
         : "Chọn tài liệu để hỏi đáp có căn cứ.";
       const send = document.querySelector("#chatForm button[type=submit]");
       if (send) send.disabled = !chosen.length || chosen.some(doc => !isGenerationReady(doc));
