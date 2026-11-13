@@ -25,7 +25,10 @@ public class DocumentKnowledgeGraphGenerationService {
         List<DocumentChunk> active = chunks.findByDocumentIdAndIndexVersionOrderByChunkIndexAsc(documentId, scope.indexVersion());
         if (active.isEmpty()) throw new KnowledgeGraphStateException(GraphFailureCode.NO_ACTIVE_EVIDENCE);
         Set<GraphFailureCode> degradation = new LinkedHashSet<>();
-        for (DocumentChunk chunk : active) {
+        int sampleCount = Math.min(active.size(), 8);
+        for (int i = 0; i < sampleCount; i++) {
+            int index = sampleCount == 1 ? 0 : (int) ((long) i * (active.size() - 1) / (sampleCount - 1));
+            DocumentChunk chunk = active.get(index);
             scope.validate(document, chunk);
             chunk.setDocument(document);
             var conceptResult = concepts.extractConcepts(scope, chunk);

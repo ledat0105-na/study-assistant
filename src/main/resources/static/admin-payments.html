@@ -91,12 +91,13 @@
               <td class="p-4 text-slate-600 font-semibold">${p.user.email}</td>
               <td class="p-4"><span class="badge-3d badge-3d-indigo">${p.plan} · ${p.durationMonths || 1} tháng</span></td>
               <td class="p-4 font-mono font-extrabold text-indigo-700">${(p.amount || 0).toLocaleString('vi-VN')}đ</td>
-              <td class="p-4 text-slate-600 font-semibold max-w-xs truncate">${p.paymentNote || ''}</td>
+              <td class="p-4 text-slate-600 font-semibold max-w-xs break-words" data-payment-note></td>
               <td class="p-4 text-center pr-6 flex justify-center gap-2">
                 <button onclick="approvePayment(${p.id})" class="btn-3d btn-3d-primary px-3.5 py-1.5 text-xs font-bold shadow-md">Duyệt Kích Hoạt</button>
                 <button onclick="rejectPayment(${p.id})" class="btn-3d btn-3d-secondary px-3.5 py-1.5 text-xs font-bold !text-rose-600">Từ chối</button>
               </td>
             `;
+            tr.querySelector("[data-payment-note]").textContent = p.paymentNote || "";
             tbody.appendChild(tr);
           });
           paginateAdminRows(tbody);

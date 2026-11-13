@@ -208,6 +208,24 @@ public class PaymentController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
         }
 
+        String transactionId = body.get("transactionId");
+        if (transactionId != null) {
+            Long id;
+            try {
+                id = Long.valueOf(transactionId);
+            } catch (NumberFormatException ex) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Mã yêu cầu không hợp lệ."));
+            }
+            var existing = paymentRepository.findByIdForUpdate(id)
+                    .filter(payment -> userId.equals(payment.getUser().getId()));
+            if (existing.isEmpty()) return ResponseEntity.notFound().build();
+            Payment payment = existing.get();
+            if (!"PENDING".equals(payment.getStatus())) {
+                return ResponseEntity.status(409).body(Map.of("error", "Yêu cầu đã được xử lý. Vui lòng tải lại trang."));
+            }
+            return savePaymentDetails(payment, body, true);
+        }
+
         String planId = body.get("planId");
         if (planId == null || planId.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Vui lòng chọn gói dịch vụ"));
@@ -232,20 +250,32 @@ public class PaymentController {
         payment.setAmount(realPrice);
         payment.setDurationMonths(durationMonths);
         payment.setStatus("PENDING");
-        payment.setPaymentNote("Thanh toán nâng cấp gói " + targetPlanCode + " cho " + user.getUsername());
         payment.setCreatedAt(LocalDateTime.now());
+        return savePaymentDetails(payment, body, false);
+    }
 
-        Payment savedPayment = paymentRepository.save(payment);
-
-        Map<String, Object> checkoutInfo = new HashMap<>();
-        checkoutInfo.put("transactionId", savedPayment.getId());
-        checkoutInfo.put("plan", targetPlanCode);
-        checkoutInfo.put("amount", realPrice);
-        checkoutInfo.put("months", durationMonths);
-        checkoutInfo.put("status", "PENDING");
-        checkoutInfo.put("message", "Vui lòng hoàn tất chuyển khoản. Hệ thống sẽ xác minh để kích hoạt gói.");
-
-        return ResponseEntity.ok(checkoutInfo);
+    private ResponseEntity<?> savePaymentDetails(Payment payment, Map<String, String> body, boolean existing) {
+        String method = switch (Objects.toString(body.get("paymentMethod"), "")) {
+            case "ZALOPAY" -> "ZaloPay";
+            case "MOMO" -> "MoMo";
+            case "SHOPEEPAY" -> "ShopeePay";
+            case "BANK" -> "Ngân hàng";
+            default -> "";
+        };
+        String note = Objects.toString(body.get("paymentNote"), "").strip();
+        if (note.length() > 200) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Ghi chú đối soát tối đa 200 ký tự."));
+        }
+        if (!existing || !note.isEmpty() || payment.getPaymentNote() == null) {
+            String description = "Thanh toán nâng cấp gói " + payment.getPlan() + " cho " + payment.getUser().getUsername();
+            payment.setPaymentNote((method.isEmpty() ? "" : method + " · ") + description
+                    + (note.isEmpty() ? "" : " · " + note));
+        }
+        Map<String, Object> result = new HashMap<>(paymentStatus(paymentRepository.save(payment)));
+        if (!existing) {
+            result.put("message", "Vui lòng hoàn tất chuyển khoản. Hệ thống sẽ xác minh để kích hoạt gói.");
+        }
+        return ResponseEntity.ok(result);
     }
 
     // PAY-01 Webhook / Callback xác minh thanh toán chuẩn Server-side (Transactional & Audit log)
@@ -370,7 +400,8 @@ public class PaymentController {
     }
 
     private Map<String, Object> paymentStatus(Payment payment) {
-        return Map.of("transactionId", payment.getId(), "status", payment.getStatus(), "plan", payment.getPlan());
+        return Map.of("transactionId", payment.getId(), "status", payment.getStatus(), "plan", payment.getPlan(),
+                "amount", payment.getAmount(), "months", payment.getDurationMonths());
     }
 
     @GetMapping("/payments/mine/latest")

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -42,6 +43,10 @@ public class GroundedAnswerService {
     }
 
     public GroundedAnswer answer(Long authenticatedUserId, Long notebookId, String question) {
+        return answer(authenticatedUserId, notebookId, question, null);
+    }
+
+    public GroundedAnswer answer(Long authenticatedUserId, Long notebookId, String question, List<Long> documentIds) {
         if (question == null || question.trim().isEmpty()) {
             throw new IllegalArgumentException("Question cannot be blank");
         }
@@ -65,7 +70,9 @@ public class GroundedAnswerService {
         }
 
         // 1. Context extraction (handles retrieval, evidence gate, formatting, budget chunking)
-        GroundedContext context = groundedContextService.buildContext(authenticatedUserId, notebookId, question, remainingBudget);
+        GroundedContext context = documentIds == null
+                ? groundedContextService.buildContext(authenticatedUserId, notebookId, question, remainingBudget)
+                : groundedContextService.buildContext(authenticatedUserId, notebookId, question, remainingBudget, documentIds);
         
         if (!context.hasSufficientEvidence()) {
             return buildNoEvidenceAnswer();
@@ -76,7 +83,8 @@ public class GroundedAnswerService {
         int availableGraphBudget = (int) (remainingBudget - sourceDataTokens);
 
         // 2. Optional Graph Augmentation
-        String graphContext = graphRagContextService.buildContext(notebookId, context.chunks(), availableGraphBudget);
+        String graphContext = notebookId == null ? ""
+                : graphRagContextService.buildContext(notebookId, context.chunks(), availableGraphBudget);
 
         // Final sanity check before LLM
         String systemPrompt = buildSystemPrompt(sourceData, graphContext);

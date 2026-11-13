@@ -27,6 +27,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btnBackToDeck").href = `teacher-deck.html?deckId=${state.deckId}`;
 
   await loadSlideData();
+  if (state.slide && urlParams.get("insertImage") === "1") {
+    handleAddElement("IMAGE");
+  }
 });
 
 async function loadSlideData() {
@@ -82,6 +85,7 @@ function disableEditorMutations() {
 function renderCanvas() {
   const container = document.getElementById("canvasContainer");
   container.innerHTML = "";
+  container.style.backgroundColor = /^#[\da-f]{6}$/i.test(state.deck.themeKey) ? state.deck.themeKey : "#ffffff";
 
   const elements = (state.slide.elements || []).slice().sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
 
@@ -225,8 +229,12 @@ async function handleSaveSlideMeta() {
 }
 
 // Add New Element
-async function handleAddElement(elementType) {
-  if (state.isArchived) return;
+async function handleAddElement(elementType, selectedMedia = null) {
+  if (state.isArchived || !state.slide) return;
+  if (elementType === "IMAGE" && !selectedMedia) {
+    TeacherMediaModal.open(state.deckId, media => handleAddElement("IMAGE", media));
+    return;
+  }
 
   let request = {
     elementType,
@@ -249,8 +257,10 @@ async function handleAddElement(elementType) {
     request.payload = { primitive: "RECTANGLE", text: "SHAPE" };
     request.style = { fillColor: "#e0e7ff", strokeColor: "#6366f1", strokeWidthPt: 1 };
   } else if (elementType === "IMAGE") {
+    const ratio = Number(selectedMedia.width) / Number(selectedMedia.height);
     request.width = 300;
-    request.height = 200;
+    request.height = Number.isFinite(ratio) && ratio > 0 ? Math.max(1, Math.min(350, 300 / ratio)) : 200;
+    request.mediaAssetId = selectedMedia.id;
     request.payload = {};
     request.style = {};
   }

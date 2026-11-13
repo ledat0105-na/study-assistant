@@ -49,9 +49,13 @@
             </div>
           </div>
 
-          <a id="profileUpgradeLink" href="payment.html?plan=PRO" class="mt-8 w-full btn-3d btn-3d-primary py-3 text-xs font-bold shadow-lg shadow-indigo-500/30">
-            Nâng Cấp Gói PRO
-          </a>
+          <section id="profilePlanChoices" class="mt-6 hidden" aria-labelledby="profilePlanHeading">
+            <h3 id="profilePlanHeading" class="mb-3 text-sm font-extrabold text-slate-900">Chọn gói dịch vụ</h3>
+            <div class="grid gap-2">
+              <div id="profileProChoice"><a id="profileProLink" href="payment.html?plan=PRO&amp;checkout=1" class="w-full btn-3d btn-3d-secondary justify-center px-3 py-2.5 text-xs font-bold">Nâng cấp PRO</a></div>
+              <a id="profileVipLink" href="payment.html?plan=VIP&amp;checkout=1" class="btn-3d btn-3d-primary justify-center px-3 py-2.5 text-xs font-bold">Nâng cấp VIP</a>
+            </div>
+          </section>
         </div>
 
         <!-- Form Edit Info -->

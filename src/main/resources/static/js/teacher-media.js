@@ -13,8 +13,8 @@ const TeacherMediaModal = (function() {
       <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-3xl mx-4 overflow-hidden flex flex-col max-h-[85vh]">
         <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
           <div>
-            <h3 class="text-lg font-extrabold text-slate-900">Thư viện phương tiện (Media Assets)</h3>
-            <p class="text-xs text-slate-500 font-semibold mt-0.5">Tải lên hoặc chọn hình ảnh để chèn vào bài giảng</p>
+            <h3 class="text-lg font-extrabold text-slate-900">Thư viện ảnh bài giảng</h3>
+            <p class="text-xs text-slate-500 font-semibold mt-0.5">Ảnh tải lên được lưu trong bài giảng. Dùng nút Chèn ảnh trên slide để chọn ảnh.</p>
           </div>
           <button onclick="TeacherMediaModal.close()" class="text-slate-400 hover:text-slate-600 focus:outline-none">
             <i data-lucide="x" class="h-5 w-5"></i>
@@ -117,7 +117,7 @@ const TeacherMediaModal = (function() {
         if (onSelectCallback) {
           const btnSelect = document.createElement('button');
           btnSelect.className = 'flex-1 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-lg text-xs font-extrabold transition-all';
-          btnSelect.textContent = 'Chọn ảnh';
+          btnSelect.textContent = 'Chèn ảnh';
           btnSelect.onclick = () => {
             onSelectCallback(item);
             close();

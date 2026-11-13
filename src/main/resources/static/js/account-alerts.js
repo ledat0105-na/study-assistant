@@ -8,9 +8,9 @@
   let lastNotice;
   const checkoutPage = location.pathname.endsWith("/payment.html");
 
-  function showPending(payment) {
+  function showPending(payment, openDialog = false) {
     waiting = payment.transactionId;
-    if (!checkoutPage || dismissed === waiting) return;
+    if (!openDialog || !checkoutPage || dismissed === waiting) return;
     if (!dialog) {
       dialog = document.createElement("dialog");
       dialog.className = "rounded-2xl p-6 max-w-sm shadow-xl";
@@ -118,7 +118,7 @@
 
   window.AccountAlerts = {waitForPayment(payment) {
     dismissed = undefined;
-    showPending(payment);
+    showPending(payment, true);
     void check();
   }};
   document.addEventListener("DOMContentLoaded", () => {

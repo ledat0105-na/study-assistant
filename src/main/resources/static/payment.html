@@ -13,6 +13,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="css/style-3d.css">
+  <link rel="stylesheet" href="css/payment-qr.css">
 </head>
 <body class="billing-checkout-page bg-slate-50 text-slate-800 min-h-screen flex relative overflow-x-hidden">
 
@@ -26,7 +27,7 @@
         <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">
           Thanh Toán Nâng Cấp Gói 3D
         </h1>
-        <p class="text-slate-600 text-sm mt-1.5 font-semibold">Nạp tiền chuyển khoản và gửi yêu cầu nâng cấp gói tài khoản</p>
+        <p class="text-slate-600 text-sm mt-1.5 font-semibold">Chọn thời hạn và phương thức thanh toán cho gói của bạn.</p>
       </div>
 
       <div class="glass-3d-card p-8 space-y-6">
@@ -44,48 +45,49 @@
           </div>
         </div>
 
-        <div>
-          <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-3">Thông tin chuyển khoản ngân hàng</h3>
-          <div class="bg-white/90 border border-slate-200 p-6 rounded-2xl space-y-4 shadow-sm">
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-600 font-bold">Ngân hàng:</span>
-              <span class="text-slate-900 font-extrabold"><span id="billingBankName">Chưa cấu hình</span></span>
-            </div>
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-600 font-bold">Số tài khoản:</span>
-              <span class="text-indigo-600 font-mono font-extrabold text-sm"><span id="billingBankAccount">Chưa cấu hình</span></span>
-            </div>
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-600 font-bold">Chủ tài khoản:</span>
-              <span class="text-slate-900 font-extrabold"><span id="billingBankHolder">Chưa cấu hình</span></span>
-            </div>
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-600 font-bold">Số tiền thanh toán:</span>
-              <span id="transferPrice" class="text-emerald-600 font-extrabold font-mono text-sm">Đang tính…</span>
-            </div>
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-600 font-bold">Nội dung chuyển khoản:</span>
-              <span id="transferSyntax" class="text-amber-600 font-extrabold font-mono uppercase text-xs bg-amber-50 border border-amber-200 px-3 py-1 rounded-lg">UPGRADE PRO USER</span>
-            </div>
-          </div>
-        </div>
-
-        <p class="text-xs text-slate-600 leading-relaxed">Gia hạn cùng gói sẽ cộng tiếp thời gian còn lại. Đăng ký gói khác sẽ kích hoạt ngay sau khi duyệt và thay thế thời hạn gói hiện tại. Hạn mức sử dụng làm mới vào đầu mỗi tháng.</p>
-        <!-- Submit form -->
-        <div class="space-y-4">
-          <div>
-            <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Mã giao dịch / Ghi chú đối soát</label>
-            <textarea id="paymentNote" rows="3" placeholder="Nhập mã giao dịch chuyển khoản hoặc ghi chú của bạn để admin đối soát..." class="input-3d w-full font-semibold"></textarea>
-          </div>
-
-          <div class="flex justify-end gap-3 pt-2">
-            <a href="profile.html" class="btn-3d btn-3d-secondary py-3 px-6 text-xs font-bold">Hủy Bỏ</a>
-            <button id="submitSubscription" disabled onclick="submitPayment()" class="btn-3d btn-3d-primary py-3 px-6 text-xs font-bold shadow-lg shadow-indigo-500/30">Gửi Yêu Cầu Đăng Ký</button>
-          </div>
+        <p class="text-xs text-slate-600 leading-relaxed">Gia hạn cùng gói sẽ cộng tiếp thời gian còn lại. Gói mới có hiệu lực sau khi quản trị viên đối soát.</p>
+        <div class="flex flex-wrap justify-end gap-3">
+          <a href="profile.html" class="btn-3d btn-3d-secondary py-3 px-6 text-xs font-bold">Quay lại hồ sơ</a>
+          <button id="submitSubscription" type="button" disabled class="btn-3d btn-3d-primary py-3 px-6 text-xs font-bold">Chọn phương thức thanh toán</button>
         </div>
       </div>
     </div>
   </main>
+
+  <dialog id="paymentMethodsDialog" class="payment-method-dialog" aria-labelledby="paymentMethodsTitle">
+    <header class="payment-method-header">
+      <h2 id="paymentMethodsTitle">Thanh toán gói <span id="paymentDialogPlan"></span></h2>
+      <button type="button" id="closePaymentMethods" aria-label="Đóng hộp thoại">×</button>
+    </header>
+    <fieldset id="paymentMethodOptions">
+      <legend>Chọn phương thức thanh toán</legend>
+      <div class="payment-method-options">
+        <label><input type="radio" name="paymentMethod" value="ZALOPAY">ZaloPay</label>
+        <label><input type="radio" name="paymentMethod" value="MOMO">MoMo</label>
+        <label><input type="radio" name="paymentMethod" value="SHOPEEPAY">ShopeePay</label>
+        <label><input type="radio" name="paymentMethod" value="BANK" checked>Ngân hàng</label>
+      </div>
+    </fieldset>
+    <div class="payment-method-body">
+      <figure>
+        <a id="openPaymentQr" class="payment-qr-preview" target="_blank" rel="noopener" aria-label="Mở mã QR kích thước gốc">
+          <img id="paymentQr" alt="Mã QR nhận tiền Techcombank">
+        </a>
+        <a id="downloadPaymentQr" download>Tải mã QR</a>
+      </figure>
+      <div class="payment-method-details">
+        <p>Số tiền <strong id="transferPrice"></strong></p>
+        <p>Nội dung chuyển tiền <strong id="transferSyntax"></strong></p>
+        <p class="payment-method-hint">Quét mã QR, kiểm tra tên người nhận và nhập đúng số tiền. Nếu ứng dụng cho nhập nội dung, dùng nội dung ở trên.</p>
+        <label for="paymentNote">Mã giao dịch / ghi chú đối soát</label>
+        <textarea id="paymentNote" rows="2" maxlength="200" class="input-3d" placeholder="Ví dụ: mã giao dịch sau khi chuyển tiền"></textarea>
+      </div>
+    </div>
+    <p id="paymentMethodError" role="alert" class="payment-method-error" hidden></p>
+    <div class="payment-method-footer">
+      <button id="confirmPaymentMethod" type="button" class="btn-3d btn-3d-primary py-3 px-5 text-xs font-bold">Tôi đã thanh toán</button>
+    </div>
+  </dialog>
 
   <script src="auth-interceptor.js"></script>
   <script src="sidebar.js"></script>
