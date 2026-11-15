@@ -4,6 +4,7 @@
   const relationNames = { PART_OF: 'là thành phần của', IS_A: 'là một loại',
     PREREQUISITE_OF: 'là điều kiện trước của', RELATED_TO: 'liên quan đến', HAS_PART: 'bao gồm' };
   let sequence = 0;
+  const preferences = new WeakMap();
 
   function layout(graph) {
     const nodes = [], byId = new Map();
@@ -40,11 +41,11 @@
     for (const node of nodes.filter(node => node.incoming || node.neighbors.length)) if (!placed.has(node.key)) visit(node);
     let rows = Math.max(0, ...levels.map(level => level.length));
     levels.forEach((level, depth) => level.forEach((node, row) => {
-      node.x = 50 + depth * 310; node.y = 50 + (row + (rows - level.length) / 2) * 125;
+      node.x = 50 + depth * 310; node.y = 50 + (row + (rows - level.length) / 2) * 205;
     }));
     const isolated = nodes.filter(node => !placed.has(node.key));
     isolated.forEach((node, index) => {
-      node.x = 50 + (index % 3) * 310; node.y = 50 + rows * 125 + Math.floor(index / 3) * 125;
+      node.x = 50 + (index % 3) * 310; node.y = 50 + rows * 205 + Math.floor(index / 3) * 205;
     });
     return { nodes, edges, width: Math.max(400, ...nodes.map(node => node.x + WIDTH + 50)),
       height: Math.max(240, ...nodes.map(node => node.y + HEIGHT + 50)) };
@@ -71,14 +72,99 @@
       width: related.length ? 1140 : 320, height: related.length > 2 ? 475 : 240 };
   }
 
+
+  function pdfFromJpeg(jpeg, width, height) {
+    const encoder = new TextEncoder();
+    const chunks = [], offsets = [0];
+    let length = 0;
+    function append(value) {
+      const bytes = typeof value === 'string' ? encoder.encode(value) : value;
+      chunks.push(bytes);
+      length += bytes.byteLength;
+    }
+    function object(id, ...parts) {
+      offsets[id] = length;
+      append(id + ' 0 obj\n');
+      parts.forEach(append);
+      append('\nendobj\n');
+    }
+    const scale = 780 / Math.max(width, height);
+    const w = (width * scale).toFixed(2), h = (height * scale).toFixed(2);
+    const drawing = 'q ' + w + ' 0 0 ' + h + ' 0 0 cm /Map Do Q\n';
+    append('%PDF-1.4\n');
+    object(1, '<< /Type /Catalog /Pages 2 0 R >>');
+    object(2, '<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
+    object(3, '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + w + ' ' + h
+      + '] /Resources << /XObject << /Map 4 0 R >> >> /Contents 5 0 R >>');
+    object(4, '<< /Type /XObject /Subtype /Image /Width ' + width + ' /Height ' + height
+      + ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '
+      + jpeg.byteLength + ' >>\nstream\n', jpeg, '\nendstream');
+    object(5, '<< /Length ' + drawing.length + ' >>\nstream\n' + drawing + 'endstream');
+    const xref = length;
+    append('xref\n0 6\n0000000000 65535 f \n');
+    offsets.slice(1).forEach(offset => append(String(offset).padStart(10, '0') + ' 00000 n \n'));
+    append('trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF\n');
+    return new Blob(chunks, { type: 'application/pdf' });
+  }
+
+  async function downloadMap(svg, data, format) {
+    const copy = svg.cloneNode(true);
+    const properties = ['fill', 'stroke', 'stroke-width', 'stroke-linejoin', 'paint-order',
+      'font-family', 'font-size', 'font-weight'];
+    const originals = svg.querySelectorAll('rect, path, text');
+    copy.querySelectorAll('rect, path, text').forEach((element, index) => {
+      const style = global.getComputedStyle(originals[index]);
+      properties.forEach(property => element.style.setProperty(property, style.getPropertyValue(property)));
+    });
+    copy.setAttribute('viewBox', '0 0 ' + data.width + ' ' + data.height);
+    copy.setAttribute('width', data.width);
+    copy.setAttribute('height', data.height);
+    const scale = Math.min(3, 3840 / Math.max(data.width, data.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(data.width * scale);
+    canvas.height = Math.round(data.height * scale);
+    const background = global.getComputedStyle(svg.closest('.kg-map')).backgroundColor;
+    const source = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(copy)],
+      { type: 'image/svg+xml;charset=utf-8' }));
+    try {
+      const mapImage = new Image();
+      mapImage.src = source;
+      await mapImage.decode();
+      const context = canvas.getContext('2d');
+      context.fillStyle = background;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(mapImage, 0, 0, canvas.width, canvas.height);
+    } finally {
+      URL.revokeObjectURL(source);
+    }
+    const image = await new Promise((resolve, reject) => {
+      canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Image export failed')),
+        format === 'png' ? 'image/png' : 'image/jpeg', 0.94);
+    });
+    const file = format === 'pdf'
+      ? pdfFromJpeg(new Uint8Array(await image.arrayBuffer()), canvas.width, canvas.height) : image;
+    const url = URL.createObjectURL(file);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'so-do-tu-duy.' + format;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  }
+
   function render(container, graph, focusId, page = 0, options = {}) {
     container.replaceChildren();
-    const data = branch(graph, focusId, page);
+    const settings = preferences.get(container) || { theme: 'dark', expanded: false };
+    preferences.set(container, settings);
+    const data = options.exportLayout || branch(graph, focusId, page);
     if (options.collapsed && data.focus) {
       data.nodes = [data.focus]; data.edges = []; data.focus.x = 20; data.focus.y = 35; data.width = 320; data.height = 240;
     }
     if (!data.nodes.length) { container.textContent = 'Chưa có khái niệm trong tài liệu.'; return; }
     const frame = document.createElement('div'); frame.className = 'kg-map';
+    frame.setAttribute('data-theme', settings.theme);
+    if (settings.expanded) frame.className += ' kg-map-expanded';
     const toolbar = document.createElement('div'); toolbar.className = 'kg-map-toolbar';
     const count = document.createElement('span');
     count.textContent = `Đang xem ${data.nodes.length}/${data.all.nodes.length} khái niệm · Nhánh ${data.page + 1}/${data.pages}`;
@@ -96,7 +182,8 @@
       }
       picker.value = data.focus.key;
     }
-    populate(); search.addEventListener('input', () => populate(search.value));
+    if (!options.exportLayout) populate();
+    search.addEventListener('input', () => populate(search.value));
     picker.addEventListener('change', () => { if (picker.value) render(container, graph, picker.value, 0, options); });
     navigation.append(search, picker);
     const instruction = document.createElement('p'); instruction.className = 'kg-map-instruction';
@@ -107,7 +194,40 @@
     const hint = data.edges.length ? 'Chọn khái niệm để xem mô tả. Kéo nền để di chuyển sơ đồ.'
       : 'Chưa có quan hệ được xác thực giữa các khái niệm. Chọn một nút để xem mô tả.';
     details.textContent = hint;
-    frame.append(toolbar, navigation, instruction, viewport, details); container.appendChild(frame);
+    const divider = document.createElement('div');
+    divider.className = 'kg-map-divider';
+    divider.tabIndex = 0;
+    divider.setAttribute('role', 'separator');
+    divider.setAttribute('aria-label', 'Điều chỉnh chiều cao phần mô tả');
+    divider.setAttribute('aria-orientation', 'horizontal');
+    let resize;
+    function resizeDetails(height) {
+      const max = Math.max(44, Math.min(480, Math.floor(global.innerHeight * 0.55)));
+      settings.detailsHeight = Math.max(44, Math.min(max, Math.round(height)));
+      details.style.setProperty('--kg-details-height', settings.detailsHeight + 'px');
+      divider.setAttribute('aria-valuemin', '44');
+      divider.setAttribute('aria-valuemax', String(max));
+      divider.setAttribute('aria-valuenow', String(settings.detailsHeight));
+    }
+    divider.setAttribute('aria-valuemin', '44');
+    divider.setAttribute('aria-valuemax', '480');
+    divider.setAttribute('aria-valuenow', String(settings.detailsHeight ?? 96));
+    if (settings.detailsHeight != null) resizeDetails(settings.detailsHeight);
+    divider.addEventListener('pointerdown', event => {
+      if (event.button !== 0) return;
+      resize = { id: event.pointerId, y: event.clientY, height: details.offsetHeight };
+      divider.setPointerCapture(event.pointerId);
+    });
+    divider.addEventListener('pointermove', event => {
+      if (resize?.id === event.pointerId) resizeDetails(resize.height + resize.y - event.clientY);
+    });
+    divider.addEventListener('lostpointercapture', () => { resize = null; });
+    divider.addEventListener('keydown', event => {
+      if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+      event.preventDefault();
+      resizeDetails(details.offsetHeight + (event.key === 'ArrowUp' ? 24 : -24));
+    });
+    frame.append(toolbar, navigation, instruction, viewport, divider, details); container.appendChild(frame);
     function svgElement(tag, attributes, parent) {
       const element = document.createElementNS(NS, tag);
       for (const [key, value] of Object.entries(attributes || {})) element.setAttribute(key, value);
@@ -197,8 +317,9 @@
       group.addEventListener('keydown', event => {
         if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); select(); }
       });
-      if (node.key === data.focus.key) select();
+      if (!options.exportLayout && node.key === data.focus.key) select();
     }
+    if (options.exportLayout) return svg;
     let view = { x: 0, y: 0, width: data.width, height: data.height }, drag;
     function update() { svg.setAttribute('viewBox', `${view.x} ${view.y} ${view.width} ${view.height}`); }
     function zoom(factor) {
@@ -211,7 +332,85 @@
       const button = document.createElement('button'); button.type = 'button'; button.textContent = label;
       button.setAttribute('aria-label', label === '+' ? 'Phóng to' : label === '−' ? 'Thu nhỏ' : label);
       button.addEventListener('click', action); controls.appendChild(button);
+      return button;
     }
+
+    const expand = control('⛶', () => {
+      const expanded = settings.expanded = !settings.expanded;
+      frame.className = expanded ? 'kg-map kg-map-expanded' : 'kg-map';
+      if (frame.showPopover) {
+        if (expanded) {
+          frame.setAttribute('popover', 'manual');
+          frame.showPopover();
+        } else {
+          frame.hidePopover();
+          frame.removeAttribute('popover');
+        }
+      }
+      expand.focus();
+      expand.textContent = expanded ? '↙' : '⛶';
+      expand.setAttribute('aria-pressed', String(expanded));
+    });
+    expand.setAttribute('aria-label', 'Mở rộng sơ đồ');
+    expand.title = 'Mở rộng hoặc thu gọn sơ đồ';
+    expand.setAttribute('aria-pressed', String(settings.expanded));
+    if (settings.expanded) {
+      expand.textContent = '↙';
+      if (frame.showPopover) {
+        frame.setAttribute('popover', 'manual');
+        frame.showPopover();
+        expand.focus();
+      }
+    }
+    frame.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && settings.expanded) expand.click();
+    });
+
+    const exportControls = document.createElement('div');
+    exportControls.className = 'kg-map-controls kg-map-export';
+    navigation.appendChild(exportControls);
+    function dropdown(label, choices, selectedValue) {
+      const select = document.createElement('select');
+      select.setAttribute('aria-label', label);
+      for (const [value, name] of choices) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = name;
+        select.appendChild(option);
+      }
+      select.value = selectedValue;
+      exportControls.appendChild(select);
+      return select;
+    }
+    const theme = dropdown('Giao diện sơ đồ', [['dark', 'Tối'], ['light', 'Sáng'], ['ocean', 'Xanh biển']],
+      settings.theme);
+    theme.addEventListener('change', () => {
+      settings.theme = theme.value;
+      frame.setAttribute('data-theme', theme.value);
+    });
+    const format = dropdown('Định dạng tải sơ đồ', [['pdf', 'PDF'], ['png', 'PNG'], ['jpg', 'JPG']], 'pdf');
+    const download = control('Tải sơ đồ', async () => {
+      download.disabled = true;
+      const exportHost = document.createElement('div');
+      exportHost.style.cssText = 'position:fixed;left:-10000px;top:0;visibility:hidden';
+      document.body.appendChild(exportHost);
+      try {
+        const exportLayout = layout(graph);
+        exportLayout.all = exportLayout;
+        exportLayout.focus = exportLayout.nodes.find(node => node.key === data.focus.key);
+        exportLayout.page = 0;
+        exportLayout.pages = 1;
+        preferences.set(exportHost, { theme: settings.theme, expanded: false });
+        const exportSvg = render(exportHost, graph, undefined, 0, { exportLayout });
+        await downloadMap(exportSvg, exportLayout, format.value);
+      } catch (_) {
+        details.textContent = 'Không thể tải sơ đồ. Vui lòng thử lại.';
+      } finally {
+        exportHost.remove();
+        download.disabled = false;
+      }
+    });
+    exportControls.appendChild(download);
     control('−', () => zoom(1.25)); control('+', () => zoom(0.8));
     control('Vừa khung', () => { view = { x: 0, y: 0, width: data.width, height: data.height }; update(); });
     control(options.collapsed ? 'Mở nhánh' : 'Thu nhánh', () => render(container, graph, data.focus.key, data.page, { ...options, collapsed: !options.collapsed }));
