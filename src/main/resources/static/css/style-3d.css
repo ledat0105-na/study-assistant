@@ -340,7 +340,22 @@ body {
 .app-table-scroll { max-width: 100%; overflow-x: auto; }
 .app-table-scroll > table { min-width: 40rem; }
 .app-table-scroll:focus-visible { outline: 2px solid #818cf8; outline-offset: -2px; }
-.slide-editor-workspace > main { min-width: 0; }
+.slide-editor-workspace { min-height: 0; min-width: 0; }
+.slide-editor-workspace > main { min-width: 0; min-height: 0; justify-content: flex-start; }
+.slide-editor-workspace #canvasContainer { flex-shrink: 0; margin-block: auto; }
+
+@media (min-width: 1025px) {
+  .slide-editor-page {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .slide-editor-page > header { flex-shrink: 0; }
+  .slide-editor-properties { min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; }
+  .slide-editor-tools { min-height: 0; overflow-y: auto; }
+}
 
 @media (max-width: 1024px) {
   .home-navbar { flex-wrap: wrap; padding-block: .65rem; }
@@ -378,4 +393,13 @@ body {
   .home-nav-actions { gap: .35rem; }
   .home-nav-actions .btn-3d { padding: .55rem .65rem; }
   .home-nav-links { font-size: .8rem; }
+}
+
+.slide-canvas-text {
+  box-sizing: border-box;
+  padding: 0;
+  line-height: 1.12;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow: hidden;
 }

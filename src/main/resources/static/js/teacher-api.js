@@ -115,3 +115,56 @@ const TeacherAPI = (function() {
     }
   };
 })();
+
+const presentationCanvasObservers = new WeakMap();
+
+function fitPresentationCanvasText(canvas) {
+  function fit() {
+    if (!canvas.clientWidth) return;
+    const scale = canvas.clientWidth / 960;
+    for (const box of canvas.querySelectorAll('.slide-canvas-text')) {
+      const desiredSize = (Number(box.dataset.slideFontSize) || 18) * scale;
+      let low = Math.min(1, desiredSize), high = desiredSize;
+      box.style.fontSize = high + 'px';
+      if (box.scrollHeight <= box.clientHeight && box.scrollWidth <= box.clientWidth) continue;
+      for (let step = 0; step < 9; step++) {
+        const size = (low + high) / 2;
+        box.style.fontSize = size + 'px';
+        if (box.scrollHeight <= box.clientHeight && box.scrollWidth <= box.clientWidth) low = size;
+        else high = size;
+      }
+      box.style.fontSize = low + 'px';
+    }
+  }
+
+  presentationCanvasObservers.get(canvas)?.disconnect();
+  fit();
+  const observer = new ResizeObserver(fit);
+  observer.observe(canvas);
+  presentationCanvasObservers.set(canvas, observer);
+}
+// Use the visible background under the text to keep the editor and preview readable.
+function presentationTextColor(element, elements, canvasColor) {
+  const foreground = element.style?.color || "#1e293b";
+  const x = element.x + element.width / 2;
+  const y = element.y + element.height / 2;
+  const backdrop = elements.slice().reverse().find(shape =>
+    shape.elementType === "SHAPE" && shape.zIndex < element.zIndex &&
+    /^#[0-9a-f]{6}$/i.test(shape.style?.fillColor) &&
+    x >= shape.x && x <= shape.x + shape.width &&
+    y >= shape.y && y <= shape.y + shape.height);
+  function luminance(color) {
+    if (!/^#[0-9a-f]{6}$/i.test(color)) return null;
+    const channels = color.slice(1).match(/../g).map(value => {
+      const channel = parseInt(value, 16) / 255;
+      return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+  }
+  const background = luminance(backdrop?.style.fillColor || canvasColor);
+  const ink = luminance(foreground);
+  if (background === null || ink === null) return foreground;
+  const ratio = (Math.max(background, ink) + 0.05) / (Math.min(background, ink) + 0.05);
+  if (ratio >= 4.5) return foreground;
+  return background > 0.179 ? "#000000" : "#ffffff";
+}

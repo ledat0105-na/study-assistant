@@ -5,6 +5,8 @@ let state = {
   outlines: [],
   slides: [],
   activeTab: 'outlines',
+  approvingOutline: false,
+  generatingSlides: false,
   previewCurrentIndex: 0
 };
 
@@ -332,18 +334,23 @@ async function handleGenerateOutlineSubmit(event) {
 }
 
 async function handleApproveOutline(revisionId) {
-  if (!confirm("Bạn có chắc chắn muốn phê duyệt phiên bản Dàn ý này? Dàn ý này sẽ được dùng để tạo các trang Slide.")) return;
+  if (state.approvingOutline || state.generatingSlides) return;
+  if (!confirm("Duyệt dàn ý này và bắt đầu tạo slide AI?")) return;
 
+  state.approvingOutline = true;
   try {
     await TeacherAPI.approveOutline(state.deckId, revisionId, state.deck.version);
-    UIErrors.showToast("Đã duyệt dàn ý. Bạn có thể bấm Tạo Slide AI.", "success");
-    await loadDeck();
+    state.deck = await TeacherAPI.getPresentation(state.deckId);
+    renderDeckInfo();
     switchTab("slides");
+    await handleGenerateSlides();
   } catch (err) {
     if (err.status === 409) {
       await loadDeck();
     }
     UIErrors.handle(err);
+  } finally {
+    state.approvingOutline = false;
   }
 }
 
@@ -357,14 +364,13 @@ async function loadSlides() {
 
   try {
     state.slides = await TeacherAPI.listSlides(state.deckId);
+    renderSlides();
     loading.classList.add("hidden");
 
     if (!state.slides || state.slides.length === 0) {
       empty.classList.remove("hidden");
       return;
     }
-
-    renderSlides();
   } catch (err) {
     loading.classList.add("hidden");
     UIErrors.handle(err);
@@ -454,15 +460,19 @@ function renderSlides() {
 }
 
 async function handleGenerateSlides() {
+  if (state.generatingSlides || state.deck.status === "ARCHIVED") return;
   if (!state.deck.approvedOutlineRevisionId) {
     UIErrors.showToast("Bạn cần phê duyệt (Approve) một Dàn ý trước khi tạo Slide.", "error");
     return;
   }
 
-  showJobProgress("Đang tạo tất cả Slide tự động...");
+  state.generatingSlides = true;
+  showJobProgress("Đang tạo slide từ dàn ý đã duyệt…");
 
   try {
-    const jobDto = await TeacherAPI.generateSlides(state.deckId, crypto.randomUUID());
+    const requestId = crypto.randomUUID?.() ??
+      Array.from(crypto.getRandomValues(new Uint8Array(16)), byte => byte.toString(16).padStart(2, "0")).join("");
+    const jobDto = await TeacherAPI.generateSlides(state.deckId, requestId);
     
     await JobPoller.pollJob(() => TeacherAPI.getJob(state.deckId, jobDto.jobId), {
       timeout: 600000,
@@ -470,12 +480,16 @@ async function handleGenerateSlides() {
     });
 
     hideJobProgress();
-    UIErrors.showToast("Đã tạo tất cả Slide thành công!", "success");
     await loadDeck();
+    if (state.slides.length) {
+      UIErrors.showToast("Danh sách slide đã được cập nhật.", "success");
+    }
   } catch (err) {
     hideJobProgress();
     UIErrors.handle(err);
     await loadDeck();
+  } finally {
+    state.generatingSlides = false;
   }
 }
 
@@ -604,10 +618,10 @@ function renderPreviewSlide() {
 
     if (elem.elementType === "TEXT") {
       const text = elem.payload ? elem.payload.text || "" : "";
-      el.className = "flex items-center p-2 text-slate-800 font-semibold";
+      el.className = "slide-canvas-text text-slate-800";
+      el.dataset.slideFontSize = elem.style?.fontSizePt || 18;
+      el.style.color = presentationTextColor(elem, elements, /^#[0-9a-f]{6}$/i.test(state.deck.themeKey) ? state.deck.themeKey : "#ffffff");
       if (elem.style) {
-        if (elem.style.fontSizePt) el.style.fontSize = `${elem.style.fontSizePt}px`;
-        if (elem.style.color) el.style.color = elem.style.color;
         if (elem.style.bold) el.style.fontWeight = "bold";
         if (elem.style.italic) el.style.fontStyle = "italic";
         if (elem.style.textAlign) el.style.textAlign = elem.style.textAlign.toLowerCase();
@@ -619,7 +633,7 @@ function renderPreviewSlide() {
         if (elem.style.fillColor) el.style.backgroundColor = elem.style.fillColor;
         if (elem.style.strokeColor) el.style.borderColor = elem.style.strokeColor;
       }
-      el.textContent = elem.payload ? elem.payload.text || elem.payload.primitive || "SHAPE" : "SHAPE";
+      el.textContent = elem.payload?.text || "";
     } else if (elem.elementType === "IMAGE") {
       if (elem.contentUrl) {
         const img = document.createElement("img");
@@ -634,6 +648,7 @@ function renderPreviewSlide() {
 
     canvas.appendChild(el);
   });
+  fitPresentationCanvasText(canvas);
 }
 
 // PPTX Export

@@ -64,3 +64,4 @@ class ProgressDashboardIntegrationTest {
                 .andExpect(jsonPath("$.length()").value(1));
     }
 }
+
