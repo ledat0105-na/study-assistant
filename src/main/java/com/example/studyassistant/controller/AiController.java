@@ -4,7 +4,9 @@ import com.example.studyassistant.entity.Document;
 import com.example.studyassistant.entity.User;
 import com.example.studyassistant.repository.DocumentRepository;
 import com.example.studyassistant.repository.UserRepository;
-import com.example.studyassistant.service.AiService;
+import com.example.studyassistant.retrieval.service.GroundedAnswerService;
+import com.example.studyassistant.retrieval.model.GroundedAnswer;
+import lombok.extern.slf4j.Slf4j;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/ai")
 @CrossOrigin(origins = "*")
+@Slf4j
 public class AiController {
 
     @Autowired
@@ -24,9 +27,6 @@ public class AiController {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private AiService aiService;
 
     private Long getCurrentUserId(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
@@ -37,7 +37,7 @@ public class AiController {
     }
 
     @Autowired
-    private com.example.studyassistant.retrieval.service.GroundedAnswerService groundedAnswerService;
+    private GroundedAnswerService groundedAnswerService;
 
     @Autowired
     private DocumentSummaryController documentSummaryController;
@@ -58,43 +58,31 @@ public class AiController {
             return ResponseEntity.badRequest().body(Map.of("error", "Message cannot be empty"));
         }
 
-        List<?> docIdsRaw = (List<?>) payload.get("docIds");
-        Long firstDocId = null;
-        if (docIdsRaw != null && !docIdsRaw.isEmpty()) {
-            try {
-                firstDocId = Long.valueOf(docIdsRaw.get(0).toString());
-            } catch (Exception e) {}
+        if (!(payload.get("docIds") instanceof List<?> rawIds) || rawIds.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Vui lòng chọn tài liệu để hỏi đáp."));
         }
-
-        if (firstDocId != null) {
-            // CP7: Use GroundedAnswerService for document RAG
-            // Wait, GroundedAnswerService currently takes (userId, notebookId, question).
-            // But here we have docId instead of notebookId.
-            // Let's fallback to finding the notebookId of the document.
-            Optional<Document> docOpt = documentRepository.findByIdAndUserId(firstDocId, userId);
-            if (docOpt.isPresent() && docOpt.get().getNotebook() != null) {
-                try {
-                    com.example.studyassistant.retrieval.model.GroundedAnswer answer = groundedAnswerService.answer(userId, docOpt.get().getNotebook().getId(), message);
-                    Map<String, Object> result = new HashMap<>();
-                    result.put("response", answer.getAnswer());
-                    result.put("docId", firstDocId);
-                    
-                    try {
-                        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-                        result.put("sources", mapper.convertValue(answer.getCitations(), List.class));
-                    } catch (Exception e) {}
-                    
-                    return ResponseEntity.ok(result);
-                } catch (IllegalArgumentException e) {
-                    return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
-                } catch (Exception e) {
-                    return ResponseEntity.status(500).body(Map.of("error", "Error connecting to GroundedAnswerService: " + e.getMessage()));
-                }
+        List<Long> docIds;
+        try {
+            docIds = rawIds.stream().map(value -> Long.valueOf(Objects.toString(value))).distinct().toList();
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Mã tài liệu không hợp lệ."));
+        }
+        for (Long docId : docIds) {
+            Optional<Document> document = documentRepository.findByIdAndUserId(docId, userId);
+            if (document.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("error", "Không tìm thấy tài liệu đã chọn."));
             }
         }
-        
-        // Fallback for non-RAG chat or missing notebook
-        return ResponseEntity.status(400).body(Map.of("error", "Tài liệu chưa được xử lý để trò chuyện (thiếu Notebook)."));
+        try {
+            GroundedAnswer answer = groundedAnswerService.answer(userId, null, message, docIds);
+            return ResponseEntity.ok(Map.of("response", answer.getAnswer(), "docId", docIds.get(0),
+                    "sources", Optional.ofNullable(answer.getCitations()).orElseGet(Collections::emptyList)));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Document chat failed for user {} and documents {}", userId, docIds, e);
+            return ResponseEntity.status(500).body(Map.of("error", "Chưa thể tạo câu trả lời từ tài liệu."));
+        }
     }
 
     @GetMapping("/summary/{docId}")

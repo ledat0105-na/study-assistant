@@ -65,8 +65,7 @@ function renderUnifiedSidebar(activeNavKey) {
     
     navItems.push(
       { key: "chat", label: "Trợ lý Chat AI & 3D Studio", icon: "sparkles", href: "viewer.html" },
-      { key: "progress", label: "Tiến độ & Thống kê", icon: "bar-chart-3", href: "progress.html" },
-      { key: "profile", label: "Hồ sơ cá nhân", icon: "user", href: "profile.html" }
+      { key: "progress", label: "Tiến độ & Thống kê", icon: "bar-chart-3", href: "progress.html" }
     );
   }
 
@@ -99,6 +98,10 @@ function renderUnifiedSidebar(activeNavKey) {
     }
 
     sidebarContainer.className = "app-sidebar w-64 bg-white/80 backdrop-blur-2xl border-r border-slate-200/80 text-slate-800 flex flex-col justify-between p-4 sticky top-0 h-screen z-30 shrink-0 shadow-xl relative overflow-hidden";
+    const accountTag = isAdmin ? "div" : "a";
+    const accountLink = isAdmin ? "" : 'href="profile.html" aria-label="Mở hồ sơ cá nhân"'
+      + (activeNavKey === "profile" ? ' aria-current="page"' : "");
+    const escapeText = value => String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
     sidebarContainer.innerHTML = `
       <div class="relative z-10">
         <a href="index.html" aria-label="Study AI – Trang chủ" class="flex items-center gap-3 px-2 py-4 mb-6 border-b border-slate-200/80 hover:opacity-90 transition-opacity">
@@ -119,16 +122,16 @@ function renderUnifiedSidebar(activeNavKey) {
       </div>
 
       <div class="border-t border-slate-200/80 pt-4 mt-auto relative z-10">
-        <div class="flex items-center gap-3 px-3 py-3 mb-3 bg-slate-50/90 rounded-2xl border border-slate-200 shadow-inner backdrop-blur-md">
+        <${accountTag} ${accountLink} class="flex items-center gap-3 px-3 py-3 mb-3 bg-slate-50/90 rounded-2xl border border-slate-200 shadow-inner backdrop-blur-md ${isAdmin ? '' : 'hover:border-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500'}">
           <div class="w-10 h-10 rounded-xl bg-gradient-to-tr ${isAdmin ? 'from-rose-600 to-purple-600' : 'from-indigo-600 to-purple-600'} text-white flex items-center justify-center font-extrabold text-sm shadow-md ring-2 ring-white">
-            ${userAvatarName}
+            ${escapeText(userAvatarName)}
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-xs font-bold text-slate-900 truncate">${fullName}</p>
+            <p class="text-xs font-bold text-slate-900 truncate">${escapeText(fullName)}</p>
             ${isAdmin ? '' : '<span data-plan-badge class="plan-badge">FREE</span>'}
-            <p class="text-[10px] text-slate-500 truncate">${email}</p>
+            <p class="text-[10px] text-slate-500 truncate">${escapeText(email)}</p>
           </div>
-        </div>
+        </${accountTag}>
         <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-2xl text-xs font-extrabold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all duration-300 shadow-sm">
           <i data-lucide="log-out" class="h-4 w-4"></i>
           <span>Đăng xuất</span>

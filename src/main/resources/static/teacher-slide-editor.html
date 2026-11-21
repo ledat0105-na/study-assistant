@@ -34,12 +34,6 @@
       <i data-lucide="archive" class="h-4 w-4"></i> Chế độ chỉ đọc (Archived)
     </div>
 
-    <div class="flex items-center gap-3" id="topBarActions">
-      <button onclick="handleSaveSlideMeta()" id="btnSaveMeta" class="btn-3d btn-3d-secondary px-4 py-2 text-xs font-extrabold flex items-center gap-1.5">
-        <i data-lucide="save" class="h-4 w-4 text-indigo-400"></i>
-        <span>Lưu Tiêu Đề & Ghi Chú</span>
-      </button>
-    </div>
   </header>
 
   <!-- Main Content Layout -->
@@ -63,26 +57,17 @@
       <div id="canvasContainer" class="w-full max-w-[960px] aspect-[16/9] bg-white rounded-2xl shadow-2xl relative overflow-hidden border border-slate-700">
         <!-- Slide elements rendered dynamically here -->
       </div>
+      <details class="mt-3 w-full max-w-[960px] shrink-0 text-sm text-slate-300">
+        <summary class="cursor-pointer">Ghi chú người nói</summary>
+        <label for="inputSpeakerNotes" class="sr-only">Ghi chú người nói</label>
+        <textarea id="inputSpeakerNotes" rows="3" placeholder="Nhập ghi chú người nói…" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-900 p-3 text-white"></textarea>
+        <button type="button" id="btnSaveNotes" onclick="handleSaveSpeakerNotes()" class="mt-2 btn-3d btn-3d-secondary px-4 py-2 text-xs font-bold">Lưu ghi chú</button>
+      </details>
     </main>
 
     <!-- Right Sidebar (Properties Panel) -->
     <aside class="slide-editor-properties w-80 bg-slate-800 border-l border-slate-700/80 p-5 flex flex-col overflow-y-auto z-20 shrink-0 text-slate-200">
       
-      <!-- Slide Meta Section -->
-      <div class="mb-6 pb-5 border-b border-slate-700/80">
-        <h3 class="text-xs font-extrabold uppercase tracking-wider text-indigo-400 mb-3">Thông tin Slide</h3>
-        <div class="space-y-3">
-          <div>
-            <label class="block text-[11px] font-bold text-slate-400 mb-1">Tiêu đề Trang Slide</label>
-            <input type="text" id="inputSlideTitle" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:border-indigo-500 font-semibold">
-          </div>
-          <div>
-            <label class="block text-[11px] font-bold text-slate-400 mb-1">Ghi chú người nói (Speaker Notes)</label>
-            <textarea id="inputSpeakerNotes" rows="3" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:border-indigo-500 font-semibold"></textarea>
-          </div>
-        </div>
-      </div>
-
       <!-- Selected Element Inspector Section -->
       <div class="flex-1">
         <div class="flex justify-between items-center mb-3">
@@ -169,8 +154,11 @@
               <label class="block font-bold text-slate-400 mb-1">Dạng hình khối (Primitive)</label>
               <select id="shapePrimitive" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-semibold">
                 <option value="RECTANGLE">Hình chữ nhật (RECTANGLE)</option>
-                <option value="CIRCLE">Hình tròn (CIRCLE)</option>
-                <option value="TRIANGLE">Hình tam giác (TRIANGLE)</option>
+                <option value="ROUNDED_RECTANGLE">Hình chữ nhật bo góc</option>
+                <option value="ELLIPSE">Hình bầu dục</option>
+                <option value="LINE">Đường thẳng</option>
+                <option value="ARROW">Mũi tên</option>
+
               </select>
             </div>
             <div>
@@ -200,7 +188,9 @@
             </div>
           </div>
 
-          <button type="button" onclick="handleUpdateElement()" id="btnSaveElem" class="w-full btn-3d btn-3d-primary py-2.5 text-xs font-extrabold mt-4">
+          <button type="button" id="btnMoveElem" onclick="toggleElementMoveMode()" aria-pressed="false" class="w-full btn-3d btn-3d-secondary py-2 text-xs font-bold">Di chuyển phần tử</button>
+          <p class="mt-2 text-xs text-slate-400">Bật chế độ di chuyển để kéo ô đã chọn, rồi bấm Cập nhật phần tử.</p>
+          <button type="button" onclick="handleUpdateElement()" id="btnSaveElem" class="sticky bottom-0 z-10 w-full btn-3d btn-3d-primary py-2.5 text-xs font-extrabold mt-4">
             Cập nhật phần tử
           </button>
         </div>
@@ -216,7 +206,7 @@
   <script src="js/api-client.js"></script>
   <script src="js/teacher-api.js"></script>
   <script src="js/teacher-media.js"></script>
-  <script src="js/teacher-slide-editor.js"></script>
+  <script src="js/teacher-slide-editor.js?v=canvas-title-edit"></script>
 
 </body>
 </html>

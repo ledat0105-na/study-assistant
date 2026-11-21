@@ -132,6 +132,10 @@
             opt.textContent = nb.title || `Notebook #${nb.id}`;
             select.appendChild(opt);
           });
+          const requestedId = new URLSearchParams(location.search).get("notebookId");
+          if (notebooks.some(notebook => String(notebook.id) === requestedId)) {
+            select.value = requestedId;
+          }
         }
       } catch (e) {
         console.error("Lỗi tải danh sách notebook:", e);

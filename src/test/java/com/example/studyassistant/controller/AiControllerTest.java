@@ -20,6 +20,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -59,13 +61,10 @@ public class AiControllerTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(mockUser));
 
         com.example.studyassistant.entity.Document mockDoc = new com.example.studyassistant.entity.Document();
-        com.example.studyassistant.entity.Notebook mockNotebook = new com.example.studyassistant.entity.Notebook();
-        mockNotebook.setId(1L);
-        mockDoc.setNotebook(mockNotebook);
         
         when(documentRepository.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(mockDoc));
 
-        when(groundedAnswerService.answer(anyLong(), anyLong(), anyString()))
+        when(groundedAnswerService.answer(anyLong(), isNull(), anyString(), anyList()))
                 .thenThrow(new IllegalArgumentException("Question exceeds available context limit"));
 
         Map<String, Object> payload = new HashMap<>();
@@ -85,13 +84,10 @@ public class AiControllerTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(mockUser));
 
         com.example.studyassistant.entity.Document mockDoc = new com.example.studyassistant.entity.Document();
-        com.example.studyassistant.entity.Notebook mockNotebook = new com.example.studyassistant.entity.Notebook();
-        mockNotebook.setId(1L);
-        mockDoc.setNotebook(mockNotebook);
         
         when(documentRepository.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(mockDoc));
 
-        when(groundedAnswerService.answer(anyLong(), anyLong(), anyString()))
+        when(groundedAnswerService.answer(anyLong(), isNull(), anyString(), anyList()))
                 .thenThrow(new RuntimeException("DB offline"));
 
         Map<String, Object> payload = new HashMap<>();
@@ -101,6 +97,6 @@ public class AiControllerTest {
         ResponseEntity<?> response = aiController.chat(payload, request);
         
         assertThat(response.getStatusCode().value()).isEqualTo(500);
-        assertThat(response.getBody().toString()).contains("DB offline");
+        assertThat(response.getBody().toString()).contains("Chưa thể tạo câu trả lời từ tài liệu");
     }
 }

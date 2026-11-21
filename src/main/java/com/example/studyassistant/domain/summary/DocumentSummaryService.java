@@ -227,24 +227,21 @@ public class DocumentSummaryService {
                     requiredText(term, "definition"),
                     parseReferences(term.get("sourceRefs"), allowedAliases)));
         }
-        List<String> sourceRefs = parseReferences(root.get("sourceRefs"), allowedAliases);
+        Set<String> sourceRefs = new LinkedHashSet<>(parseReferences(root.get("sourceRefs"), allowedAliases, false));
         if (keyPoints.isEmpty() && terms.isEmpty()) {
             throw new DocumentSummaryProviderException("Summary must include key points or important terms");
         }
-        if (sourceRefs.isEmpty()) {
-            throw new DocumentSummaryProviderException("Summary has no source citations");
-        }
-        Set<String> allNestedRefs = new LinkedHashSet<>();
-        keyPoints.forEach(point -> allNestedRefs.addAll(point.sourceRefs()));
-        terms.forEach(term -> allNestedRefs.addAll(term.sourceRefs()));
-        if (!sourceRefs.containsAll(allNestedRefs)) {
-            throw new DocumentSummaryProviderException("Top-level sourceRefs must include every section citation");
-        }
+        keyPoints.forEach(point -> sourceRefs.addAll(point.sourceRefs()));
+        terms.forEach(term -> sourceRefs.addAll(term.sourceRefs()));
         return new SummaryContent(overview, List.copyOf(keyPoints), List.copyOf(terms),
-                conclusion, sourceRefs);
+                conclusion, List.copyOf(sourceRefs));
     }
 
     private List<String> parseReferences(JsonNode refsNode, Set<String> allowedAliases) {
+        return parseReferences(refsNode, allowedAliases, true);
+    }
+
+    private List<String> parseReferences(JsonNode refsNode, Set<String> allowedAliases, boolean requireCitation) {
         if (refsNode == null || !refsNode.isArray()) {
             throw new DocumentSummaryProviderException("sourceRefs must be an array");
         }
@@ -255,7 +252,7 @@ public class DocumentSummaryService {
             }
             refs.add(ref.asText());
         }
-        if (refs.isEmpty()) {
+        if (requireCitation && refs.isEmpty()) {
             throw new DocumentSummaryProviderException("Every summary section must cite at least one source");
         }
         return List.copyOf(refs);

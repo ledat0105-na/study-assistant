@@ -1,0 +1,39 @@
+dialog.payment-method-dialog {
+  width: min(43rem, calc(100% - 1.5rem));
+  max-height: calc(100dvh - 1.5rem);
+  margin: auto;
+  padding: clamp(.9rem, 3vw, 1.5rem);
+  overflow: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 1.25rem;
+  background: #fff;
+  color: #17233a;
+}
+.payment-method-dialog::backdrop { background: #101a36a6; }
+.payment-method-header { display: flex; justify-content: space-between; align-items: center; gap: .6rem; }
+.payment-method-header h2 { font-weight: 800; font-size: 1.3rem; }
+.payment-method-header button { width: 2.65rem; height: 2.65rem; font-size: 1.4rem; border-radius: .65rem; }
+.payment-method-dialog fieldset { margin-block: .65rem 1rem; }
+.payment-method-dialog legend { margin-bottom: .5rem; font-weight: 700; }
+.payment-method-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; }
+.payment-method-options label { display: flex; align-items: center; gap: .38rem; padding: .55rem; border: 1px solid #aebcd0; border-radius: .65rem; font-size: .84rem; cursor: pointer; }
+.payment-method-options label:has(:checked) { border-color: #6366f1; background: #e9eaff; color: #312e81; }
+.payment-method-body { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 1rem; align-items: center; }
+.payment-method-body figure { margin: 0; text-align: center; }
+.payment-method-body img { display: block; width: 100%; height: clamp(12rem, 37vh, 20rem); object-fit: contain; background: white; border-radius: .75rem; }
+.payment-method-body .payment-qr-preview { display: block; }
+.payment-method-body figure a[download] { display: inline-block; margin-top: .45rem; text-decoration: underline; }
+.payment-method-details { display: grid; gap: .7rem; font-size: .89rem; }
+.payment-method-details strong { display: block; overflow-wrap: anywhere; }
+.payment-method-hint { line-height: 1.55; }
+.payment-method-details textarea { width: 100%; }
+.payment-method-footer { display: flex; justify-content: flex-end; margin-top: 1rem; }
+.payment-method-error { margin-top: .6rem; color: #be123c; }
+[data-theme="dark"] .payment-method-dialog { background: #25344b; color: #f3f6ff; border-color: #536783; }
+[data-theme="dark"] .payment-method-error { color: #fda4af; }
+@media (max-width: 560px) {
+  .payment-method-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .payment-method-body { grid-template-columns: minmax(0, 1fr); }
+  .payment-method-body img { height: min(35vh, 17rem); }
+  .payment-method-details textarea { font-size: 16px; }
+}

@@ -5,6 +5,8 @@ let state = {
   outlines: [],
   slides: [],
   activeTab: 'outlines',
+  approvingOutline: false,
+  generatingSlides: false,
   previewCurrentIndex: 0
 };
 
@@ -51,9 +53,25 @@ function renderDeckInfo() {
   document.getElementById("deckDescription").textContent = d.description || "Không có mô tả.";
   document.getElementById("deckStatusBadge").textContent = d.status;
   document.getElementById("deckRatio").textContent = d.aspectRatio || "16:9";
-  document.getElementById("deckTheme").textContent = d.themeKey || "DEFAULT";
-  document.getElementById("deckVersion").textContent = d.version;
-  document.getElementById("deckUpdatedAt").textContent = new Date(d.updatedAt).toLocaleString("vi-VN");
+  const theme = document.getElementById("deckTheme");
+  theme.value = Array.from(theme.options).some(option => option.value === d.themeKey) ? d.themeKey : "DEFAULT";
+  theme.disabled = d.status === "ARCHIVED";
+  document.getElementById("deckUpdatedAt").textContent = d.updatedAt
+    ? new Date(d.updatedAt).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" })
+    : "—";
+}
+
+async function saveDeckTheme(select) {
+  select.disabled = true;
+  try {
+    state.deck = await TeacherAPI.patchPresentation(state.deckId, { themeKey: select.value }, state.deck.version);
+    UIErrors.showToast("Đã lưu màu nền slide.", "success");
+  } catch (error) {
+    UIErrors.handle(error);
+    if (error.status === 409) await loadDeck();
+  } finally {
+    renderDeckInfo();
+  }
 }
 
 function disableMutationsForArchived() {
@@ -249,6 +267,9 @@ function renderOutlines() {
 }
 
 function openGenerateOutlineModal() {
+  document.getElementById("outlineSourceUpload").href =
+    "upload.html?notebookId=" + encodeURIComponent(state.deck.notebookId);
+  document.getElementById("outlineSourceError").textContent = "";
   document.getElementById("genOutlineModal").classList.remove("hidden");
 }
 
@@ -266,14 +287,27 @@ async function handleGenerateOutlineSubmit(event) {
   const audience = document.getElementById("outlineAudience").value;
   const language = document.getElementById("outlineLanguage").value;
 
-  closeGenerateOutlineModal();
+  const submit = document.getElementById("btnSubmitOutlineGen");
+  if (submit.disabled) return;
+  submit.disabled = true;
+  const sourceError = document.getElementById("outlineSourceError");
+  sourceError.textContent = "";
 
   const command = { topic, teacherInstruction, targetSlideCount, audience, language, documentIds: null };
   const idempotencyKey = crypto.randomUUID();
 
-  showJobProgress("Đang biên soạn Dàn ý AI...");
-
   try {
+    const notebookId = encodeURIComponent(state.deck.notebookId);
+    const documents = await ApiClient.get(`/api/documents?notebookId=${notebookId}`);
+    if (!documents.some(doc => doc.status === "READY" && doc.activeIndexVersion)) {
+      sourceError.textContent = documents.length
+        ? "Chưa có tài liệu sẵn sàng. Chờ xử lý xong hoặc tải một tệp có văn bản."
+        : "Sổ tay đang trống. Hãy tải tài liệu nguồn trước khi tạo dàn ý.";
+      return;
+    }
+
+    document.getElementById("genOutlineModal").classList.add("hidden");
+    showJobProgress("Đang biên soạn Dàn ý AI...");
     const jobDto = await TeacherAPI.generateOutline(state.deckId, command, idempotencyKey);
     
     // Poll job until complete
@@ -283,26 +317,40 @@ async function handleGenerateOutlineSubmit(event) {
     });
 
     hideJobProgress();
-    UIErrors.showToast("Đã tạo Dàn ý AI thành công!", "success");
+    closeGenerateOutlineModal();
+    UIErrors.showToast("Đã tạo dàn ý. Hãy duyệt dàn ý để tạo slide.", "success");
     await loadDeck();
   } catch (err) {
     hideJobProgress();
-    UIErrors.handle(err);
+    if (err.code === "INSUFFICIENT_EVIDENCE") {
+      openGenerateOutlineModal();
+      sourceError.textContent = "AI chưa đọc được nội dung từ tài liệu trong sổ tay. Hãy kiểm tra tệp nguồn rồi thử lại.";
+    } else {
+      UIErrors.handle(err);
+    }
+  } finally {
+    submit.disabled = false;
   }
 }
 
 async function handleApproveOutline(revisionId) {
-  if (!confirm("Bạn có chắc chắn muốn phê duyệt phiên bản Dàn ý này? Dàn ý này sẽ được dùng để tạo các trang Slide.")) return;
+  if (state.approvingOutline || state.generatingSlides) return;
+  if (!confirm("Duyệt dàn ý này và bắt đầu tạo slide AI?")) return;
 
+  state.approvingOutline = true;
   try {
     await TeacherAPI.approveOutline(state.deckId, revisionId, state.deck.version);
-    UIErrors.showToast("Đã phê duyệt dàn ý thành công.", "success");
-    await loadDeck();
+    state.deck = await TeacherAPI.getPresentation(state.deckId);
+    renderDeckInfo();
+    switchTab("slides");
+    await handleGenerateSlides();
   } catch (err) {
     if (err.status === 409) {
       await loadDeck();
     }
     UIErrors.handle(err);
+  } finally {
+    state.approvingOutline = false;
   }
 }
 
@@ -316,14 +364,13 @@ async function loadSlides() {
 
   try {
     state.slides = await TeacherAPI.listSlides(state.deckId);
+    renderSlides();
     loading.classList.add("hidden");
 
     if (!state.slides || state.slides.length === 0) {
       empty.classList.remove("hidden");
       return;
     }
-
-    renderSlides();
   } catch (err) {
     loading.classList.add("hidden");
     UIErrors.handle(err);
@@ -388,6 +435,13 @@ function renderSlides() {
     btnEdit.className = "flex-1 py-2 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-600 font-extrabold text-xs rounded-xl transition-all text-center flex items-center justify-center gap-1.5";
     btnEdit.innerHTML = `<i data-lucide="edit-3" class="h-3.5 w-3.5"></i> ${isArchived ? 'Xem' : 'Chỉnh sửa'}`;
     actions.appendChild(btnEdit);
+    if (!isArchived) {
+      const insertImage = document.createElement("a");
+      insertImage.href = btnEdit.href + "&insertImage=1";
+      insertImage.className = "rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200";
+      insertImage.textContent = "Chèn ảnh";
+      actions.appendChild(insertImage);
+    }
 
     if (slide.generationState === 'FAILED' && !isArchived) {
       const btnRetry = document.createElement("button");
@@ -406,15 +460,19 @@ function renderSlides() {
 }
 
 async function handleGenerateSlides() {
+  if (state.generatingSlides || state.deck.status === "ARCHIVED") return;
   if (!state.deck.approvedOutlineRevisionId) {
     UIErrors.showToast("Bạn cần phê duyệt (Approve) một Dàn ý trước khi tạo Slide.", "error");
     return;
   }
 
-  showJobProgress("Đang tạo tất cả Slide tự động...");
+  state.generatingSlides = true;
+  showJobProgress("Đang tạo slide từ dàn ý đã duyệt…");
 
   try {
-    const jobDto = await TeacherAPI.generateSlides(state.deckId, crypto.randomUUID());
+    const requestId = crypto.randomUUID?.() ??
+      Array.from(crypto.getRandomValues(new Uint8Array(16)), byte => byte.toString(16).padStart(2, "0")).join("");
+    const jobDto = await TeacherAPI.generateSlides(state.deckId, requestId);
     
     await JobPoller.pollJob(() => TeacherAPI.getJob(state.deckId, jobDto.jobId), {
       timeout: 600000,
@@ -422,12 +480,16 @@ async function handleGenerateSlides() {
     });
 
     hideJobProgress();
-    UIErrors.showToast("Đã tạo tất cả Slide thành công!", "success");
     await loadDeck();
+    if (state.slides.length) {
+      UIErrors.showToast("Danh sách slide đã được cập nhật.", "success");
+    }
   } catch (err) {
     hideJobProgress();
     UIErrors.handle(err);
     await loadDeck();
+  } finally {
+    state.generatingSlides = false;
   }
 }
 
@@ -537,6 +599,7 @@ function renderPreviewSlide() {
 
   const canvas = document.getElementById("previewCanvas");
   canvas.innerHTML = "";
+  canvas.style.backgroundColor = /^#[\da-f]{6}$/i.test(state.deck.themeKey) ? state.deck.themeKey : "#ffffff";
 
   // Render elements ordered by zIndex
   const elements = (slide.elements || []).slice().sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
@@ -555,10 +618,10 @@ function renderPreviewSlide() {
 
     if (elem.elementType === "TEXT") {
       const text = elem.payload ? elem.payload.text || "" : "";
-      el.className = "flex items-center p-2 text-slate-800 font-semibold";
+      el.className = "slide-canvas-text text-slate-800";
+      el.dataset.slideFontSize = elem.style?.fontSizePt || 18;
+      el.style.color = presentationTextColor(elem, elements, /^#[0-9a-f]{6}$/i.test(state.deck.themeKey) ? state.deck.themeKey : "#ffffff");
       if (elem.style) {
-        if (elem.style.fontSizePt) el.style.fontSize = `${elem.style.fontSizePt}px`;
-        if (elem.style.color) el.style.color = elem.style.color;
         if (elem.style.bold) el.style.fontWeight = "bold";
         if (elem.style.italic) el.style.fontStyle = "italic";
         if (elem.style.textAlign) el.style.textAlign = elem.style.textAlign.toLowerCase();
@@ -570,7 +633,7 @@ function renderPreviewSlide() {
         if (elem.style.fillColor) el.style.backgroundColor = elem.style.fillColor;
         if (elem.style.strokeColor) el.style.borderColor = elem.style.strokeColor;
       }
-      el.textContent = elem.payload ? elem.payload.text || elem.payload.primitive || "SHAPE" : "SHAPE";
+      el.textContent = elem.payload?.text || "";
     } else if (elem.elementType === "IMAGE") {
       if (elem.contentUrl) {
         const img = document.createElement("img");
@@ -585,6 +648,7 @@ function renderPreviewSlide() {
 
     canvas.appendChild(el);
   });
+  fitPresentationCanvasText(canvas);
 }
 
 // PPTX Export

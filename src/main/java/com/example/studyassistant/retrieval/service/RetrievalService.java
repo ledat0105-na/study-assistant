@@ -112,7 +112,12 @@ public class RetrievalService {
     }
 
     private List<DocumentVersionPair> resolveAuthorizedPairs(Long userId, Long notebookId, List<Long> requestedDocumentIds) {
-        List<Document> documents = documentRepository.findByUserIdAndNotebookId(userId, notebookId);
+        if (notebookId == null && (requestedDocumentIds == null || requestedDocumentIds.isEmpty())) {
+            return List.of();
+        }
+        List<Document> documents = notebookId == null
+                ? documentRepository.findAllById(requestedDocumentIds)
+                : documentRepository.findByUserIdAndNotebookId(userId, notebookId);
         
         Set<Long> filter = null;
         if (requestedDocumentIds != null && !requestedDocumentIds.isEmpty()) {
@@ -121,6 +126,7 @@ public class RetrievalService {
         
         final Set<Long> finalFilter = filter;
         return documents.stream()
+                .filter(doc -> notebookId != null || (doc.getUser() != null && Objects.equals(doc.getUser().getId(), userId)))
                 .filter(doc -> "READY".equals(doc.getStatus()) && doc.getActiveIndexVersion() != null)
                 .filter(doc -> finalFilter == null || finalFilter.contains(doc.getId()))
                 .map(doc -> new DocumentVersionPair(doc.getId(), doc.getActiveIndexVersion()))

@@ -161,7 +161,7 @@ public class PresentationPptxExportSnapshotService {
         }
 
         return new ExportSnapshot(deck.getId(), deck.getTitle(), owner.getId(),
-                List.copyOf(slideSnapshots), Map.copyOf(mediaSnapshots));
+                List.copyOf(slideSnapshots), Map.copyOf(mediaSnapshots), deck.getThemeKey());
     }
 
     private MediaSnapshot toMediaSnapshot(PresentationMediaAsset asset, Long deckId, Long ownerId, Long mediaId) {
@@ -251,7 +251,13 @@ public class PresentationPptxExportSnapshotService {
             String deckTitle,
             Long ownerId,
             List<SlideSnapshot> slides,
-            Map<Long, MediaSnapshot> media) {}
+            Map<Long, MediaSnapshot> media,
+            String themeKey) {
+        public ExportSnapshot(Long deckId, String deckTitle, Long ownerId, List<SlideSnapshot> slides,
+                              Map<Long, MediaSnapshot> media) {
+            this(deckId, deckTitle, ownerId, slides, media, "DEFAULT");
+        }
+    }
 
     public record SlideSnapshot(
             Long id,

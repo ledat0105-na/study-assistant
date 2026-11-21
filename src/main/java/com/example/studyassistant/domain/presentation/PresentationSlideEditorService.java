@@ -108,6 +108,7 @@ public class PresentationSlideEditorService {
             if (title.length() > 255) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title exceeds 255 characters");
             }
+            updateCanvasTitle(slide, title);
             slide.setTitle(title);
         }
         if (request.speakerNotes() != null) {
@@ -217,6 +218,16 @@ public class PresentationSlideEditorService {
             if (media.getDeckId() == null || !media.getDeckId().equals(deckId)) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Media not found");
             }
+        }
+
+        PresentationSlideElement heading = elementType == PresentationElementType.TEXT ? findCanvasTitle(slide) : null;
+        if (heading != null && Objects.equals(heading.getId(), element.getId())) {
+            String updatedTitle = ((String) payload.get("text")).trim();
+            if (updatedTitle.length() > 255) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title exceeds 255 characters");
+            }
+            slide.setTitle(updatedTitle);
+            payload = Map.of("text", updatedTitle);
         }
 
         element.setElementType(elementType);
@@ -356,6 +367,34 @@ public class PresentationSlideEditorService {
         } catch (SlideGenerationException.SlideSchemaViolationException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
         }
+    }
+
+    private void updateCanvasTitle(PresentationSlide slide, String title) {
+        PresentationSlideElement heading = findCanvasTitle(slide);
+        if (heading != null) {
+            heading.setPayloadJson(toJson(Map.of("text", title)));
+            heading.setUpdatedAt(LocalDateTime.now());
+            elementRepository.save(heading);
+        }
+    }
+
+    private PresentationSlideElement findCanvasTitle(PresentationSlide slide) {
+        PresentationSlideElement previousHeading = null;
+        for (PresentationSlideElement element : elementRepository.findBySlideIdOrderByZIndexAscIdAsc(slide.getId())) {
+            if (element.getElementType() != PresentationElementType.TEXT) continue;
+            Object value = parseJsonObject(element.getPayloadJson()).get("text");
+            if (!(value instanceof String text) || text.isBlank()) continue;
+            if (text.equals(slide.getTitle())) {
+                return element;
+            }
+            // Older editor versions could append to the title without updating its canvas text.
+            if (previousHeading == null && slide.getTitle() != null && text.length() >= 4
+                    && slide.getTitle().startsWith(text)
+                    && Boolean.TRUE.equals(parseJsonObject(element.getStyleJson()).get("bold"))) {
+                previousHeading = element;
+            }
+        }
+        return previousHeading;
     }
 
     private void validateGeometry(BigDecimal x, BigDecimal y, BigDecimal width, BigDecimal height, BigDecimal rotation) {

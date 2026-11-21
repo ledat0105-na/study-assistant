@@ -115,6 +115,14 @@ public class PresentationPptxExportService {
     private void renderSlide(XMLSlideShow presentation, XSLFSlide slide, ExportSnapshot deck,
                              SlideSnapshot slideSnapshot, User owner,
                              Map<Long, XSLFPictureData> pictureCache) throws IOException {
+        String theme = deck.themeKey();
+        if (theme != null && theme.matches("#[0-9a-fA-F]{6}")) {
+            var slideData = slide.getXmlObject().getCSld();
+            if (!slideData.isSetBg()) {
+                slideData.addNewBg();
+            }
+            slide.getBackground().setFillColor(Color.decode(theme));
+        }
         if (hasTitle(slideSnapshot)) {
             addTitle(slide, slideSnapshot.title());
         }
