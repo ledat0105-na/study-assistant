@@ -103,7 +103,7 @@
   <script src="js/api-client.js"></script>
   <script src="js/document-ui.js"></script>
   <script src="js/document-features.js"></script>
-  <script src="citations.js"></script>
+  <script src="citations.js?v=source-location"></script>
   <script src="js/summary-view.js"></script>
   <script src="js/document-summary.js"></script>
   <script src="i18n.js"></script>
@@ -311,10 +311,17 @@
       const quote = urlParams.get("q");
       const contentEl = document.getElementById("documentContentText");
       if (quote) {
-        const index = rawText.toLowerCase().indexOf(quote.toLowerCase());
+        const candidates = [quote, urlParams.get("section")].filter(Boolean);
+        let index = -1, matchLength = 0;
+        for (const candidate of candidates) {
+          // Match words across the line breaks inserted when the file was parsed.
+          const words = candidate.trim().split(/\s+/).map(word => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+          const found = new RegExp(words.join("\\s+"), "iu").exec(rawText);
+          if (found) { index = found.index; matchLength = found[0].length; break; }
+        }
         if (index !== -1) {
           const escapeHtml = value => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-          contentEl.innerHTML = `${escapeHtml(rawText.slice(0, index))}<mark id="quoteHighlight" style="background:rgba(250,204,21,0.6);border-radius:2px;">${escapeHtml(rawText.slice(index, index + quote.length))}</mark>${escapeHtml(rawText.slice(index + quote.length))}`;
+          contentEl.innerHTML = `${escapeHtml(rawText.slice(0, index))}<mark id="quoteHighlight" style="background:rgba(250,204,21,0.6);border-radius:2px;">${escapeHtml(rawText.slice(index, index + matchLength))}</mark>${escapeHtml(rawText.slice(index + matchLength))}`;
           setTimeout(() => document.getElementById("quoteHighlight")?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
         } else {
           contentEl.textContent = rawText;
@@ -324,6 +331,7 @@
       }
       statusWrap.classList.add("hidden");
       textWrap.classList.remove("hidden");
+      requestAnimationFrame(() => document.getElementById("quoteHighlight")?.scrollIntoView({ block: "center" }));
       autoSummarize();
     }
 

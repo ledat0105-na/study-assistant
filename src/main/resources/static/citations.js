@@ -5,6 +5,9 @@ function citationLocation(source, fallbackId) {
   const page = source.pageStart ?? (match ? Number(match[0]) : null);
   const params = new URLSearchParams({ id: String(id) });
   if (Number.isInteger(Number(page)) && Number(page) > 0) params.set('page', String(page));
+  const quote = String(source.snippet || source.excerpt || source.sectionTitle || "").trim().replace(/\.{3}$|…$/, "").trim();
+  if (quote && !params.has("page")) params.set("q", quote);
+  if (source.sectionTitle && !params.has("page")) params.set("section", source.sectionTitle);
   return { href: `reader.html?${params}`, label: `${source.documentTitle || source.sectionTitle || 'Tài liệu'}${page ? ` · Trang ${page}${source.pageEnd > page ? `–${source.pageEnd}` : ''}` : ''}` };
 }
 function renderCitationSources(container, sources, docId) {
